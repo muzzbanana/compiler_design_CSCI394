@@ -77,7 +77,6 @@ int main(){
 	count_up_down(num3);
 	cout << "\n";
 
-
 	int summ = sum_till_n(4);
 	cout << "The sum for 0 to 4 is " << summ << "\n";
 	int summ1 = sum_till_n(-3);
