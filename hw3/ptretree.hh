@@ -8,7 +8,7 @@ class PtreTree : public Tree {
 	public:
 		PtreTree();
 		PtreTree(value_t value);
-		~PtreTree() {delete [] flatTree_;}
+		~PtreTree();
 		PtreTree(value_t newroot, const PtreTree& left, const PtreTree& right);
 		// PtreTree(value_t newroot, const PtreTree& child_tree);
 
