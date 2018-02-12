@@ -1,0 +1,5 @@
+Bug 1:
+When building a compound tree, the right side was not being built correctly. This was because insteading of using start_right, start_left was being used.
+
+Bug 2:
+Not explicitly mentioning that all values should be different. Not really a bug.
