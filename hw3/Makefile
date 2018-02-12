@@ -1,5 +1,6 @@
 # uncomment to test for vectree
 
+
 CXX=g++-7   # Can switch to g++ if desired
 CXXFLAGS=-g -std=c++17 -Wall -pedantic -Wextra -Werror
 LDFLAGS=$(CXXFLAGS)
