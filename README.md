@@ -8,3 +8,7 @@ Assignment 1: Basic Functions in C++
 Assignment 2: Debugging in C++
               debugging.cc
               02/05/18
+              
+Assignment 3: Binary Trees in C++
+              hw3/
+              02/12/18
