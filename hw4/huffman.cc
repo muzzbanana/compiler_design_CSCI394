@@ -4,7 +4,6 @@
 #include <queue>
 #include <string>
 #include <algorithm>
-#include <typeinfo>
 
 #include "huffman.hh"
 #include "ptretree.hh"
@@ -15,7 +14,7 @@ struct Huffman::Impl {
 
     std::vector<std::pair<Huffman::symbol_t,unsigned>> char_freqs;
     symbol_t EOFF = symbol_t(256);  // pseudo end-of-file symbol
-    unsigned non_leaf_value = 257;  // values for non-leaf nodes
+    unsigned non_leaf_value = 10000;  // values for non-leaf nodes
 
     Impl() {
         for (int i=0; i<256; ++i){
@@ -149,6 +148,7 @@ Huffman::decode(enc_iter_t& begin, const enc_iter_t& end) const noexcept(false){
     }
 
     tree::Tree::value_t symbol = pImpl_->decodeHelper(begin,end);
+
 
     if(symbol == pImpl_->EOFF){
         begin = end;
