@@ -12,3 +12,7 @@ Assignment 2: Debugging in C++
 Assignment 3: Binary Trees in C++
               hw3/
               02/12/18
+            
+Assignment 4: Adaptive Huffman Encoding and Decoding
+              hw4/
+              02/21/18
