@@ -64,12 +64,14 @@ new            { return NEW; }
 :=             { return ASSIGN; }
 \r\n|\n\r|\n|\r {return END_OF_LINE; }
 \"([^"]|\\.)*\" {
+    /* a string literal is a quote, followed by 0 or more repetitions
+       of things that are either (a) not a quote, or (b) \ followed by
+       any character, and then a closing quote.
+       Note: not all backslash-character sequences are valid, but we
+       will deal with this somewhere else. */
     return STRING_LITERAL;
 }
 [0-9]+ {
-    /* a string literal is a quote, followed by 0 or more repetitions
-       of things that are either (a) not a quote, or (b) \ followed by
-       any character, and then a closing quote */
     return INTEGER_LITERAL;
 }
 [A-Za-z][A-Za-z0-9_]*|_main {
