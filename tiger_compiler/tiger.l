@@ -40,5 +40,28 @@ class          { return CLASS; }
 extends        { return EXTENDS; }
 method         { return METHOD; }
 new            { return NEW; }
+,              { return COMMA; }
+;              { return SEMICOLON; }
+\(             { return OPEN_PAREN; }
+\)             { return CLOSE_PAREN; }
+\[             { return OPEN_BRACKET; }
+\]             { return CLOSE_BRACKET; }
+\{             { return OPEN_CURLY; }
+\}             { return CLOSE_CURLY; }
+\.             { return STOP; }
+\+             { return PLUS; }
+-              { return MINUS; }
+\*             { return MULT; }
+\/             { return DIV; }
+=              { return EQUAL; }
+\<>            { return POINTIES; }
+\<             { return LESS; }
+\<=            { return LESS_EQUAL; }
+\>             { return GREATER; }
+\>=            { return GREATER_EQUAL; }
+&              { return AND; }
+\|             { return OR; }
+:=             { return ASSIGN; }
+\r\n|\n\r|\n|\r { return END_OF_LINE; }
 .              ;
 %%
