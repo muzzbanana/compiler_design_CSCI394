@@ -1,0 +1,4 @@
+*.swp
+tiger
+*.o
+test_tiger

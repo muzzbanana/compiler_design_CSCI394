@@ -1,8 +1,26 @@
-
-
+%{
+#include <iostream>
+#include "tokens.hh"
+//#include "snazzle.tab.h"
+using namespace std;
+#define YY_DECL extern "C" int yylex()
+int line_num = 1;
+/*
 enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               OF, BREAK, NIL, FUNCTION, VAR, TYPE, IMPORT, PRIMITIVE, CLASS,
               EXTENDS, METHOD, NEW, COMMA, COLON, SEMICOLON, OPEN_PAREN, CLOSE_PAREN,
               OPEN_BRACKET, CLOSE_BRACKET, OPEN_CURLY, CLOSE_CURLY, STOP, PLUS, MINUS,
               MULT, DIV, EQUAL, POINTIES, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, AND,
               OR, ASSIGN, END_OF_LINE, COMMENT, STRING_LITERAL, INTEGER_LITERAL, SPACE};
+              */
+%}
+%option noyywrap
+%%
+[ \t]          { return SPACE; }
+array          { return ARRAY; }
+if             { return IF; }
+then           { return THEN; }
+else           { return ELSE; }
+while          { return WHILE; }
+.              ;
+%%
