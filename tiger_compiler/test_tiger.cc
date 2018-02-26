@@ -11,7 +11,10 @@ extern FILE *yyin;
 //using namespace ???;
 
 TEST_CASE("basic lexical specification", "[basic-lexing]") {
-    FILE *myfile = fopen("test/while", "r");
+    FILE *myfile = fopen("test/tokentest.tig", "r");
     yyin = myfile;
     REQUIRE(yylex() == WHILE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IF);
+    fclose(myfile);
 }
