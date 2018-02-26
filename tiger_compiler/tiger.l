@@ -40,5 +40,42 @@ class          { return CLASS; }
 extends        { return EXTENDS; }
 method         { return METHOD; }
 new            { return NEW; }
+,              { return COMMA; }
+;              { return SEMICOLON; }
+\(             { return OPEN_PAREN; }
+\)             { return CLOSE_PAREN; }
+\[             { return OPEN_BRACKET; }
+\]             { return CLOSE_BRACKET; }
+\{             { return OPEN_CURLY; }
+\}             { return CLOSE_CURLY; }
+\.             { return STOP; }
+\+             { return PLUS; }
+-              { return MINUS; }
+\*             { return MULT; }
+\/             { return DIV; }
+=              { return EQUAL; }
+\<>            { return POINTIES; }
+\<             { return LESS; }
+\<=            { return LESS_EQUAL; }
+\>             { return GREATER; }
+\>=            { return GREATER_EQUAL; }
+&              { return AND; }
+\|             { return OR; }
+:=             { return ASSIGN; }
+\r\n|\n\r|\n|\r {return END_OF_LINE; }
+\"([^"]|\\.)*\" {
+    /* a string literal is a quote, followed by 0 or more repetitions
+       of things that are either (a) not a quote, or (b) \ followed by
+       any character, and then a closing quote.
+       Note: not all backslash-character sequences are valid, but we
+       will deal with this somewhere else. */
+    return STRING_LITERAL;
+}
+[0-9]+ {
+    return INTEGER_LITERAL;
+}
+[A-Za-z][A-Za-z0-9_]*|_main {
+    return IDENTIFIER;
+}
 .              ;
 %%

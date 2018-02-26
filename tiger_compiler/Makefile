@@ -9,13 +9,13 @@ LIBS=
 
 all: test_tiger tiger
 
-tiger: tiger.o lex.yy.c
+tiger: tiger.o lex.yy.c tokens.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -lfl -o $@ $^
 
-test_tiger: test_tiger.o tiger.o lex.yy.c
+test_tiger: test_tiger.o tiger.o lex.yy.c tokens.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^ -lfl
 
-lex.yy.c: tiger.l
+lex.yy.c: tiger.l tokens.hh
 	lex tiger.l
 
 %.o.cc: %.cc %.hh
