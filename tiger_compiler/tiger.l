@@ -22,5 +22,23 @@ if             { return IF; }
 then           { return THEN; }
 else           { return ELSE; }
 while          { return WHILE; }
+for            { return FOR; }
+to             { return TO; }
+do             { return DO; }
+let            { return LET; }
+in             { return IN; }
+end            { return END; }
+of             { return OF; }
+break          { return BREAK; }
+nil            { return NIL; }
+function       { return FUNCTION; }
+var            { return VAR; }
+type           { return TYPE; }
+import         { return IMPORT; }
+primitive      { return PRIMITIVE; }
+class          { return CLASS; }
+extends        { return EXTENDS; }
+method         { return METHOD; }
+new            { return NEW; }
 .              ;
 %%
