@@ -46,9 +46,14 @@ OR,
 ASSIGN,
 END_OF_LINE,
 COMMENT,
+/* 'int' and 'string' aren't in the specification --
+ * are they just supposed to be identifiers? that
+ * seems kind of weird */
+STRING,
 STRING_LITERAL,
+INTEGER,
 INTEGER_LITERAL,
 SPACE,
-ERORR_ESCAPE,
+ERORR_ESCAPE, // 310
 ERROR_COMMENT,
-IDENTIFIER}; // 309
+IDENTIFIER};

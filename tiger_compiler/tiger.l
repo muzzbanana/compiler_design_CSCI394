@@ -11,7 +11,8 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               EXTENDS, METHOD, NEW, COMMA, COLON, SEMICOLON, OPEN_PAREN, CLOSE_PAREN,
               OPEN_BRACKET, CLOSE_BRACKET, OPEN_CURLY, CLOSE_CURLY, STOP, PLUS, MINUS,
               MULT, DIV, EQUAL, POINTIES, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, AND,
-              OR, ASSIGN, END_OF_LINE, COMMENT, STRING_LITERAL, INTEGER_LITERAL, SPACE};
+              OR, ASSIGN, END_OF_LINE, COMMENT, STRING, STRING_LITERAL, INTEGER,
+              INTEGER_LITERAL, SPACE};
               */
 %}
 %option noyywrap
@@ -19,6 +20,8 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
 %%
 [ \t]+         { return SPACE; }
 array          { return ARRAY; }
+int            { return INTEGER; }
+string         { return STRING; }
 if             { return IF; }
 then           { return THEN; }
 else           { return ELSE; }
