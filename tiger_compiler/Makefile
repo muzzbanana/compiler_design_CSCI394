@@ -12,8 +12,8 @@ all: test_tiger tiger
 tiger: tiger.o lex.yy.o
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger: test_tiger.o tiger.o lex.yy.o
-	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
+test_tiger: test_tiger.o tiger.o lex.yy.c tokens.hh
+	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 lex.yy.c: tiger.l tokens.hh
 	lex tiger.l

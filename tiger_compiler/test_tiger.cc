@@ -303,3 +303,13 @@ TEST_CASE("testing test 3", "[basic-lexing]") {
 
     fclose(myfile);
 }
+
+TEST_CASE("testing nested comments", "[basic-lexing]") {
+    FILE *myfile = fopen("test/nested_comment.tig", "r");
+    yyin = myfile;
+    REQUIRE(yylex() == END_OF_LINE);
+
+REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
