@@ -18,6 +18,7 @@ TEST_CASE("basic lexical specification", "[basic-lexing]") {
     REQUIRE(yylex() == IF);
     REQUIRE(yylex() == SPACE);
     REQUIRE(yylex() == ARRAY);
+    REQUIRE(yylex() == SPACE);
     REQUIRE(yylex() == THEN);
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == SPACE);          // tests tabs
