@@ -309,7 +309,7 @@ TEST_CASE("testing nested comments", "[basic-lexing]") {
     yyin = myfile;
     REQUIRE(yylex() == END_OF_LINE);
 
-REQUIRE(yylex() == 0);
+    REQUIRE(yylex() == 0);
 
     fclose(myfile);
 }
