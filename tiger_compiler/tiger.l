@@ -67,6 +67,8 @@ new            { return NEW; }
 &              { return AND; }
 \|             { return OR; }
 :=             { return ASSIGN; }
+\"	       { return DOUBLE_QUOTE;}
+\\	       { return BACKSLASH;}
 \r\n|\n\r|\n|\r {return END_OF_LINE; }
 \"([^"]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
