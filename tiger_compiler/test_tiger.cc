@@ -92,7 +92,7 @@ TEST_CASE("basic lexical specification", "[basic-lexing]") {
     fclose(myfile);
 }
 
-TEST_CASE("testing test 1", "[lexing]") {
+TEST_CASE("testing test 1", "[basic-lexing]") {
     FILE *myfile = fopen("test/test1.tig", "r");
     yyin = myfile;
     REQUIRE(yylex() == END_OF_LINE);
@@ -159,6 +159,75 @@ TEST_CASE("literals recognized properly", "[basic-lexing]") {
     REQUIRE(yylex() == INTEGER_LITERAL);
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+
+    REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
+
+TEST_CASE("testing test 2", "[basic-lexing]") {
+    FILE *myfile = fopen("test/test2.tig", "r");
+    yyin = myfile;
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == LET);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == TYPE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == OPEN_CURLY);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == STRING);
+    REQUIRE(yylex() == COMMA);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == INTEGER);
+    REQUIRE(yylex() == CLOSE_CURLY);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == VAR);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == ASSIGN);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == OPEN_CURLY);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == COMMA);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == CLOSE_CURLY);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == IN);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == STOP);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == ASSIGN);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == SEMICOLON);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END);
     REQUIRE(yylex() == END_OF_LINE);
 
     REQUIRE(yylex() == 0);
