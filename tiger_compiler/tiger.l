@@ -4,7 +4,7 @@
 //#include "snazzle.tab.h"
 using namespace std;
 #define YY_DECL extern "C" int yylex()
-int line_num = 1;
+int comment_depth = 0;
 /*
 enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               OF, BREAK, NIL, FUNCTION, VAR, TYPE, IMPORT, PRIMITIVE, CLASS,
@@ -15,6 +15,7 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               */
 %}
 %option noyywrap
+%x COMMENT
 %%
 [ \t]          { return SPACE; }
 array          { return ARRAY; }
@@ -77,6 +78,15 @@ new            { return NEW; }
 }
 [A-Za-z][A-Za-z0-9_]*|_main {
     return IDENTIFIER;
+}
+\/\*          { BEGIN(COMMENT); comment_depth = 1; }
+\*\/          { return ERROR_COMMENT; }
+<COMMENT>\/\* { comment_depth ++; }
+<COMMENT>\*\/ {
+    comment_depth --;
+    if (comment_depth == 0) {
+        BEGIN(INITIAL);
+    }
 }
 .              ;
 %%

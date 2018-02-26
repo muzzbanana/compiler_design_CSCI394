@@ -73,6 +73,7 @@ TEST_CASE("basic lexical specification", "[basic-lexing]") {
     REQUIRE(yylex() == PLUS);
     REQUIRE(yylex() == MINUS);
     REQUIRE(yylex() == MULT);
+    REQUIRE(yylex() == SPACE);
     REQUIRE(yylex() == DIV);
     REQUIRE(yylex() == EQUAL);
     REQUIRE(yylex() == POINTIES);
