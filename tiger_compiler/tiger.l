@@ -62,6 +62,18 @@ new            { return NEW; }
 &              { return AND; }
 \|             { return OR; }
 :=             { return ASSIGN; }
-\r\n|\n\r|\n|\r { return END_OF_LINE; }
+\r\n|\n\r|\n|\r {return END_OF_LINE; }
+\"([^"]|\\.)*\" {
+    return STRING_LITERAL;
+}
+[0-9]+ {
+    /* a string literal is a quote, followed by 0 or more repetitions
+       of things that are either (a) not a quote, or (b) \ followed by
+       any character, and then a closing quote */
+    return INTEGER_LITERAL;
+}
+[A-Za-z][A-Za-z0-9_]*|_main {
+    return IDENTIFIER;
+}
 .              ;
 %%
