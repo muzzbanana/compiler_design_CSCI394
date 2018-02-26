@@ -41,6 +41,7 @@ extends        { return EXTENDS; }
 method         { return METHOD; }
 new            { return NEW; }
 ,              { return COMMA; }
+:              { return COLON; }
 ;              { return SEMICOLON; }
 \(             { return OPEN_PAREN; }
 \)             { return CLOSE_PAREN; }
