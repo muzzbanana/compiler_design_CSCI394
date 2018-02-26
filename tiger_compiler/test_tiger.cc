@@ -234,3 +234,72 @@ TEST_CASE("testing test 2", "[basic-lexing]") {
 
     fclose(myfile);
 }
+
+TEST_CASE("testing test 3", "[basic-lexing]") {
+    FILE *myfile = fopen("test/test3.tig", "r");
+    yyin = myfile;
+
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == LET);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == FUNCTION);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == OPEN_PAREN);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER);
+    REQUIRE(yylex() == CLOSE_PAREN);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IF);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == THEN);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == ELSE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == MULT);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == OPEN_PAREN);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == MINUS);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == CLOSE_PAREN);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == IN);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == OPEN_PAREN);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == CLOSE_PAREN);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END);
+    REQUIRE(yylex() == END_OF_LINE);
+
+    REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
