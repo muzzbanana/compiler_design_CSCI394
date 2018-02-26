@@ -139,6 +139,29 @@ TEST_CASE("testing test 1", "[lexing]") {
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == 0);
 
+    REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
+
+TEST_CASE("literals recognized properly", "[basic-lexing]") {
+    FILE *myfile = fopen("test/literaltest.tig", "r");
+    yyin = myfile;
+
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+
+    REQUIRE(yylex() == 0);
 
     fclose(myfile);
 }

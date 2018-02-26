@@ -91,5 +91,6 @@ new            { return NEW; }
         BEGIN(INITIAL);
     }
 }
+<COMMENT>.     ;
 .              ;
 %%
