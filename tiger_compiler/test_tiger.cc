@@ -86,6 +86,58 @@ TEST_CASE("basic lexical specification", "[basic-lexing]") {
     REQUIRE(yylex() == OR);
     REQUIRE(yylex() == ASSIGN);
     REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == 0);
+
+
+    fclose(myfile);
+}
+
+TEST_CASE("testing test 1", "[lexing]") {
+    FILE *myfile = fopen("test/test1.tig", "r");
+    yyin = myfile;
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == LET);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == TYPE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == EQUAL);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == ARRAY);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == OF);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == VAR);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == COLON);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == ASSIGN);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == OPEN_BRACKET);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == CLOSE_BRACKET);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == OF);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == INTEGER_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == IN);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == SPACE);
+    REQUIRE(yylex() == IDENTIFIER);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == END);
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == 0);
 
 
     fclose(myfile);
