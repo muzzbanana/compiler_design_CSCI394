@@ -1,9 +1,7 @@
 
 CXX=g++-7   # Can switch to g++ if desired
-#CC=clang-5.0
 # CXX=g++-6
 CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra
-CFLAGS=-g -Og -Wall -pedantic -Wextra
 #CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra -Werror
 #CXXFLAGS=-O3 -std=c++17 -Wall -pedantic -Wextra -Werror
 LDFLAGS=$(CXXFLAGS) -lfl
@@ -14,19 +12,20 @@ all: test_tiger tiger
 tiger: tiger.o lex.yy.o
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger: test_tiger.o tiger.o lex.yy.o
+test_tiger: test_tiger.o tiger.o lex.yy.c tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-lex.yy.c: tiger.l
-	flex tiger.l
-
-%.o.c: %.c %.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
+lex.yy.c: tiger.l tokens.hh
+	lex tiger.l
 
 %.o.cc: %.cc %.hh
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+lex.yy.o: lex.yy.c
+	$(CXX) $(CXXFLAGS) -c -o lex.yy.o lex.yy.c
+
+%.o.c: %.cc %.hh
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 test: all
 	./test_tiger
