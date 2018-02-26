@@ -17,7 +17,7 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
 %option noyywrap
 %x COMMENT
 %%
-[ \t]          { return SPACE; }
+[ \t]+         { return SPACE; }
 array          { return ARRAY; }
 if             { return IF; }
 then           { return THEN; }
