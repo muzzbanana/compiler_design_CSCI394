@@ -571,6 +571,7 @@ char *yytext;
 //#include "snazzle.tab.h"
 using namespace std;
 #define YY_DECL extern "C" int yylex()
+std::string parse_string(const char *text);
 int comment_depth = 0;
 /*
 enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
@@ -582,7 +583,7 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               INTEGER_LITERAL, SPACE};
               */
 
-#line 586 "lex.yy.c"
+#line 587 "lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -801,9 +802,9 @@ YY_DECL
 		}
 
 	{
-#line 20 "tiger.l"
+#line 21 "tiger.l"
 
-#line 807 "lex.yy.c"
+#line 808 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -862,300 +863,305 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 21 "tiger.l"
+#line 22 "tiger.l"
 { return SPACE; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 22 "tiger.l"
+#line 23 "tiger.l"
 { return ARRAY; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 23 "tiger.l"
+#line 24 "tiger.l"
 { return INTEGER; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 24 "tiger.l"
+#line 25 "tiger.l"
 { return STRING; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 25 "tiger.l"
+#line 26 "tiger.l"
 { return IF; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 26 "tiger.l"
+#line 27 "tiger.l"
 { return THEN; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 27 "tiger.l"
+#line 28 "tiger.l"
 { return ELSE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 28 "tiger.l"
+#line 29 "tiger.l"
 { return WHILE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 29 "tiger.l"
+#line 30 "tiger.l"
 { return FOR; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 30 "tiger.l"
+#line 31 "tiger.l"
 { return TO; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 31 "tiger.l"
+#line 32 "tiger.l"
 { return DO; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 32 "tiger.l"
+#line 33 "tiger.l"
 { return LET; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 33 "tiger.l"
+#line 34 "tiger.l"
 { return IN; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 34 "tiger.l"
+#line 35 "tiger.l"
 { return END; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 35 "tiger.l"
+#line 36 "tiger.l"
 { return OF; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 36 "tiger.l"
+#line 37 "tiger.l"
 { return BREAK; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 37 "tiger.l"
+#line 38 "tiger.l"
 { return NIL; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 38 "tiger.l"
+#line 39 "tiger.l"
 { return FUNCTION; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 39 "tiger.l"
+#line 40 "tiger.l"
 { return VAR; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 40 "tiger.l"
+#line 41 "tiger.l"
 { return TYPE; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 41 "tiger.l"
+#line 42 "tiger.l"
 { return IMPORT; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 42 "tiger.l"
+#line 43 "tiger.l"
 { return PRIMITIVE; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 43 "tiger.l"
+#line 44 "tiger.l"
 { return CLASS; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 44 "tiger.l"
+#line 45 "tiger.l"
 { return EXTENDS; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 45 "tiger.l"
+#line 46 "tiger.l"
 { return METHOD; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 46 "tiger.l"
+#line 47 "tiger.l"
 { return NEW; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 47 "tiger.l"
+#line 48 "tiger.l"
 { return COMMA; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 48 "tiger.l"
+#line 49 "tiger.l"
 { return COLON; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 49 "tiger.l"
+#line 50 "tiger.l"
 { return SEMICOLON; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 50 "tiger.l"
+#line 51 "tiger.l"
 { return OPEN_PAREN; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 51 "tiger.l"
+#line 52 "tiger.l"
 { return CLOSE_PAREN; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 52 "tiger.l"
+#line 53 "tiger.l"
 { return OPEN_BRACKET; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 53 "tiger.l"
+#line 54 "tiger.l"
 { return CLOSE_BRACKET; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 54 "tiger.l"
+#line 55 "tiger.l"
 { return OPEN_CURLY; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 55 "tiger.l"
+#line 56 "tiger.l"
 { return CLOSE_CURLY; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 56 "tiger.l"
+#line 57 "tiger.l"
 { return STOP; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 57 "tiger.l"
+#line 58 "tiger.l"
 { return PLUS; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 58 "tiger.l"
+#line 59 "tiger.l"
 { return MINUS; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 59 "tiger.l"
+#line 60 "tiger.l"
 { return MULT; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 60 "tiger.l"
+#line 61 "tiger.l"
 { return DIV; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 61 "tiger.l"
+#line 62 "tiger.l"
 { return EQUAL; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 62 "tiger.l"
+#line 63 "tiger.l"
 { return POINTIES; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 63 "tiger.l"
+#line 64 "tiger.l"
 { return LESS; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 64 "tiger.l"
+#line 65 "tiger.l"
 { return LESS_EQUAL; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 65 "tiger.l"
+#line 66 "tiger.l"
 { return GREATER; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 66 "tiger.l"
+#line 67 "tiger.l"
 { return GREATER_EQUAL; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 67 "tiger.l"
+#line 68 "tiger.l"
 { return AND; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 68 "tiger.l"
+#line 69 "tiger.l"
 { return OR; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 69 "tiger.l"
-{ return ASSIGN; }
+#line 70 "tiger.l"
+{ return ASSIGN;}
 	YY_BREAK
 case 50:
 /* rule 50 can match eol */
 YY_RULE_SETUP
-#line 70 "tiger.l"
+#line 71 "tiger.l"
 {return END_OF_LINE; }
 	YY_BREAK
 case 51:
 /* rule 51 can match eol */
 YY_RULE_SETUP
-#line 71 "tiger.l"
+#line 72 "tiger.l"
 {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
        any character, and then a closing quote.
        Note: not all backslash-character sequences are valid, but we
        will deal with this somewhere else. */
+    try {
+        std::string result = parse_string(yytext);
+    } catch (std::runtime_error e) {
+        return ERROR_ESCAPE;
+    }
     return STRING_LITERAL;
 }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 79 "tiger.l"
+#line 85 "tiger.l"
 {
     return INTEGER_LITERAL;
 }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 82 "tiger.l"
+#line 88 "tiger.l"
 {
     return IDENTIFIER;
 }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 85 "tiger.l"
+#line 91 "tiger.l"
 { BEGIN(COMMENT); comment_depth = 1; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 86 "tiger.l"
+#line 92 "tiger.l"
 { return ERROR_COMMENT; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 87 "tiger.l"
+#line 93 "tiger.l"
 { comment_depth ++; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 88 "tiger.l"
+#line 94 "tiger.l"
 {
     comment_depth --;
     if (comment_depth == 0) {
@@ -1165,20 +1171,20 @@ YY_RULE_SETUP
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 94 "tiger.l"
+#line 100 "tiger.l"
 ;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 95 "tiger.l"
+#line 101 "tiger.l"
 ;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 96 "tiger.l"
+#line 102 "tiger.l"
 ECHO;
 	YY_BREAK
-#line 1182 "lex.yy.c"
+#line 1188 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 	yyterminate();
@@ -2180,7 +2186,59 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 96 "tiger.l"
+#line 102 "tiger.l"
 
 
+std::string parse_string(const char *text) {
+    /* Parse a string literal into a std::string, replacing escape
+       characters by their proper representations. Throws an exception
+       if an invalid character is found. */
+    bool escape_mode = false;
+    std::string result = "";
+    for (const char *it = text; *it; it++) {
+        const char ch = *it;
+        if (!escape_mode) {
+            if (ch == '\\') {
+                escape_mode = true;
+            } else {
+                // Just put the characters into the string
+                result += ch;
+            }
+        } else {
+            switch(ch) {
+                case 'a':
+                    result += '\a';
+                    break;
+                case 'b':
+                    result += '\b';
+                    break;
+                case 'f':
+                    result += '\f';
+                    break;
+                case 'n':
+                    result += '\n';
+                    break;
+                case 'r':
+                    result += '\r';
+                    break;
+                case 't':
+                    result += '\t';
+                    break;
+                case 'v':
+                    result += '\v';
+                    break;
+                case '"':
+                    result += '"';
+                    break;
+                case '\\':
+                    result += '\\';
+                    break;
+                default:
+                    throw std::runtime_error("error: unknown escape character");
+            }
+            escape_mode = false;
+        }
+    }
+    return result;
+}
 
