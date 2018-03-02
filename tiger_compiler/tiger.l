@@ -71,7 +71,7 @@ new            { return NEW; }
 \|             { return OR; }
 :=             { return ASSIGN;}
 \r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
-\"([^"]|\\.)*\" {
+\"([^"\n]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
        any character, and then a closing quote.
@@ -84,11 +84,11 @@ new            { return NEW; }
     }
     return STRING_LITERAL;
 }
-\"([^"]|\\.)* {
+\"([^"\n]|\\.)* {
     /* if we found this, it can't have matched the previous rule --
        so it must be an error resulting from an unterminated string
        literal */
-    fprintf(stderr, "error: unterminated string literal starting at line %d\n", comment_start_line);
+    fprintf(stderr, "error: unterminated string literal starting at line %d\n", current_line);
     return ERROR_UNTERM_STRING;
 }
 [0-9]+ {
@@ -120,6 +120,7 @@ new            { return NEW; }
        otherwise resetting yyin makes the line number go up
        really high */
     current_line = 1;
+    comment_start_line = -1;
     return 0;
 }
 <COMMENT>.     ;
