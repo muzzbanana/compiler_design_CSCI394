@@ -23,3 +23,7 @@ Tiger lexer
         * some character that isn't a quote
         * or a backslash followed by a single character
     - followed by another double quote.
+
+* Unterminated strings are handled by a second regex, matched after the first string
+  regex, which is identical but missing the last quote. This will only be matched on
+  strings that are missing a second quote mark.

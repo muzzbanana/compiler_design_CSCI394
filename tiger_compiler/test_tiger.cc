@@ -331,7 +331,7 @@ TEST_CASE("testing unterminated comment", "[basic-lexing]") {
 TEST_CASE("testing unterminated literal", "[basic-lexing]") {
     FILE *myfile = fopen("test/unterminated_literal.tig", "r");
     yyin = myfile;
-    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == ERROR_UNTERM_STRING);
 
     REQUIRE(yylex() == 0);
 

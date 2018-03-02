@@ -84,6 +84,13 @@ new            { return NEW; }
     }
     return STRING_LITERAL;
 }
+\"([^"]|\\.)* {
+    /* if we found this, it can't have matched the previous rule --
+       so it must be an error resulting from an unterminated string
+       literal */
+    fprintf(stderr, "error: unterminated string literal starting at line %d\n", comment_start_line);
+    return ERROR_UNTERM_STRING;
+}
 [0-9]+ {
     return INTEGER_LITERAL;
 }
