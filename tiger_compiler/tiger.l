@@ -6,6 +6,8 @@ using namespace std;
 #define YY_DECL extern "C" int yylex()
 std::string parse_string(const char *text);
 int comment_depth = 0;
+int current_line = 1;
+int comment_start_line = -1;
 /*
 enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               OF, BREAK, NIL, FUNCTION, VAR, TYPE, IMPORT, PRIMITIVE, CLASS,
@@ -68,7 +70,7 @@ new            { return NEW; }
 &              { return AND; }
 \|             { return OR; }
 :=             { return ASSIGN;}
-\r\n|\n\r|\n|\r {return END_OF_LINE; }
+\r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
 \"([^"]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
@@ -88,7 +90,7 @@ new            { return NEW; }
 [A-Za-z][A-Za-z0-9_]*|_main {
     return IDENTIFIER;
 }
-\/\*          { BEGIN(COMMENT); comment_depth = 1; }
+\/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
 \*\/          { return ERROR_COMMENT; }
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
@@ -96,6 +98,9 @@ new            { return NEW; }
     if (comment_depth == 0) {
         BEGIN(INITIAL);
     }
+}
+<COMMENT><<EOF>> {
+    fprintf(stderr, "error: unterminated comment starting at line %d\n", comment_start_line);
 }
 <COMMENT>.     ;
 .              ;

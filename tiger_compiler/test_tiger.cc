@@ -154,6 +154,8 @@ TEST_CASE("literals recognized properly", "[basic-lexing]") {
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == STRING_LITERAL);
     REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == STRING_LITERAL);
+    REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == INTEGER_LITERAL);
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == INTEGER_LITERAL);
@@ -308,6 +310,27 @@ TEST_CASE("testing nested comments", "[basic-lexing]") {
     FILE *myfile = fopen("test/nested_comment.tig", "r");
     yyin = myfile;
     REQUIRE(yylex() == END_OF_LINE);
+
+    REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
+
+TEST_CASE("testing unterminated literal", "[basic-lexing]") {
+    FILE *myfile = fopen("test/unterminated_literal.tig", "r");
+    yyin = myfile;
+    REQUIRE(yylex() == END_OF_LINE);
+
+    REQUIRE(yylex() == 0);
+
+    fclose(myfile);
+}
+
+TEST_CASE("testing unterminated comment", "[basic-lexing]") {
+    FILE *myfile = fopen("test/unterminated_comment.tig", "r");
+    yyin = myfile;
+    REQUIRE(yylex() == END_OF_LINE);
+    REQUIRE(yylex() == ERROR_COMMENT);
 
     REQUIRE(yylex() == 0);
 
