@@ -321,7 +321,7 @@ TEST_CASE("testing unterminated comment", "[basic-lexing]") {
     yyin = myfile;
     REQUIRE(yylex() == IDENTIFIER);
     REQUIRE(yylex() == END_OF_LINE);
-    REQUIRE(yylex() == ERROR_COMMENT);
+    REQUIRE(yylex() == ERROR_UNTERM_COMMENT);
 
     REQUIRE(yylex() == 0);
 

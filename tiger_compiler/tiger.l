@@ -113,7 +113,7 @@ new            { return NEW; }
        we don't do this, it gets stuck on the EOF character and
        keeps returning ERROR_COMMENT over and over. */
     BEGIN(INITIAL);
-    return ERROR_COMMENT;
+    return ERROR_UNTERM_COMMENT;
 }
 <<EOF>> {
     /* also, reset the line number to 1 at the end of the file,
