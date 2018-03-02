@@ -17,13 +17,14 @@ Tiger lexer
   if the `*/` has no matching `/*` -- an `ERROR_COMMENT` token is returned.
 
 * Strings are handled as a single token with the regular expression:
-  `\"([^"]|\\.)*\"` -- that is:
+  `\"([^"\n\r]|\\.)*\"` -- that is:
     - a double quote
     - followed by zero or more repetitions of:
-        * some character that isn't a quote
+        * some character that isn't a quote (or a newline)
         * or a backslash followed by a single character
     - followed by another double quote.
 
 * Unterminated strings are handled by a second regex, matched after the first string
   regex, which is identical but missing the last quote. This will only be matched on
-  strings that are missing a second quote mark.
+  strings that are missing a second quote mark, and an `ERROR_UNTERM_STRING` token
+  will be returned.

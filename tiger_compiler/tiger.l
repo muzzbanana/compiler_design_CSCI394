@@ -71,7 +71,7 @@ new            { return NEW; }
 \|             { return OR; }
 :=             { return ASSIGN;}
 \r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
-\"([^"\n]|\\.)*\" {
+\"([^"\n\r]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
        any character, and then a closing quote.
@@ -84,7 +84,7 @@ new            { return NEW; }
     }
     return STRING_LITERAL;
 }
-\"([^"\n]|\\.)* {
+\"([^"\n\r]|\\.)* {
     /* if we found this, it can't have matched the previous rule --
        so it must be an error resulting from an unterminated string
        literal */
