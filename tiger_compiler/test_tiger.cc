@@ -323,6 +323,8 @@ TEST_CASE("testing unterminated comment", "[basic-lexing]") {
     REQUIRE(yylex() == END_OF_LINE);
     REQUIRE(yylex() == ERROR_COMMENT);
 
+    REQUIRE(yylex() == 0);
+
     fclose(myfile);
 }
 

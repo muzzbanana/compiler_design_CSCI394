@@ -101,9 +101,22 @@ new            { return NEW; }
 }
 <COMMENT><<EOF>> {
     fprintf(stderr, "error: unterminated comment starting at line %d\n", comment_start_line);
+    /* switch back into initial mode here, so we still return
+       the end-of-file token (0) after the ERROR_COMMENT. If
+       we don't do this, it gets stuck on the EOF character and
+       keeps returning ERROR_COMMENT over and over. */
+    BEGIN(INITIAL);
+    /* also, reset the line number to 1 at the end of the file,
+       otherwise resetting yyin makes the line number go up
+       really high */
     return ERROR_COMMENT;
 }
+<<EOF>> {
+    current_line = 1;
+    return 0;
+}
 <COMMENT>.     ;
+<COMMENT>\n    ;
 .              ;
 %%
 std::string parse_string(const char *text) {
