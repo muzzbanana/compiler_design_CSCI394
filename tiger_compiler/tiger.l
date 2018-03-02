@@ -101,6 +101,7 @@ new            { return NEW; }
 }
 <COMMENT><<EOF>> {
     fprintf(stderr, "error: unterminated comment starting at line %d\n", comment_start_line);
+    return ERROR_COMMENT;
 }
 <COMMENT>.     ;
 .              ;
