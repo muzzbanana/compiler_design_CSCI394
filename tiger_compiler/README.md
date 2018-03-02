@@ -11,7 +11,7 @@ Tiger lexer
 
 * If the lexer reaches the end of file (`<<EOF>>` token) while still in `<COMMENT>`
   mode, an error is printed out to `stderr` and an `ERROR_UNTERM_COMMENT` token is
-  returned instead of the end-of-file.
+  returned before the end-of-file.
 
 * If a `*/` token is encountered while the lexer is in `<INITIAL>` mode -- that is,
   if the `*/` has no matching `/*` -- an `ERROR_COMMENT` token is returned.
