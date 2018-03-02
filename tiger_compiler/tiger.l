@@ -117,7 +117,7 @@ new            { return NEW; }
 }
 <COMMENT>.     ;
 <COMMENT>\n    ;
-.              ;
+.              { fprintf(stderr, "unknown character: %s\n", yytext); };
 %%
 std::string parse_string(const char *text) {
     /* Parse a string literal into a std::string, replacing escape
