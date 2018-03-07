@@ -40,7 +40,7 @@
 %left '|'
 %left '&'
 
-%nonassoc '='
+%nonassoc '=' '<' LESS_EQUAL '>' GREATER_EQUAL POINTIES
 %left '+' '-'
 %left '*' '/'
 
