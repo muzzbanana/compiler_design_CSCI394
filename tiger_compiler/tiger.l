@@ -47,29 +47,34 @@ class          { return CLASS; }
 extends        { return EXTENDS; }
 method         { return METHOD; }
 new            { return NEW; }
-,              { return COMMA; }
-:              { return COLON; }
-;              { return SEMICOLON; }
-\(             { return OPEN_PAREN; }
-\)             { return CLOSE_PAREN; }
-\[             { return OPEN_BRACKET; }
-\]             { return CLOSE_BRACKET; }
-\{             { return OPEN_CURLY; }
-\}             { return CLOSE_CURLY; }
-\.             { return STOP; }
-\+             { return PLUS; }
--              { return MINUS; }
-\*             { return MULT; }
-\/             { return DIV; }
-=              { return EQUAL; }
+
+/* token-less symbols */
+
+,   |
+:   |
+;   |
+\(  | 
+\)  |
+\[  |
+\]  |
+\{  |
+\}  |
+\.  |
+\+  |
+-   |
+\*  |
+\/  |
+=   |
+\<  |
+\>  |
+\&  |
+\|             { return yytest[0]; }
+
 \<>            { return POINTIES; }
-\<             { return LESS; }
 \<=            { return LESS_EQUAL; }
-\>             { return GREATER; }
 \>=            { return GREATER_EQUAL; }
-&              { return AND; }
-\|             { return OR; }
 :=             { return ASSIGN;}
+
 \r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
 \"([^"\n\r]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
