@@ -48,8 +48,6 @@ extends        { return EXTENDS; }
 method         { return METHOD; }
 new            { return NEW; }
 
-/* token-less symbols */
-
 ,   |
 :   |
 ;   |
@@ -64,16 +62,16 @@ new            { return NEW; }
 \-  |
 \*  |
 \/  |
-=   |
+\=  |
 \<  |
 \>  |
 \&  |
-\|             { return yytest[0]; }
+\|             { return yytext[0]; }
 
 \<>            { return POINTIES; }
 \<=            { return LESS_EQUAL; }
 \>=            { return GREATER_EQUAL; }
-:=             { return ASSIGN;}
+\:=            { return ASSIGN;}
 
 \r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
 \"([^"\n\r]|\\.)*\" {
