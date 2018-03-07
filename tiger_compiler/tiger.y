@@ -4,14 +4,30 @@
 %}
 
 %union {
-    double      d;
-    string      s;
-    int         binop;
+    double              d;
+    string              s;
+    double              binop;
 
-    Program_t*  program;    /* all these will need to be declared in ast.hh */
-    Expr_t*     expr;
-    /* TODO: need to create one for every type */
-
+    /* all these will need to be declared in ast.hh */
+    /* depending on our implementation, we might need all these,
+       certain types might be described using the same union
+       member. we can edit that as we go. */
+    Program_t*          program;
+    Expr_t*             expr;
+    ExprseqOpt_t*       exprseq_opt;
+    ExprlistOpt_t*      exprlist_opt;
+    FieldlistOpt_t*     fieldlist_opt;
+    Exprseq*            exprseq;
+    Fieldlist_t*        fieldlist;
+    Lvalue_t*           lvalue;
+    Declaration_t*      declaration;
+    Decllist_t*         decllist;
+    Typedecl_t*         typedecl;
+    Type_t*             type;
+    TypefieldsOpt_t*    typefields_opt;
+    Typefield_t*        typefield;
+    Vardecl_t*          vardecl;
+    Funcdecl_t*         fundecl;
 }
 
 %token<d> NUMBER
@@ -35,7 +51,7 @@
 %type <exprlist_opt> exprlist_opt
 %type <fieldlist_opt> fieldlist_opt
 %type <exprseq> exprseq
-%type <fieldlsit> fieldlist
+%type <fieldlist> fieldlist
 %type <lvalue> lvalue
 %type <declaration> declaration
 %type <decllist> decllist
@@ -62,7 +78,7 @@ expr: STR {
   } | NAME '(' exprlist_opt ')' {
   } | '(' exprseq_opt ')' {
   } | NAME '{' fieldlist_opt '}' {
-  } | NAME '[' expr ']' OF expr {
+  } | NAME '[' expr ']' OF expr {     /* array */
   } | IF expr THEN expr {
   } | IF expr THEN expr ELSE expr {
   } | WHILE expr DO expr {
