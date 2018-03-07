@@ -4,8 +4,14 @@
 %}
 
 %union {
-    double d;
-    string s;
+    double      d;
+    string      s;
+    int         binop;
+
+    Program_t*  program;    /* all these will need to be declared in ast.hh */
+    Expr_t*     expr;
+    /* TODO: need to create one for every type */
+
 }
 
 %token<d> NUMBER
@@ -13,6 +19,33 @@
 %token<s> NAME
 
 %token ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF BREAK NIL FUNCTION VAR TYPE IMPORT PRIMITIVE CLASS EXTENDS METHOD NEW ASSIGN POINTIES LESS_EQUAL GREATER_EQUAL
+
+%nonassoc ASSIGN
+%left '|'
+%left '&'
+
+%nonassoc '='
+%left '+' '-'
+%left '*' '/'
+
+%type <program> program
+%type <expr> expr
+%type <binop> binop
+%type <exprseq_opt> exprseq_opt
+%type <exprlist_opt> exprlist_opt
+%type <fieldlist_opt> fieldlist_opt
+%type <exprseq> exprseq
+%type <fieldlsit> fieldlist
+%type <lvalue> lvalue
+%type <declaration> declaration
+%type <decllist> decllist
+%type <typedecl> typedecl
+%type <type> type
+%type <typefields_opt> typefields_opt
+%type <typefield>
+%type <vardecl> vardecl
+%type <fundecl> funcdecl>
+
 
 %%
 
@@ -38,19 +71,19 @@ expr: STR {
   } | LET decllist IN exprseq_opt END {
   }
 
-binop: '+' {
-  } | '-' {
-  } | '*' {
-  } | '/' {
-  } | '=' {
-  } | POINTIES {
-  } | '<' {
-  } | '>' {
-  } | LESS_EQUAL {
-  } | GREATER_EQUAL {
-  } | '&' {
-  } | '|' {
-  }
+binop: 
+      '+'             { $$ = '+' }
+    | '-'             { $$ = '-' }
+    | '*'             { $$ = '*' }
+    | '/'             { $$ = '/' }
+    | '='             { $$ = '=' }
+    | POINTIES        { $$ = POINTIES }
+    | '<'             { $$ = '<' }
+    | '>'             { $$ = '>' }
+    | LESS_EQUAL      { $$ = LESS_EQUAL } 
+    | GREATER_EQUAL   { $$ = GREATER_EQUAL }
+    | '&'             { $$ = '&' }
+    | '|'             { $$ = '|' }
 
 exprlist_opt: /* nothing */ {
   } | exprlist {
