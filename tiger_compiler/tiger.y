@@ -1,6 +1,7 @@
 %{
     #include <iostream>
     #include <string>
+    #define YY_DECL extern "C" int yylex()
 %}
 
 %union {
@@ -58,9 +59,9 @@
 %type <typedecl> typedecl
 %type <type> type
 %type <typefields_opt> typefields_opt
-%type <typefield>
+%type <typefield> typefield
 %type <vardecl> vardecl
-%type <fundecl> funcdecl>
+%type <fundecl> funcdecl
 
 
 %%
