@@ -36,7 +36,7 @@ test_tiger: test_tiger.o tiger.o lex.yy.c tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
-	bison -d tiger.y
+	bison -d -v tiger.y
 
 lex.yy.c: tiger.l tokens.hh
 	lex tiger.l

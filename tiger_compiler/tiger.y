@@ -47,7 +47,6 @@
 
 %type <program> program
 %type <expr> expr
-%type <binop> binop
 %type <exprseq_opt> exprseq_opt
 %type <exprlist_opt> exprlist_opt
 %type <fieldlist_opt> fieldlist_opt
@@ -72,9 +71,20 @@ program: expr {
 expr: STR {
   } | NUMBER {
   } | NIL {
-  } | lvalue {
+  /*} | lvalue {*/
   } | '-' expr {
-  } | expr binop expr {
+  } | expr '+' expr {
+  } | expr '-' expr {
+  } | expr '*' expr {
+  } | expr '/' expr {
+  } | expr '=' expr {
+  } | expr POINTIES expr {
+  } | expr '<' expr {
+  } | expr '>' expr {
+  } | expr LESS_EQUAL expr {
+  } | expr GREATER_EQUAL expr {
+  } | expr '&' expr {
+  } | expr '|' expr {
   } | lvalue ASSIGN expr {
   } | NAME '(' exprlist_opt ')' {
   } | '(' exprseq_opt ')' {
@@ -88,7 +98,7 @@ expr: STR {
   } | LET decllist IN exprseq_opt END {
   }
 
-binop: 
+/*binop: 
       '+'             { $$ = '+' }
     | '-'             { $$ = '-' }
     | '*'             { $$ = '*' }
@@ -100,7 +110,7 @@ binop:
     | LESS_EQUAL      { $$ = LESS_EQUAL } 
     | GREATER_EQUAL   { $$ = GREATER_EQUAL }
     | '&'             { $$ = '&' }
-    | '|'             { $$ = '|' }
+    | '|'             { $$ = '|' } */
 
 exprlist_opt: /* nothing */ {
   } | exprlist {
