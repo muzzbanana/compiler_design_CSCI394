@@ -160,6 +160,7 @@ class BinaryASTNode : public ASTNode {
   const std::string rep_;  // String representation of node
 };
 
+
 using PlusASTNode = BinaryASTNode<std::plus>;
 using MinusASTNode = BinaryASTNode<std::minus>;
 using MultASTNode = BinaryASTNode<std::multiplies>;
