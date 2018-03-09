@@ -10,7 +10,7 @@ using namespace tiger;
 
 #define YY_DECL extern "C" int yylex()
 
-extern void yyerror(const char *);
+extern void yyerror(ASTNode::ASTptr *, const char *);
 extern int yylineno;
 std::string parse_string(const char *text);
 
@@ -84,7 +84,7 @@ new            { return NEW; }
     try {
         std::string result = parse_string(yytext);
     } catch (std::runtime_error e) {
-        yyerror("errorL use of illegal escape character in string at line");
+        yyerror(NULL, "errorL use of illegal escape character in string at line");
     }
     return STR;
 }
@@ -92,7 +92,7 @@ new            { return NEW; }
     /* if we found this, it can't have matched the previous rule --
        so it must be an error resulting from an unterminated string
        literal */
-    yyerror("error: unterminated string literal starting at line");
+    yyerror(NULL, "error: unterminated string literal starting at line");
 }
 [0-9]+ {
     return NUMBER;
@@ -101,7 +101,7 @@ new            { return NEW; }
     return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
-\*\/          { yyerror("error: invalid comment syntax at line"); }
+\*\/          { yyerror(NULL, "error: invalid comment syntax at line"); }
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
     comment_depth --;
@@ -116,7 +116,7 @@ new            { return NEW; }
        we don't do this, it gets stuck on the EOF character and
        keeps returning ERROR_COMMENT over and over. */
     BEGIN(INITIAL);
-    yyerror("error: unterminated comment at line");
+    yyerror(NULL, "error: unterminated comment at line");
 }
 <<EOF>> {
     /* also, reset the line number to 1 at the end of the file,
@@ -128,7 +128,7 @@ new            { return NEW; }
 }
 <COMMENT>.     ;
 <COMMENT>\n    ;
-.              { yyerror("error: unknown character at line"); }
+.              { yyerror(NULL, "error: unknown character at line"); }
 
 %%
 

@@ -4,11 +4,13 @@
 #include <string>
 #include "ast.hh"
 //#define YY_DECL extern "C" int yylex()
-extern "C" int yylex(void);
-extern "C" int yylineno;
-void yyerror(const char *);
+
 using namespace tiger;
 using namespace std;
+
+extern "C" int yylex(void);
+extern "C" int yylineno;
+void yyerror(ASTNode::ASTptr *out, const char *);
 %}
 
 %union {
@@ -22,6 +24,8 @@ using namespace std;
     tiger::ASTNode::ASTptr     ast;
     tiger::ASTNode::value_t    val;
 }
+
+%parse-param {tiger::ASTNode::ASTptr *out}
 
 %token<d> NUMBER
 %token<s> STR
@@ -65,6 +69,7 @@ using namespace std;
 %%
 
 program: expr {
+       *out = $$;
   }
 
 expr: STR {
@@ -198,6 +203,6 @@ funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
 
 %%
 
-void yyerror(const char *error) {
+void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
     cout << error << " " << yylineno << endl;
 }

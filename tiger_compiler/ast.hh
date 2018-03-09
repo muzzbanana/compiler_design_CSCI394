@@ -12,9 +12,8 @@
 #include <string>
 #include <cmath>
 
-
 /* interface to the lexer */
-void yyerror(char *s, ...);
+//void yyerror(tiger::ASTNode::ASTptr *out, char *s, ...);
 
 namespace tiger {
 
@@ -116,8 +115,8 @@ class UnaryASTNode : public ASTNode {
   }
 
  private:
-  const ASTptr child_;
   const std::string rep_;  // String representation of node
+  const ASTptr child_;
 };
 
 // Example usage of UnaryASTNode:
@@ -166,8 +165,8 @@ class BinaryASTNode : public ASTNode {
   }
 
  private:
-  const ASTptr left_, right_;
   const std::string rep1_, rep2_;  // String representation of node
+  const ASTptr left_, right_;
 };
 
 
@@ -208,7 +207,7 @@ class TertiaryASTNode : public ASTNode {
   value_t eval() const
   {
     auto op = O<value_t>();
-    return op(left_->eval(), right_->eval());
+    return op(left_, middle_, right_);
   }
 
   virtual std::string toStr() const
@@ -229,8 +228,8 @@ class TertiaryASTNode : public ASTNode {
   }
 
  private:
-  const ASTptr left_, right_, middle_;
   const std::string rep1_, rep2_, rep3_;  // String representation of node
+  const ASTptr left_, middle_, right_;
 };
 
 template <typename Z>
@@ -241,10 +240,12 @@ class IfThenElse {
                 return middle_->eval();
             } else if (right_ != NULL) {
                 return right_->eval();
+            } else {
+                return -1; /// FIX ME
             }
         }
 };
 
-using ConditionalASTNode = BinaryASTNode<IfThenElse>;
+using ConditionalASTNode = TertiaryASTNode<IfThenElse>;
 
 } // namespace
