@@ -1,12 +1,12 @@
 %{
-    #include <iostream>
-    #include <string>
-    #define YY_DECL extern "C" int yylex()
+#include <iostream>
+#include <string>
+#define YY_DECL extern "C" int yylex()
 %}
 
 %union {
     double              d;
-    string              s;
+    std::string         s;
     double              binop;
 
     /* all these will need to be declared in ast.hh */
@@ -183,3 +183,5 @@ vardecl: VAR NAME ASSIGN expr {
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
   }
+
+%%

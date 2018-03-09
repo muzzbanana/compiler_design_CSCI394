@@ -1,6 +1,7 @@
 %{
 #include <iostream>
-#include "tokens.hh"
+//#include "tokens.hh"
+#include "y.tab.h"
 //#include "snazzle.tab.h"
 using namespace std;
 #define YY_DECL extern "C" int yylex()
@@ -98,7 +99,7 @@ new            { return NEW; }
     return INTEGER_LITERAL;
 }
 [A-Za-z][A-Za-z0-9_]*|_main {
-    return IDENTIFIER;
+    return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
 \*\/          { return ERROR_COMMENT; }

@@ -29,10 +29,10 @@ LIBS=
 
 all: test_tiger tiger
 
-tiger: tiger.o lex.yy.o tiger.tab.o
+tiger: tiger.o tiger.tab.o lex.yy.o
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger: test_tiger.o tiger.o lex.yy.c tokens.hh
+test_tiger: test_tiger.o tiger.o tiger.tab.o lex.yy.o tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
@@ -46,6 +46,9 @@ lex.yy.c: tiger.l tokens.hh
 
 lex.yy.o: lex.yy.c
 	$(CXX) $(CXXFLAGS) -c -o lex.yy.o lex.yy.c
+
+tiger.tab.o: tiger.tab.c
+	$(CXX) $(CXXFLAGS) -c -o tiger.tab.o tiger.tab.c
 
 %.o.c: %.cc %.hh
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
