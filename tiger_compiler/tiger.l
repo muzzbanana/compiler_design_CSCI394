@@ -4,10 +4,10 @@
 #include "ast.hh"
 #include "tiger.tab.h"
 //#include "snazzle.tab.h"
-
 using namespace std;
 using namespace tiger;
 #define YY_DECL extern "C" int yylex()
+extern "C" void yyerror(const char*)
 std::string parse_string(const char *text);
 int comment_depth = 0;
 int current_line = 1;
@@ -85,7 +85,7 @@ new            { return NEW; }
     try {
         std::string result = parse_string(yytext);
     } catch (std::runtime_error e) {
-        return ERROR_ESCAPE;
+        yyerror((char*)"you are using an illegal excape character");
     }
     return STR;
 }
@@ -93,8 +93,8 @@ new            { return NEW; }
     /* if we found this, it can't have matched the previous rule --
        so it must be an error resulting from an unterminated string
        literal */
-    fprintf(stderr, "error: unterminated string literal starting at line %d\n", current_line);
-    return ERROR_UNTERM_STRING;
+    yyerror((char*)"error: unterminated string literal starting at line %d\n", current_line);
+    yyerror((char*)"you have an unterminated string");;
 }
 [0-9]+ {
     return NUMBER;
@@ -103,7 +103,7 @@ new            { return NEW; }
     return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
-\*\/          { return ERROR_COMMENT; }
+\*\/          { yyerror((char*)"you are closing an unopened comment"); }
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
     comment_depth --;
@@ -118,7 +118,7 @@ new            { return NEW; }
        we don't do this, it gets stuck on the EOF character and
        keeps returning ERROR_COMMENT over and over. */
     BEGIN(INITIAL);
-    return ERROR_UNTERM_COMMENT;
+    yyerror((char*)"you have an unterminated comment");
 }
 <<EOF>> {
     /* also, reset the line number to 1 at the end of the file,
@@ -130,7 +130,7 @@ new            { return NEW; }
 }
 <COMMENT>.     ;
 <COMMENT>\n    ;
-.              { fprintf(stderr, "unknown character: %s\n", yytext); };
+.              { yyerror((char*)"unknown character");};
 %%
 std::string parse_string(const char *text) {
     /* Parse a string literal into a std::string, replacing escape
