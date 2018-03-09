@@ -144,8 +144,12 @@ fieldlist: NAME '=' expr {
   }
 
 lvalue: NAME {
-  } | lvalue '.' NAME {
-  } | lvalue '[' expr ']' {
+  } | lvalue_not_id {
+  } 
+
+lvalue_not_id: lvalue '.' NAME {
+  } | NAME '[' expr ']' {
+  } | lvalue_not_id '[' expr ']' {
   }
 
 decllist: declaration {
