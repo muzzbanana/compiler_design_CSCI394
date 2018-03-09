@@ -104,7 +104,9 @@ expr: STR {
   } | NAME '{' fieldlist_opt '}' {
   } | NAME '[' expr ']' OF expr {     /* array */
   } | IF expr THEN expr {
+        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, NULL);
   } | IF expr THEN expr ELSE expr {
+        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, $6);
   } | WHILE expr DO expr {
   } | FOR NAME ASSIGN expr TO expr DO expr {
   } | BREAK {

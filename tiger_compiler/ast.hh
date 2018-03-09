@@ -133,7 +133,11 @@ template <template <typename> class O>
 class BinaryASTNode : public ASTNode {
  public:
   BinaryASTNode(std::string rep, ASTptr left, ASTptr right)
-   : ASTNode(), rep_(rep), left_(left), right_(right)
+   : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right)
+  {}
+
+  BinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
   {}
 
   virtual ~BinaryASTNode()
@@ -150,14 +154,20 @@ class BinaryASTNode : public ASTNode {
 
   virtual std::string toStr() const
   {
-    return  "(" + left_->toStr() +
-      " " + rep_ + " " +
-      right_->toStr() + ")";
+      if (rep1_.length() == 0) {
+        return  "(" + left_->toStr() +
+          " " + rep2_ + " " +
+          right_->toStr() + ")";
+      } else {
+        return  "(" + rep1_ + " " + left_->toStr() +
+          " " + rep2_ + " " +
+          right_->toStr() + ")";
+      }
   }
 
  private:
   const ASTptr left_, right_;
-  const std::string rep_;  // String representation of node
+  const std::string rep1_, rep2_;  // String representation of node
 };
 
 
@@ -173,5 +183,68 @@ using LessEqualASTNode = BinaryASTNode<std::less_equal>;
 using GreaterEqualASTNode = BinaryASTNode<std::greater_equal>;
 using LogicalAndASTNode = BinaryASTNode<std::logical_and>;
 using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
+
+//////////////////////////////////////////////////////////////////////////////
+// A node type for tertiary operators.
+// (i.e. if-then-else)
+template <template <typename> class O>
+class TertiaryASTNode : public ASTNode {
+ public:
+  TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
+          ASTptr left, ASTptr middle, ASTptr right)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), middle_(middle), right_(right)
+  {}
+
+  TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), left_(left), middle_(middle), right_(right)
+  {}
+
+  virtual ~TertiaryASTNode()
+  {
+    delete left_;
+    delete right_;
+  }
+
+  value_t eval() const
+  {
+    auto op = O<value_t>();
+    return op(left_->eval(), right_->eval());
+  }
+
+  virtual std::string toStr() const
+  {
+      if (right_ != NULL) {
+          return  "(" + rep1_ +
+              " " + left_->toStr() +
+              " " + rep2_ +
+              " " + middle_->toStr() +
+              " " + rep3_ +
+              right_->toStr() + ")";
+      } else {
+          return  "(" + rep1_ +
+              " " + left_->toStr() +
+              " " + rep2_ +
+              " " + middle_->toStr() + ")";
+      }
+  }
+
+ private:
+  const ASTptr left_, right_, middle_;
+  const std::string rep1_, rep2_, rep3_;  // String representation of node
+};
+
+template <typename Z>
+class IfThenElse {
+    public:
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            if (left_->eval()) {
+                return middle_->eval();
+            } else if (right_ != NULL) {
+                return right_->eval();
+            }
+        }
+};
+
+using ConditionalASTNode = BinaryASTNode<IfThenElse>;
 
 } // namespace
