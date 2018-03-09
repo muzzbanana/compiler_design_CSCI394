@@ -4,26 +4,24 @@
 #include "ast.hh"
 #include "tiger.tab.h"
 //#include "snazzle.tab.h"
+
 using namespace std;
 using namespace tiger;
+
 #define YY_DECL extern "C" int yylex()
-extern "C" void yyerror(const char*)
+
+extern void yyerror(const char *);
 std::string parse_string(const char *text);
+
 int comment_depth = 0;
 int current_line = 1;
 int comment_start_line = -1;
-/*
-enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
-              OF, BREAK, NIL, FUNCTION, VAR, TYPE, IMPORT, PRIMITIVE, CLASS,
-              EXTENDS, METHOD, NEW, COMMA, COLON, SEMICOLON, OPEN_PAREN, CLOSE_PAREN,
-              OPEN_BRACKET, CLOSE_BRACKET, OPEN_CURLY, CLOSE_CURLY, STOP, PLUS, MINUS,
-              MULT, DIV, EQUAL, POINTIES, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, AND,
-              OR, ASSIGN, END_OF_LINE, COMMENT, STRING, STRING_LITERAL, INTEGER,
-              INTEGER_LITERAL, SPACE};
-              */
 %}
+
 %option noyywrap nodefault yylineno
+
 %x COMMENT
+
 %%
 [ \t]+         ;
 array          { return ARRAY; }
@@ -85,7 +83,7 @@ new            { return NEW; }
     try {
         std::string result = parse_string(yytext);
     } catch (std::runtime_error e) {
-        yyerror((char*)"you are using an illegal excape character");
+        yyerror("you are using an illegal excape character");
     }
     return STR;
 }
@@ -93,8 +91,8 @@ new            { return NEW; }
     /* if we found this, it can't have matched the previous rule --
        so it must be an error resulting from an unterminated string
        literal */
-    yyerror((char*)"error: unterminated string literal starting at line %d\n", current_line);
-    yyerror((char*)"you have an unterminated string");;
+    yyerror("error: unterminated string literal starting at line something");
+    yyerror("you have an unterminated string");
 }
 [0-9]+ {
     return NUMBER;
@@ -103,7 +101,7 @@ new            { return NEW; }
     return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
-\*\/          { yyerror((char*)"you are closing an unopened comment"); }
+\*\/          { yyerror("you are closing an unopened comment"); }
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
     comment_depth --;
@@ -118,7 +116,7 @@ new            { return NEW; }
        we don't do this, it gets stuck on the EOF character and
        keeps returning ERROR_COMMENT over and over. */
     BEGIN(INITIAL);
-    yyerror((char*)"you have an unterminated comment");
+    yyerror("you have an unterminated comment");
 }
 <<EOF>> {
     /* also, reset the line number to 1 at the end of the file,
@@ -130,7 +128,7 @@ new            { return NEW; }
 }
 <COMMENT>.     ;
 <COMMENT>\n    ;
-.              { yyerror((char*)"unknown character"); }
+.              { yyerror("unknown character"); }
 
 %%
 

@@ -2,12 +2,13 @@
 #include <iostream>
 #include <string>
 #include "ast.hh"
-#define YY_DECL extern "C" int yylex()
+//#define YY_DECL extern "C" int yylex()
 
-int yylex(void);
+extern "C" int yylex(void);
 void yyerror(const char *);
 
 using namespace tiger;
+using namespace std;
 %}
 
 %union {
@@ -194,3 +195,7 @@ funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
   }
 
 %%
+
+void yyerror(const char *error) {
+    cout << error << endl;
+}
