@@ -37,11 +37,18 @@
 
 %token ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF BREAK NIL FUNCTION VAR TYPE IMPORT PRIMITIVE CLASS EXTENDS METHOD NEW ASSIGN POINTIES LESS_EQUAL GREATER_EQUAL
 
-%nonassoc ASSIGN
+%precedence DO
+%precedence OF
+%precedence THEN
+%precedence ELSE
+
+%right ASSIGN
 %left '|'
 %left '&'
 
 %nonassoc '=' '<' LESS_EQUAL '>' GREATER_EQUAL POINTIES
+
+%nonassoc '['
 %left '+' '-'
 %left '*' '/'
 
@@ -71,7 +78,7 @@ program: expr {
 expr: STR {
   } | NUMBER {
   } | NIL {
-  /*} | lvalue {*/
+  } | lvalue {
   } | '-' expr {
   } | expr '+' expr {
   } | expr '-' expr {
