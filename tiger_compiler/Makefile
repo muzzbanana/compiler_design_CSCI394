@@ -10,7 +10,7 @@ LIBS=
 
 all: test_tiger tiger
 
-tiger: tiger.o tiger.tab.o lex.yy.o
+tiger: tiger.o tiger.tab.o lex.yy.o ast.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
 test_tiger: test_tiger.o tiger.o tiger.tab.o lex.yy.o tokens.hh

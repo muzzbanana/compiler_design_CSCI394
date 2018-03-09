@@ -1,9 +1,12 @@
 %{
 #include <iostream>
 //#include "tokens.hh"
-#include "y.tab.h"
+#include "ast.hh"
+#include "tiger.tab.h"
 //#include "snazzle.tab.h"
+
 using namespace std;
+using namespace tiger;
 #define YY_DECL extern "C" int yylex()
 std::string parse_string(const char *text);
 int comment_depth = 0;
@@ -19,13 +22,11 @@ enum _Tokens {ARRAY = 257, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN, END,
               INTEGER_LITERAL, SPACE};
               */
 %}
-%option noyywrap
+%option noyywrap nodefault yylineno
 %x COMMENT
 %%
-[ \t]+         { return SPACE; }
+[ \t]+         ;
 array          { return ARRAY; }
-int            { return INTEGER; }
-string         { return STRING; }
 if             { return IF; }
 then           { return THEN; }
 else           { return ELSE; }
@@ -74,7 +75,7 @@ new            { return NEW; }
 \>=            { return GREATER_EQUAL; }
 \:=            { return ASSIGN;}
 
-\r\n|\n\r|\n|\r { current_line++; return END_OF_LINE; }
+\r\n|\n\r|\n|\r { current_line++; }
 \"([^"\n\r]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
@@ -86,7 +87,7 @@ new            { return NEW; }
     } catch (std::runtime_error e) {
         return ERROR_ESCAPE;
     }
-    return STRING_LITERAL;
+    return STR;
 }
 \"([^"\n\r]|\\.)* {
     /* if we found this, it can't have matched the previous rule --
@@ -96,7 +97,7 @@ new            { return NEW; }
     return ERROR_UNTERM_STRING;
 }
 [0-9]+ {
-    return INTEGER_LITERAL;
+    return NUMBER;
 }
 [A-Za-z][A-Za-z0-9_]*|_main {
     return NAME;

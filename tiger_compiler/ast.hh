@@ -164,5 +164,13 @@ using PlusASTNode = BinaryASTNode<std::plus>;
 using MinusASTNode = BinaryASTNode<std::minus>;
 using MultASTNode = BinaryASTNode<std::multiplies>;
 using DivASTNode = BinaryASTNode<std::divides>;
+using EqualASTNode = BinaryASTNode<std::equal_to>;
+using NotEqualASTNode = BinaryASTNode<std::not_equal_to>;
+using GreaterASTNode = BinaryASTNode<std::greater>;
+using LessASTNode = BinaryASTNode<std::less>;
+using LessEqualASTNode = BinaryASTNode<std::less_equal>;
+using GreaterEqualASTNode = BinaryASTNode<std::greater_equal>;
+using LogicalAndASTNode = BinaryASTNode<std::logical_and>;
+using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
 
 } // namespace

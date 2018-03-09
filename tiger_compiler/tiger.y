@@ -1,37 +1,26 @@
 %{
 #include <iostream>
 #include <string>
+#include "ast.hh"
 #define YY_DECL extern "C" int yylex()
 
 int yylex(void);
 void yyerror(const char *);
+
+using namespace tiger;
 %}
 
 %union {
     double              d;
-    char*               s; /* we can't use a std::string, ask Eitan */
+    char*               str; /* we can't use a std::string, ask Eitan */
     double              binop;
 
     /* all these will need to be declared in ast.hh */
     /* depending on our implementation, we might need all these,
        certain types might be described using the same union
        member. we can edit that as we go. */
-    Program_t*          program;
-    Expr_t*             expr;
-    ExprseqOpt_t*       exprseq_opt;
-    ExprlistOpt_t*      exprlist_opt;
-    FieldlistOpt_t*     fieldlist_opt;
-    Exprseq*            exprseq;
-    Fieldlist_t*        fieldlist;
-    Lvalue_t*           lvalue;
-    Declaration_t*      declaration;
-    Decllist_t*         decllist;
-    Typedecl_t*         typedecl;
-    Type_t*             type;
-    TypefieldsOpt_t*    typefields_opt;
-    Typefield_t*        typefield;
-    Vardecl_t*          vardecl;
-    Funcdecl_t*         fundecl;
+    ASTNode::ASTptr     ast;
+    ASTNode::value_t    val;
 }
 
 %token<d> NUMBER
@@ -55,22 +44,22 @@ void yyerror(const char *);
 %left '+' '-'
 %left '*' '/'
 
-%type <program> program
-%type <expr> expr
-%type <exprseq_opt> exprseq_opt
-%type <exprlist_opt> exprlist_opt
-%type <fieldlist_opt> fieldlist_opt
-%type <exprseq> exprseq
-%type <fieldlist> fieldlist
-%type <lvalue> lvalue
-%type <declaration> declaration
-%type <decllist> decllist
-%type <typedecl> typedecl
-%type <type> type
-%type <typefields_opt> typefields_opt
-%type <typefield> typefield
-%type <vardecl> vardecl
-%type <fundecl> funcdecl
+%type <ast> program
+%type <ast> expr
+%type <ast> exprseq_opt
+%type <ast> exprlist_opt
+%type <ast> fieldlist_opt
+%type <ast> exprseq
+%type <ast> fieldlist
+%type <ast> lvalue
+%type <ast> declaration
+%type <ast> decllist
+%type <ast> typedecl
+%type <ast> type
+%type <ast> typefields_opt
+%type <ast> typefield
+%type <ast> vardecl
+%type <ast> funcdecl
 
 
 %%
@@ -82,19 +71,33 @@ expr: STR {
   } | NUMBER {
   } | NIL {
   } | lvalue {
+
   } | '-' expr {
+        $$ = new UnaryMinusASTNode("-", $2);
   } | expr '+' expr {
+        $$ = new PlusASTNode("+", $1, $3);
   } | expr '-' expr {
+        $$ = new MinusASTNode("-", $1, $3);
   } | expr '*' expr {
+        $$ = new MultASTNode("*", $1, $3);
   } | expr '/' expr {
+        $$ = new DivASTNode("/", $1, $3);
   } | expr '=' expr {
+        $$ = new EqualASTNode("=", $1, $3);
   } | expr POINTIES expr {
+        $$ = new NotEqualASTNode("<>", $1, $3);
   } | expr '<' expr {
+        $$ = new LessASTNode("<", $1, $3);
   } | expr '>' expr {
+        $$ = new GreaterASTNode(">", $1, $3);
   } | expr LESS_EQUAL expr {
+        $$ = new LessEqualASTNode("<=", $1, $3);
   } | expr GREATER_EQUAL expr {
+        $$ = new GreaterEqualASTNode(">=", $1, $3);
   } | expr '&' expr {
+        $$ = new LogicalAndASTNode("&", $1, $3);
   } | expr '|' expr {
+        $$ = new LogicalOrASTNode("|", $1, $3);
   } | lvalue ASSIGN expr {
   } | NAME '(' exprlist_opt ')' {
   } | '(' exprseq_opt ')' {
