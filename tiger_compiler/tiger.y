@@ -13,14 +13,13 @@ using namespace tiger;
 %union {
     double              d;
     char*               str; /* we can't use a std::string, ask Eitan */
-    double              binop;
 
     /* all these will need to be declared in ast.hh */
     /* depending on our implementation, we might need all these,
        certain types might be described using the same union
        member. we can edit that as we go. */
-    ASTNode::ASTptr     ast;
-    ASTNode::value_t    val;
+    tiger::ASTNode::ASTptr     ast;
+    tiger::ASTNode::value_t    val;
 }
 
 %token<d> NUMBER
@@ -111,7 +110,7 @@ expr: STR {
   } | LET decllist IN exprseq_opt END {
   }
 
-/*binop: 
+/*binop:
       '+'             { $$ = '+' }
     | '-'             { $$ = '-' }
     | '*'             { $$ = '*' }
@@ -120,7 +119,7 @@ expr: STR {
     | POINTIES        { $$ = POINTIES }
     | '<'             { $$ = '<' }
     | '>'             { $$ = '>' }
-    | LESS_EQUAL      { $$ = LESS_EQUAL } 
+    | LESS_EQUAL      { $$ = LESS_EQUAL }
     | GREATER_EQUAL   { $$ = GREATER_EQUAL }
     | '&'             { $$ = '&' }
     | '|'             { $$ = '|' } */
@@ -151,7 +150,7 @@ fieldlist: NAME '=' expr {
 
 lvalue: NAME {
   } | lvalue_not_id {
-  } 
+  }
 
 lvalue_not_id: lvalue '.' NAME {
   } | NAME '[' expr ']' {
