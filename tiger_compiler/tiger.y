@@ -2,11 +2,14 @@
 #include <iostream>
 #include <string>
 #define YY_DECL extern "C" int yylex()
+
+int yylex(void);
+void yyerror(const char *);
 %}
 
 %union {
     double              d;
-    std::string         s;
+    char*               s; /* we can't use a std::string, ask Eitan */
     double              binop;
 
     /* all these will need to be declared in ast.hh */
