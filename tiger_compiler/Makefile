@@ -19,10 +19,10 @@ parse: test_tiger_parse
 tiger: tiger.o tiger.tab.o tiger.tab.h lex.yy.o ast.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger_lex: test_tiger_lex.o tiger.o tiger.tab.o lex.yy.o tokens.hh
+test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-test_tiger_parse: test_tiger_parse.o tiger.o tiger.tab.o lex.yy.o tokens.hh
+test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
