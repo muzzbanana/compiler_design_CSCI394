@@ -8,12 +8,21 @@ LDFLAGS=$(CXXFLAGS) -lfl
 LIBS=
 
 
-all: test_tiger tiger
+all: test_tiger_lex test_tiger_parse tiger
 
-tiger: tiger.o tiger.tab.o lex.yy.o ast.hh
+lex: test_tiger_lex
+	./test_tiger_lex
+
+parse: test_tiger_parse
+	./test_tiger_parse
+
+tiger: tiger.o tiger.tab.o tiger.tab.h lex.yy.o ast.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger: test_tiger.o tiger.o tiger.tab.o lex.yy.o tokens.hh
+test_tiger_lex: test_tiger_lex.o tiger.o tiger.tab.o lex.yy.o tokens.hh
+	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
+
+test_tiger_parse: test_tiger_parse.o tiger.o tiger.tab.o lex.yy.o tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
@@ -35,7 +44,8 @@ tiger.tab.o: tiger.tab.c
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 test: all
-	./test_tiger
+	./test_tiger_lex
+	./test_tiger_parse
 
 clean:
 	rm -f *.o tiger test_tiger lex.yy.c tiger.tab.c tiger.tab.h

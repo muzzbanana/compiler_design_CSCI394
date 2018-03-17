@@ -8,6 +8,7 @@
  * Declarations for a calculator fb3-1
  */
 
+#include <iostream>
 #include <functional>
 #include <string>
 #include <cmath>

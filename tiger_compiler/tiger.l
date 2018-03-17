@@ -95,6 +95,7 @@ new            { return NEW; }
     yyerror(NULL, "error: unterminated string literal starting at line");
 }
 [0-9]+ {
+    yylval.d = atof(yytext);
     return NUMBER;
 }
 [A-Za-z][A-Za-z0-9_]*|_main {

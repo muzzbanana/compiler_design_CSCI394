@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "ast.hh"
 #include "catch.hpp"
-#include "tokens.hh"
+#include "tiger.tab.h"
 
 #include <limits.h>
 #include <cstdlib>
@@ -9,7 +9,7 @@
 
 using namespace tiger;
 
-extern "C" int yyparse(ASTNode::ASTptr *out);
+int yyparse(ASTNode::ASTptr *out);
 extern FILE *yyin;
 
 TEST_CASE("basic parsing", "[basic-parsing]") {
@@ -17,4 +17,7 @@ TEST_CASE("basic parsing", "[basic-parsing]") {
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
 }

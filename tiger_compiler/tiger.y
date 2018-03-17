@@ -74,6 +74,7 @@ program: expr {
 
 expr: STR {
   } | NUMBER {
+        $$ = new NumASTNode($1);
   } | NIL {
   } | lvalue {
 
