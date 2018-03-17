@@ -44,3 +44,14 @@ TEST_CASE("for parsing", "[basic-parsing]") {
     std::cout << output->toStr() << std::endl;
     REQUIRE(output->toStr() == "(for (i := 0) do (10) )");
 }
+
+TEST_CASE("var decl parsing", "[basic-parsing]") {
+    FILE *myfile = fopen("test/vardecltest.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
+    REQUIRE(output->toStr() == "(var b := 100.000000)");
+}
