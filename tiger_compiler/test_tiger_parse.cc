@@ -21,6 +21,7 @@ TEST_CASE("if then parsing", "[basic-parsing]") {
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
     REQUIRE(output->eval() == 39);
+    delete output;
 }
 
 TEST_CASE("while parsing", "[basic-parsing]") {
@@ -32,6 +33,7 @@ TEST_CASE("while parsing", "[basic-parsing]") {
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
     REQUIRE(output->toStr() == "(while 1.000000 do 10.000000");
+    delete output;
 }
 
 TEST_CASE("for parsing", "[basic-parsing]") {
@@ -43,6 +45,7 @@ TEST_CASE("for parsing", "[basic-parsing]") {
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
     REQUIRE(output->toStr() == "(for i := 0.000000 do 10.000000)");
+    delete output;
 }
 
 TEST_CASE("var decl parsing", "[basic-parsing]") {
@@ -54,4 +57,5 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
     REQUIRE(output->toStr() == "(var b := 100.000000)");
+    delete output;
 }
