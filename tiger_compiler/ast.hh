@@ -108,6 +108,9 @@ class NameASTNode : public ASTNode {
   {}
   virtual ~NameASTNode() = default;
 
+  value_t eval() const {
+      return -1; /// FIX ME
+  }
 
   virtual std::string toStr() const
   {
@@ -247,6 +250,55 @@ using GreaterEqualASTNode = BinaryASTNode<std::greater_equal>;
 using LogicalAndASTNode = BinaryASTNode<std::logical_and>;
 using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
 
+
+///////////////////////////////////////////////////////////////////////////////
+// A node type for things that have two children but don't evaluate before
+// they get called (e.g. while loops)
+// It's templated by another class O for the operator. Any instance of O has an
+// operator() that takes two values of type value_t and returns another value
+// of type value_t.
+// See for example: http://en.cppreference.com/w/cpp/utility/functional/plus
+template <template <typename> class O>
+class NonEvalBinaryASTNode : public ASTNode {
+ public:
+  NonEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right)
+   : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right)
+  {}
+
+  NonEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
+  {}
+
+  virtual ~NonEvalBinaryASTNode()
+  {
+    delete left_;
+    delete right_;
+  }
+
+  value_t eval() const
+  {
+    auto op = O<value_t>();
+    return op(left_, right_);
+  }
+
+  virtual std::string toStr() const
+  {
+      if (rep1_.length() == 0) {
+        return  "(" + left_->toStr() +
+          " " + rep2_ + " " +
+          right_->toStr() + ")";
+      } else {
+        return  "(" + rep1_ + " " + left_->toStr() +
+          " " + rep2_ + " " +
+          right_->toStr() + ")";
+      }
+  }
+
+ private:
+  const std::string rep1_, rep2_;  // String representation of node
+  const ASTptr left_, right_;
+};
+
 //////////////////////////////////////////////////////////////////////////////
 // A node type for tertiary operators.
 // (i.e. if-then-else)
@@ -297,6 +349,50 @@ class TertiaryASTNode : public ASTNode {
   const ASTptr left_, middle_, right_;
 };
 
+
+//////////////////////////////////////////////////////////////////////////////
+// A node type for tertiary operators.
+// (i.e. if-then-else)
+template <template <typename> class O>
+class QuaternaryASTNode : public ASTNode {
+ public:
+  QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
+          ASTptr one, ASTptr two, ASTptr three, ASTptr four)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4),
+     one_(one), two_(two), three_(three), four_(four)
+  {}
+
+  virtual ~QuaternaryASTNode()
+  {
+    delete one_;
+    delete two_;
+    delete three_;
+    delete four_;
+  }
+
+  value_t eval() const
+  {
+    auto op = O<value_t>();
+    return op(one_, two_, three_, four_);
+  }
+
+  virtual std::string toStr() const
+  {
+      return  "(" + rep1_ +
+          " " + one_->toStr() +
+          " " + rep2_ +
+          " " + two_->toStr() +
+          " " + rep3_ +
+          " " + three_->toStr() +
+          " " + rep4_ +
+          " " + four_->toStr() + ")";
+  }
+
+ private:
+  const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
+  const ASTptr one_, two_, three_, four_;
+};
+
 template <typename Z>
 class IfThenElse {
     public:
@@ -323,8 +419,19 @@ class WhileDo {
             }
             return result;
         }
-}
+};
 
-using WhileLoopASTNode = BinaryASTNode<WhileDo>;
+using WhileLoopASTNode = NonEvalBinaryASTNode<WhileDo>;
+
+template <typename Z>
+class ForTo {
+    public:
+        // TODO this is not actually right, we don't have binding yet?
+        Z operator() (ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            return -1;
+        }
+};
+
+using ForLoopASTNode = QuaternaryASTNode<ForTo>;
 
 } // namespace

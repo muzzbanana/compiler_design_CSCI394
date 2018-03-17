@@ -28,8 +28,8 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 %parse-param {tiger::ASTNode::ASTptr *out}
 
 %token<d> NUMBER
-%token<s> STR
-%token<s> NAME
+%token<str> STR
+%token<str> NAME
 
 %token ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF BREAK NIL FUNCTION VAR TYPE IMPORT PRIMITIVE CLASS EXTENDS METHOD NEW ASSIGN POINTIES LESS_EQUAL GREATER_EQUAL
 
@@ -56,6 +56,7 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 %type <ast> exprseq
 %type <ast> fieldlist
 %type <ast> lvalue
+%type <ast> lvalue_not_id
 %type <ast> declaration
 %type <ast> decllist
 %type <ast> typedecl
@@ -78,7 +79,7 @@ expr: STR {
   } | NIL {
         $$ = new NilASTNode();
   } | lvalue {
-
+        $$ = $1;
   } | '-' expr {
         $$ = new UnaryMinusASTNode("-", $2);
   } | expr '+' expr {
@@ -117,6 +118,7 @@ expr: STR {
   } | WHILE expr DO expr {
         $$ = new WhileLoopASTNode("while", "do", $2, $4);
   } | FOR NAME ASSIGN expr TO expr DO expr {
+        $$ = new ForLoopASTNode("for", ":=", "to", "do", new NameASTNode($2), $4, $6, $8);
   } | BREAK {
   } | LET decllist IN exprseq_opt END {
   }
@@ -160,7 +162,9 @@ fieldlist: NAME '=' expr {
   }
 
 lvalue: NAME {
+      $$ = new NameASTNode($1);
   } | lvalue_not_id {
+      $$ = $1;
   }
 
 lvalue_not_id: lvalue '.' NAME {
