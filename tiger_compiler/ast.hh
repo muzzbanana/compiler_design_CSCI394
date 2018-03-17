@@ -32,6 +32,27 @@ class ASTNode {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// A node type that evaluates to a single value, NIL
+class NilASTNode : public ASTNode {
+ public:
+  NilASTNode()
+   : ASTNode()
+  {}
+  virtual ~NilASTNode() = default;
+
+
+  virtual value_t eval() const
+  {
+    return -1; /// FIX ME
+  }
+
+  virtual std::string toStr() const
+  {
+    return "nil";
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // A node type that evaluates to a numeric constant:
 class NumASTNode : public ASTNode {
  public:
@@ -54,6 +75,48 @@ class NumASTNode : public ASTNode {
 
  private:
   const value_t value_;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// A node type that evaluates to a string constant:
+class StrASTNode : public ASTNode {
+ public:
+  StrASTNode(std::string value)
+   : ASTNode(), value_(value)
+  {}
+  virtual ~StrASTNode() = default;
+
+
+  virtual std::string toStr() const
+  {
+    return std::string("\"") + value_ + "\"";
+  }
+
+
+ private:
+  const std::string value_;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// A node type that represents a name
+class NameASTNode : public ASTNode {
+ public:
+  NameASTNode(std::string value)
+   : ASTNode(), value_(value)
+  {}
+  virtual ~NameASTNode() = default;
+
+
+  virtual std::string toStr() const
+  {
+    return value_;
+  }
+
+
+ private:
+  const std::string value_;
 };
 
 
@@ -202,6 +265,7 @@ class TertiaryASTNode : public ASTNode {
   virtual ~TertiaryASTNode()
   {
     delete left_;
+    delete middle_;
     delete right_;
   }
 

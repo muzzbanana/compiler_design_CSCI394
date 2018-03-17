@@ -76,6 +76,7 @@ expr: STR {
   } | NUMBER {
         $$ = new NumASTNode($1);
   } | NIL {
+        $$ = new NilASTNode();
   } | lvalue {
 
   } | '-' expr {
