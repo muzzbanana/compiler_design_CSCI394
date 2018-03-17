@@ -99,6 +99,7 @@ new            { return NEW; }
     return NUMBER;
 }
 [A-Za-z][A-Za-z0-9_]*|_main {
+    yylval.str = strdup(yytext);
     return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }

@@ -121,6 +121,7 @@ expr: STR {
         $$ = new ForLoopASTNode("for", ":=", "to", "do", new NameASTNode($2), $4, $6, $8);
   } | BREAK {
   } | LET decllist IN exprseq_opt END {
+        $$ = new LetASTNode("let", "in", $2, $4);
   }
 
 /*binop:
@@ -177,11 +178,15 @@ decllist: declaration {
   }
 
 declaration: typedecl {
+        $$ = $1;
   } | vardecl {
+        $$ = $1;
   } | funcdecl {
+        $$ = $1;
   }
 
 typedecl: TYPE NAME '=' type {
+        $$ = TypeDeclASTNode("type", "=", new NameASTNode($2), $4);
   }
 
 type: NAME {
@@ -201,7 +206,9 @@ typefield: NAME ':' NAME {
   }
 
 vardecl: VAR NAME ASSIGN expr {
+        $$ = UntypedVarDeclASTNode("var", ":=", new NameASTNode($2), $4);
   } | VAR NAME ':' NAME ASSIGN expr {
+        $$ = TypedVarDeclASTNode("var", ":", ":=", new NameASTNode($2), new NameASTNode($4), $6);
   }
 
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {

@@ -255,21 +255,21 @@ using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
 // A node type for things that have two children but don't evaluate before
 // they get called (e.g. while loops)
 // It's templated by another class O for the operator. Any instance of O has an
-// operator() that takes two values of type value_t and returns another value
+// operator() that takes two values of type ASTptr and returns a value
 // of type value_t.
 // See for example: http://en.cppreference.com/w/cpp/utility/functional/plus
 template <template <typename> class O>
-class NonEvalBinaryASTNode : public ASTNode {
+class NoEvalBinaryASTNode : public ASTNode {
  public:
-  NonEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right)
+  NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right)
    : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right)
   {}
 
-  NonEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
+  NoEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
    : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
   {}
 
-  virtual ~NonEvalBinaryASTNode()
+  virtual ~NoEvalBinaryASTNode()
   {
     delete left_;
     delete right_;
@@ -421,7 +421,7 @@ class WhileDo {
         }
 };
 
-using WhileLoopASTNode = NonEvalBinaryASTNode<WhileDo>;
+using WhileLoopASTNode = NoEvalBinaryASTNode<WhileDo>;
 
 template <typename Z>
 class ForTo {
@@ -433,5 +433,49 @@ class ForTo {
 };
 
 using ForLoopASTNode = QuaternaryASTNode<ForTo>;
+
+template <typename Z>
+class UntypedVarDeclaration {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using UntypedVarDeclASTNode = NoEvalBinaryASTNode<UntypedVarDeclaration>;
+
+template <typename Z>
+class TypedVarDeclaration {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using TypedVarDeclASTNode = TertiaryASTNode<TypedVarDeclaration>;
+
+template <typename Z>
+class TypeDeclaration {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using TypeDeclASTNode = NoEvalBinaryASTNode<TypeDeclaration>;
+
+template <typename Z>
+class LetBlock {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
 
 } // namespace
