@@ -31,7 +31,7 @@ TEST_CASE("while parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(while (1) do (10) )");
+    REQUIRE(output->toStr() == "(while 1.000000 do 10.000000)");
 }
 
 TEST_CASE("for parsing", "[basic-parsing]") {
@@ -42,5 +42,5 @@ TEST_CASE("for parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(for (i := 0) do (10) )");
+    REQUIRE(output->toStr() == "(for i := 0.000000 to 10.000000 do 10.000000)");
 }
