@@ -313,4 +313,18 @@ class IfThenElse {
 
 using ConditionalASTNode = TertiaryASTNode<IfThenElse>;
 
+template <typename Z>
+class WhileDo {
+    public:
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            Z result = -1; // WHAT SHOULD IT RETURN
+            while (left_->eval()) {
+                result = right_->eval();
+            }
+            return result;
+        }
+}
+
+using WhileLoopASTNode = BinaryASTNode<WhileDo>;
+
 } // namespace

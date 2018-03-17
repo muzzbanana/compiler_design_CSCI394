@@ -115,6 +115,7 @@ expr: STR {
   } | IF expr THEN expr ELSE expr {
         $$ = new ConditionalASTNode("if", "then", "else", $2, $4, $6);
   } | WHILE expr DO expr {
+        $$ = new WhileLoopASTNode("while", "do", $2, $4);
   } | FOR NAME ASSIGN expr TO expr DO expr {
   } | BREAK {
   } | LET decllist IN exprseq_opt END {
