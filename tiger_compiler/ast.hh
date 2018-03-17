@@ -219,7 +219,7 @@ class TertiaryASTNode : public ASTNode {
               " " + rep2_ +
               " " + middle_->toStr() +
               " " + rep3_ +
-              right_->toStr() + ")";
+              " " + right_->toStr() + ")";
       } else {
           return  "(" + rep1_ +
               " " + left_->toStr() +

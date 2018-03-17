@@ -20,4 +20,5 @@ TEST_CASE("basic parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
+    REQUIRE(output->eval() == 39);
 }
