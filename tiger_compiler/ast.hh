@@ -9,6 +9,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <functional>
 #include <string>
 #include <cmath>
@@ -93,6 +94,10 @@ class StrASTNode : public ASTNode {
     return std::string("\"") + value_ + "\"";
   }
 
+  virtual value_t eval() const
+  {
+    return -1; /// FIX ME
+  }
 
  private:
   const std::string value_;
@@ -188,6 +193,37 @@ class UnaryASTNode : public ASTNode {
 
 // Example usage of UnaryASTNode:
 using UnaryMinusASTNode = UnaryASTNode<std::negate>;
+
+//////////////////////////////////////////////////////////////////////////
+// A unary AST node that doesn't evaluate its argument when calling eval.
+template <template <typename> class O>
+class NoEvalUnaryASTNode : public ASTNode {
+ public:
+  // Take a single child to evalute, and a string representation of the node:
+  NoEvalUnaryASTNode(std::string rep, ASTptr child)
+   : ASTNode(), rep_(rep), child_(child)
+  {}
+
+  virtual ~NoEvalUnaryASTNode()
+  {
+    delete child_;
+  }
+
+  value_t eval() const
+  {
+    auto op = O<value_t>();
+    return op(child_);
+  }
+
+  virtual std::string toStr() const
+  {
+    return rep_ + child_->toStr();
+  }
+
+ private:
+  const std::string rep_;  // String representation of node
+  const ASTptr child_;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // A node type for binary operators.
@@ -287,6 +323,9 @@ class NoEvalBinaryASTNode : public ASTNode {
         return  "(" + left_->toStr() +
           " " + rep2_ + " " +
           right_->toStr() + ")";
+      } else if (right_ == NULL) {
+        return  "(" + rep1_ + " " + left_->toStr() +
+          " " + rep2_ + ")";
       } else {
         return  "(" + rep1_ + " " + left_->toStr() +
           " " + rep2_ + " " +
@@ -393,6 +432,53 @@ class QuaternaryASTNode : public ASTNode {
   const ASTptr one_, two_, three_, four_;
 };
 
+
+//////////////////////////////////////////////////////////////////////////////
+// A node type for vectors of AST nodes.
+// (e.g. declaration lists, parameter lists, statement sequences, ....)
+template <template <typename> class O, class E> // E is the elements of the vector (?)
+class VectorASTNode : public ASTNode {
+ public:
+  using VASTptr = const VectorASTNode*; // Can't use smart ptr in union :(
+
+  VectorASTNode(std::string separator)
+   : ASTNode(), sep_(separator)
+  {}
+
+  virtual ~VectorASTNode()
+  {
+      for (auto a : vec_) {
+          delete a;
+      }
+  }
+
+  value_t eval() const
+  {
+    auto op = O<value_t>();
+    return op(vec_);
+  }
+
+  void add_node(const E* node) {
+    vec_.push_back(node);
+  }
+
+  virtual std::string toStr() const
+  {
+      std::stringstream ss;
+      for (int i = 0; i < vec_.size(); i++) {
+          if (i != 0) {
+              ss << sep_;
+          }
+          ss << vec_[i]->toStr();
+      }
+      return ss.str();
+  }
+
+ private:
+  std::vector<const E*> vec_;
+  const std::string sep_;
+};
+
 template <typename Z>
 class IfThenElse {
     public:
@@ -477,5 +563,47 @@ class LetBlock {
 };
 
 using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
+
+template <typename Z>
+class Declaration {
+    public:
+        Z operator() (ASTNode::ASTptr child_) {
+            return -1;
+        }
+};
+
+using DeclarationASTNode = NoEvalUnaryASTNode<Declaration>;
+
+template <typename Z>
+class DeclList {
+    public:
+        // TODO implement variable declaration
+        Z operator() (std::vector<const DeclarationASTNode*> declarations) {
+            return -1;
+        }
+};
+
+using DeclListASTNode = VectorASTNode<DeclList, DeclarationASTNode>;
+
+template <typename Z>
+class FieldMember {
+    public:
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using FieldMemberASTNode = NoEvalBinaryASTNode<FieldMember>;
+
+template <typename Z>
+class FieldList {
+    public:
+        // TODO implement variable declaration
+        Z operator() (std::vector<const FieldMemberASTNode*> members) {
+            return -1;
+        }
+};
+
+using FieldListASTNode = VectorASTNode<FieldList, FieldMemberASTNode>;
 
 } // namespace

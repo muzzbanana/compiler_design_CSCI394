@@ -1,1 +1,6 @@
-var b := 100
+let
+    var b := 100
+    type blah = int
+    var c : blah := 20
+in
+end

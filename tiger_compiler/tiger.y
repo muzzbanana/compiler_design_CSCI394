@@ -23,6 +23,11 @@ void yyerror(ASTNode::ASTptr *out, const char *);
        member. we can edit that as we go. */
     tiger::ASTNode::ASTptr     ast;
     tiger::ASTNode::value_t    val;
+
+    tiger::DeclListASTNode*     decllist_ast;
+    tiger::DeclarationASTNode*  decl_ast;
+
+    tiger::FieldListASTNode*    fieldlist_ast;
 }
 
 %parse-param {tiger::ASTNode::ASTptr *out}
@@ -54,11 +59,11 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 %type <ast> exprlist_opt
 %type <ast> fieldlist_opt
 %type <ast> exprseq
-%type <ast> fieldlist
+%type <fieldlist_ast> fieldlist
 %type <ast> lvalue
 %type <ast> lvalue_not_id
-%type <ast> declaration
-%type <ast> decllist
+%type <decl_ast> declaration
+%type <decllist_ast> decllist
 %type <ast> typedecl
 %type <ast> type
 %type <ast> typefields_opt
@@ -74,6 +79,7 @@ program: expr {
   }
 
 expr: STR {
+        $$ = new StrASTNode($1);
   } | NUMBER {
         $$ = new NumASTNode($1);
   } | NIL {
@@ -112,7 +118,7 @@ expr: STR {
   } | NAME '{' fieldlist_opt '}' {
   } | NAME '[' expr ']' OF expr {     /* array */
   } | IF expr THEN expr {
-        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, NULL);
+        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, new NilASTNode());
   } | IF expr THEN expr ELSE expr {
         $$ = new ConditionalASTNode("if", "then", "else", $2, $4, $6);
   } | WHILE expr DO expr {
@@ -139,11 +145,14 @@ expr: STR {
     | '|'             { $$ = '|' } */
 
 exprlist_opt: /* nothing */ {
+        //$$ = new ExprListASTNode();
   } | exprlist {
   }
 
 exprseq_opt: /* nothing */ {
+        //$$ = new ExprSeqASTNode();
   } | exprseq {
+        $$ = $1;
   }
 
 fieldlist_opt: /* nothing */ {
@@ -159,7 +168,11 @@ exprlist: expr {
   }
 
 fieldlist: NAME '=' expr {
+        $$ = new FieldListASTNode(", ");
+        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($1), $3));
   } | fieldlist ',' NAME '=' expr {
+        $$ = $1;
+        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($3), $5));
   }
 
 lvalue: NAME {
@@ -174,15 +187,19 @@ lvalue_not_id: lvalue '.' NAME {
   }
 
 decllist: declaration {
+        $$ = new DeclListASTNode(" ");
+        $$->add_node($1);
   } | decllist declaration {
+        $$ = $1;
+        $$->add_node($2);
   }
 
 declaration: typedecl {
-        $$ = $1;
+        $$ = new DeclarationASTNode("", $1);
   } | vardecl {
-        $$ = $1;
+        $$ = new DeclarationASTNode("", $1);
   } | funcdecl {
-        $$ = $1;
+        $$ = new DeclarationASTNode("", $1);
   }
 
 typedecl: TYPE NAME '=' type {
@@ -190,6 +207,7 @@ typedecl: TYPE NAME '=' type {
   }
 
 type: NAME {
+        $$ = new NameASTNode($1);
   } | '{' typefields_opt '}' {
   } ARRAY OF NAME {
   }

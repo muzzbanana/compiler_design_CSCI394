@@ -24,6 +24,18 @@ TEST_CASE("if then parsing", "[basic-parsing]") {
     delete output;
 }
 
+TEST_CASE("nested if-else", "[basic-parsing]") {
+    FILE *myfile = fopen("test/nestedifelse.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
+    REQUIRE(output->eval() == 7);
+    delete output;
+}
+
 TEST_CASE("while parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/whiletest.tig", "r");
     yyin = myfile;
@@ -56,6 +68,6 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(var b := 100.000000)");
+    REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in)");
     delete output;
 }
