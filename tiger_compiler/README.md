@@ -32,10 +32,15 @@ Tiger Parser
  * `%parse-param {tiger::ASTNode::ASTptr *out}` which is declared in .y file allows us to pass
    are parameter to yyparse. This was done so we could access the ASTNode classes and call 
    methods as we saw fit.
- 
+ * **Changes were made to the lexer.**
+    - the removal of ERROR tokens. We now use yyerror to report errors. We report the line of 
+      the lexical error using yylineno.
+    - use of literals rather than tokens in enum for binary ops. eg. LESS_EQUAL is now just '<='.
+    - use of yyval.d and yyval.str for numbers and strings respectively.
+   
 
-Tiger lexer
-===========
+Tiger lexer prior to parser
+===========================
 
 * Comments are handled by using *start conditions* in Lex. When a `/*` symbol
   is encountered, it switches into `<COMMENT>` mode, where it eats all characters
