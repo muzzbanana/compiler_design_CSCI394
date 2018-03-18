@@ -323,9 +323,6 @@ class NoEvalBinaryASTNode : public ASTNode {
         return  "(" + left_->toStr() +
           " " + rep2_ + " " +
           right_->toStr() + ")";
-      } else if (right_ == NULL) {
-        return  "(" + rep1_ + " " + left_->toStr() +
-          " " + rep2_ + ")";
       } else {
         return  "(" + rep1_ + " " + left_->toStr() +
           " " + rep2_ + " " +
@@ -605,5 +602,16 @@ class FieldList {
 };
 
 using FieldListASTNode = VectorASTNode<FieldList, FieldMemberASTNode>;
+
+template <typename Z>
+class ExprSeq {
+    public:
+        // TODO implement variable declaration
+        Z operator() (std::vector<const ASTNode*> members) {
+            return -1;
+        }
+};
+
+using ExprSeqASTNode = VectorASTNode<ExprSeq, ASTNode>;
 
 } // namespace
