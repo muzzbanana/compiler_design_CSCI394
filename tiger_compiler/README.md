@@ -1,3 +1,39 @@
+Tiger Parser
+============
+
+* The header file, ast.hh, contains 11 derived classes:
+    - NilASTNode: this is to handle if and while statements that have false conditions
+                  and therefore have no return value.
+                  The parse will now print return `"nil"`.
+    - NumASTNode: this returns a number.
+    - StrASTNode: this returns a string.
+    - NameASTNode: this returns a name token as a string.
+    - UnaryASTNode: single child. This serves as a basis for unary operations. In our 
+                    case, this is only used for unaryminus (negation).
+    - NoEvalUnaryASTNode: single child. This is for types that need a single child in
+                          the tree but are not evaluate-able. This is used in the case 
+                          declerations and typing of variables.
+    - BinaryASTNode: two chidlren. Serves as the basis for evaluate-able binary ops.
+    - NoEvalBinaryASTNode: two children. For types that need two children but are not
+                           evaluate-able. This is used for assignments, while loops, etc.
+    - TertiaryASTNode: three children. Used for if-then-else, typed variable declerations,
+                       arrays, etc.
+    - QuatranaryASTNode: four children. This is used for for loops and typed function
+                         declerations.
+    - VectorASTNode: this is a special class used for types that require lists such as
+                     declerations in let statements (decllist), members in field types
+                     (fieldlist). The class makes use of a vector and has a method add_node
+                     that adds elements to the end of the vector.
+                         
+ * toStr() now uses std::stringstram rather than std::to_string. Tokens are added to a buffer
+   and then converted to a string when we reach end of tokens.
+ 
+ * `%define parse.error verbose` for error handling, temporarily. Declared in .y file.
+ * `%parse-param {tiger::ASTNode::ASTptr *out}` which is declared in .y file allows us to pass
+   are parameter to yyparse. This was done so we could access the ASTNode classes and call 
+   methods as we saw fit.
+ 
+
 Tiger lexer
 ===========
 
