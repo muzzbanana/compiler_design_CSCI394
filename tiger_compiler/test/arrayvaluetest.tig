@@ -1,0 +1,5 @@
+let
+    var a := int [5] of 10
+in
+    a
+end

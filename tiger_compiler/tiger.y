@@ -15,7 +15,7 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 
 %union {
     double              d;
-    char*               str; /* we can't use a std::string, ask Eitan */
+    const char*         str; /* we can't use a std::string, ask Eitan */
 
     /* all these will need to be declared in ast.hh */
     /* depending on our implementation, we might need all these,
@@ -30,7 +30,14 @@ void yyerror(ASTNode::ASTptr *out, const char *);
     tiger::FieldListASTNode*   fieldlist_ast;
 
     tiger::ExprSeqASTNode*     exprseq_ast;
+
+    tiger::TypeASTNode*        type_ast;
+
+    tiger::RecordFieldASTNode* recfield_ast;
+    tiger::RecordTypeASTNode*  rectype_ast;
 }
+
+%define parse.error verbose
 
 %parse-param {tiger::ASTNode::ASTptr *out}
 
@@ -68,11 +75,14 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 %type <decl_ast> declaration
 %type <decllist_ast> decllist
 %type <ast> typedecl
-%type <ast> type
-%type <ast> typefields_opt
-%type <ast> typefield
+%type <type_ast> type
+%type <rectype_ast> typefields_opt
+%type <rectype_ast> typefields
+%type <recfield_ast> typefield
 %type <ast> vardecl
 %type <ast> funcdecl
+
+%left '.'
 
 
 %%
@@ -116,10 +126,13 @@ expr: STR {
   } | expr '|' expr {
         $$ = new LogicalOrASTNode("|", $1, $3);
   } | lvalue ASSIGN expr {
+        $$ = new AssignASTNode(":=", $1, $3);
   } | NAME '(' exprlist_opt ')' {
   } | '(' exprseq_opt ')' {
   } | NAME '{' fieldlist_opt '}' {
+        $$ = new TypeInstASTNode("", "{", "}", new NameASTNode($1), $3);
   } | NAME '[' expr ']' OF expr {     /* array */
+        $$ = new ArrayASTNode("", " [", "] of ", new NameASTNode($1), $3, $6, false);
   } | IF expr THEN expr {
         $$ = new ConditionalASTNode("if", "then", "else", $2, $4, new NilASTNode());
   } | IF expr THEN expr ELSE expr {
@@ -130,7 +143,7 @@ expr: STR {
         $$ = new ForLoopASTNode("for", ":=", "to", "do", new NameASTNode($2), $4, $6, $8);
   } | BREAK {
   } | LET decllist IN exprseq_opt END {
-        $$ = new LetASTNode("let", "in", $2, $4);
+        $$ = new LetASTNode("let", "in", "end", $2, $4);
   }
 
 /*binop:
@@ -160,7 +173,9 @@ exprseq_opt: /* nothing */ {
   }
 
 fieldlist_opt: /* nothing */ {
+        $$ = new FieldListASTNode(", ");
   } | fieldlist {
+        $$ = $1;
   }
 
 exprseq: expr {
@@ -181,10 +196,10 @@ exprlist: expr {
 
 fieldlist: NAME '=' expr {
         $$ = new FieldListASTNode(", ");
-        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($1), $3));
+        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($1), $3, false));
   } | fieldlist ',' NAME '=' expr {
         $$ = $1;
-        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($3), $5));
+        $$->add_node(new FieldMemberASTNode("=", new NameASTNode($3), $5, false));
   }
 
 lvalue: NAME {
@@ -194,8 +209,11 @@ lvalue: NAME {
   }
 
 lvalue_not_id: lvalue '.' NAME {
+      $$ = new DotASTNode(".", $1, new NameASTNode($3), false);
   } | NAME '[' expr ']' {
+      $$ = new IndexASTNode("", "[", "]", new NameASTNode($1), $3, false);
   } | lvalue_not_id '[' expr ']' {
+      $$ = new IndexASTNode("", "[", "]", $1, $3, false);
   }
 
 decllist: declaration {
@@ -219,20 +237,29 @@ typedecl: TYPE NAME '=' type {
   }
 
 type: NAME {
-        $$ = new NameASTNode($1);
+        $$ = new TypeASTNode("", new NameASTNode($1));
   } | '{' typefields_opt '}' {
-  } ARRAY OF NAME {
+        $$ = new TypeASTNode("", $2);
+  } | ARRAY OF NAME {
+        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of", new NameASTNode($3)));
   }
 
 typefields_opt: /* nothing */ {
+        $$ = new RecordTypeASTNode(", ", "{", "}");
   } | typefields {
+        $$ = $1;
   }
 
 typefields: typefield {
+        $$ = new RecordTypeASTNode(", ", "{", "}");
+        $$->add_node($1);
   } | typefields ',' typefield {
+        $$ = $1;
+        $$->add_node($3);
   }
 
 typefield: NAME ':' NAME {
+       $$ = new RecordFieldASTNode(":", new NameASTNode($1), new NameASTNode($3), false);
   }
 
 vardecl: VAR NAME ASSIGN expr {

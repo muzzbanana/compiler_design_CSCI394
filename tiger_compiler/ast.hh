@@ -297,12 +297,17 @@ using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
 template <template <typename> class O>
 class NoEvalBinaryASTNode : public ASTNode {
  public:
-  NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right)
-   : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right)
+     // parens flag = whether to surround with parens
+  NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right), parens_(parens)
   {}
 
-  NoEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
+  NoEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right), parens_(parens)
+  {}
+
+  NoEvalBinaryASTNode(std::string rep1, std::string rep2, std::string rep3, ASTptr left, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), right_(right), parens_(parens)
   {}
 
   virtual ~NoEvalBinaryASTNode()
@@ -319,20 +324,43 @@ class NoEvalBinaryASTNode : public ASTNode {
 
   virtual std::string toStr() const
   {
-      if (rep1_.length() == 0) {
-        return  "(" + left_->toStr() +
-          " " + rep2_ + " " +
-          right_->toStr() + ")";
-      } else {
-        return  "(" + rep1_ + " " + left_->toStr() +
-          " " + rep2_ + " " +
-          right_->toStr() + ")";
+      std::stringstream ss;
+      if (parens_) {
+          ss << "(";
       }
+      if (rep1_.length() != 0) {
+          ss << rep1_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << left_->toStr();
+      if (parens_) {
+          ss << " ";
+      }
+      if (rep2_.length() != 0) {
+          ss << rep2_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << right_->toStr();
+      if (rep3_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep3_;
+      }
+      if (parens_) {
+          ss << ")";
+      }
+      return ss.str();
   }
 
  private:
-  const std::string rep1_, rep2_;  // String representation of node
+  const std::string rep1_, rep2_, rep3_;  // String representation of node (rep3 goes at end)
   const ASTptr left_, right_;
+  const bool parens_;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -342,12 +370,12 @@ template <template <typename> class O>
 class TertiaryASTNode : public ASTNode {
  public:
   TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
-          ASTptr left, ASTptr middle, ASTptr right)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), middle_(middle), right_(right)
+          ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), middle_(middle), right_(right), parens_(parens)
   {}
 
-  TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), left_(left), middle_(middle), right_(right)
+  TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), left_(left), middle_(middle), right_(right), parens_(parens)
   {}
 
   virtual ~TertiaryASTNode()
@@ -365,24 +393,47 @@ class TertiaryASTNode : public ASTNode {
 
   virtual std::string toStr() const
   {
-      if (right_ != NULL) {
-          return  "(" + rep1_ +
-              " " + left_->toStr() +
-              " " + rep2_ +
-              " " + middle_->toStr() +
-              " " + rep3_ +
-              " " + right_->toStr() + ")";
-      } else {
-          return  "(" + rep1_ +
-              " " + left_->toStr() +
-              " " + rep2_ +
-              " " + middle_->toStr() + ")";
+      std::stringstream ss;
+      if (parens_) {
+          ss << "(";
       }
+      if (rep1_.length() != 0) {
+          ss << rep1_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << left_->toStr();
+      if (parens_) {
+          ss << " ";
+      }
+      if (rep2_.length() != 0) {
+          ss << rep2_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << middle_->toStr();
+      if (rep3_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep3_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << right_->toStr();
+      if (parens_) {
+          ss << ")";
+      }
+      return ss.str();
   }
 
  private:
   const std::string rep1_, rep2_, rep3_;  // String representation of node
   const ASTptr left_, middle_, right_;
+  bool parens_;
 };
 
 
@@ -439,7 +490,11 @@ class VectorASTNode : public ASTNode {
   using VASTptr = const VectorASTNode*; // Can't use smart ptr in union :(
 
   VectorASTNode(std::string separator)
-   : ASTNode(), sep_(separator)
+   : ASTNode(), sep_(separator), first_(""), last_("")
+  {}
+
+  VectorASTNode(std::string separator, std::string first, std::string last)
+   : ASTNode(), sep_(separator), first_(first), last_(last)
   {}
 
   virtual ~VectorASTNode()
@@ -462,19 +517,36 @@ class VectorASTNode : public ASTNode {
   virtual std::string toStr() const
   {
       std::stringstream ss;
+      if (first_.length() != 0) {
+          ss << first_;
+      }
       for (int i = 0; i < vec_.size(); i++) {
           if (i != 0) {
               ss << sep_;
           }
           ss << vec_[i]->toStr();
       }
+      if (last_.length() != 0) {
+          ss << last_;
+      }
       return ss.str();
   }
 
  private:
   std::vector<const E*> vec_;
-  const std::string sep_;
+  const std::string sep_, first_, last_;
 };
+
+template <typename Z>
+class Assignment {
+    public:
+        // TODO implement variable assignment
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using AssignASTNode = NoEvalBinaryASTNode<Assignment>;
 
 template <typename Z>
 class IfThenElse {
@@ -550,6 +622,7 @@ class TypeDeclaration {
 
 using TypeDeclASTNode = NoEvalBinaryASTNode<TypeDeclaration>;
 
+// e.g. let decl1 decl2 decl3 in exp1; exp2; exp3; end
 template <typename Z>
 class LetBlock {
     public:
@@ -561,6 +634,7 @@ class LetBlock {
 
 using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
 
+// any type of declaration -- var, func, or type
 template <typename Z>
 class Declaration {
     public:
@@ -571,6 +645,7 @@ class Declaration {
 
 using DeclarationASTNode = NoEvalUnaryASTNode<Declaration>;
 
+// a sequence of declarations (the first part of a let)
 template <typename Z>
 class DeclList {
     public:
@@ -582,6 +657,19 @@ class DeclList {
 
 using DeclListASTNode = VectorASTNode<DeclList, DeclarationASTNode>;
 
+// e.g. a; b; c; d;
+template <typename Z>
+class ExprSeq {
+    public:
+        // TODO implement variable declaration
+        Z operator() (std::vector<const ASTNode*> members) {
+            return -1;
+        }
+};
+
+using ExprSeqASTNode = VectorASTNode<ExprSeq, ASTNode>;
+
+// e.g. a = b
 template <typename Z>
 class FieldMember {
     public:
@@ -592,6 +680,7 @@ class FieldMember {
 
 using FieldMemberASTNode = NoEvalBinaryASTNode<FieldMember>;
 
+// e.g. a = b, c = d (in a type instantiation inside curly brackets)
 template <typename Z>
 class FieldList {
     public:
@@ -603,15 +692,100 @@ class FieldList {
 
 using FieldListASTNode = VectorASTNode<FieldList, FieldMemberASTNode>;
 
+// e.g. typename { field1 = val1, field2 = val2 }
 template <typename Z>
-class ExprSeq {
+class TypeInstantiation {
     public:
         // TODO implement variable declaration
-        Z operator() (std::vector<const ASTNode*> members) {
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
         }
 };
 
-using ExprSeqASTNode = VectorASTNode<ExprSeq, ASTNode>;
+using TypeInstASTNode = NoEvalBinaryASTNode<TypeInstantiation>;
+
+// the thing that goes on the right side of a type declaration
+template <typename Z>
+class TypeValue {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr child_) {
+            return -1;
+        }
+};
+
+using TypeASTNode = NoEvalUnaryASTNode<TypeValue>;
+
+// one field in a record type, e.g. a : int
+template <typename Z>
+class RecordField {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using RecordFieldASTNode = NoEvalBinaryASTNode<RecordField>;
+
+// a record type -- i.e. a sequence of RecordFields
+template <typename Z>
+class RecordType {
+    public:
+        // TODO implement variable declaration
+        Z operator() (std::vector<const RecordFieldASTNode*> fields) {
+            return -1;
+        }
+};
+
+using RecordTypeASTNode = VectorASTNode<RecordType, RecordFieldASTNode>;
+
+// "array of" whatever type
+template <typename Z>
+class ArrayType {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr child_) {
+            return -1;
+        }
+};
+
+using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayType>;
+
+// represents lvalue.identifier
+template <typename Z>
+class DotAccess {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using DotASTNode = NoEvalBinaryASTNode<DotAccess>;
+
+// represents array[index]
+template <typename Z>
+class IndexAccess {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using IndexASTNode = NoEvalBinaryASTNode<IndexAccess>;
+
+// represents array[index]
+template <typename Z>
+class ArrayValue {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using ArrayASTNode = TertiaryASTNode<ArrayValue>;
 
 } // namespace

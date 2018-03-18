@@ -1,5 +1,6 @@
 %{
 #include <iostream>
+#include <sstream>
 //#include "tokens.hh"
 #include "ast.hh"
 #include "tiger.tab.h"
@@ -83,6 +84,7 @@ new            { return NEW; }
        will deal with this somewhere else. */
     try {
         std::string result = parse_string(yytext);
+        yylval.str = strdup(result.c_str());
     } catch (std::runtime_error e) {
         yyerror(NULL, "errorL use of illegal escape character in string at line");
     }
@@ -139,44 +141,45 @@ std::string parse_string(const char *text) {
        characters by their proper representations. Throws an exception
        if an invalid character is found. */
     bool escape_mode = false;
-    std::string result = "";
-    for (const char *it = text; *it; it++) {
+    std::stringstream result;
+    // use these +1's to skip opening and closing quotes
+    for (const char *it = text + 1; *(it + 1); it++) {
         const char ch = *it;
         if (!escape_mode) {
             if (ch == '\\') {
                 escape_mode = true;
             } else {
                 // Just put the characters into the string
-                result += ch;
+                result << ch;
             }
         } else {
             switch(ch) {
                 case 'a':
-                    result += '\a';
+                    result << '\a';
                     break;
                 case 'b':
-                    result += '\b';
+                    result << '\b';
                     break;
                 case 'f':
-                    result += '\f';
+                    result << '\f';
                     break;
                 case 'n':
-                    result += '\n';
+                    result << '\n';
                     break;
                 case 'r':
-                    result += '\r';
+                    result << '\r';
                     break;
                 case 't':
-                    result += '\t';
+                    result << '\t';
                     break;
                 case 'v':
-                    result += '\v';
+                    result << '\v';
                     break;
                 case '"':
-                    result += '"';
+                    result << '"';
                     break;
                 case '\\':
-                    result += '\\';
+                    result << '\\';
                     break;
                 default:
                     throw std::runtime_error("error: unknown escape character");
@@ -184,5 +187,5 @@ std::string parse_string(const char *text) {
             escape_mode = false;
         }
     }
-    return result;
+    return result.str();
 }
