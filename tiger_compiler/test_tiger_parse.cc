@@ -71,3 +71,15 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
     REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in )");
     delete output;
 }
+
+TEST_CASE("field list parsing", "[basic-parsing]") {
+    FILE *myfile = fopen("test/fieldtest.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
+    REQUIRE(output->toStr() == "(let (type rectype = {name:string, id:int}) (var rec1 := rectype {name=\"Name\", id=0}) in rec1.name := \"asd\")");
+    delete output;
+}
