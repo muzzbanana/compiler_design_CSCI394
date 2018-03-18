@@ -179,7 +179,6 @@ fieldlist_opt: /* nothing */ {
   }
 
 exprseq: expr {
-        std::cout << "in exprseq" << std::endl;
         $$ = new ExprSeqASTNode("; ");
         $$->add_node($1);
   } | exprseq ';' expr {
@@ -188,7 +187,6 @@ exprseq: expr {
   }
 
 exprlist: expr {
-        std::cout << "in exprlist" << std::endl;
         $$ = new ExprSeqASTNode(", ");
         $$->add_node($1);
   } | exprlist ',' expr {
