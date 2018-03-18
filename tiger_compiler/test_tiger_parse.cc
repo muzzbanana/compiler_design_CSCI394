@@ -68,7 +68,7 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in )");
+    REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in  end)");
     delete output;
 }
 
@@ -80,6 +80,18 @@ TEST_CASE("field list parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(let (type rectype = {name:string, id:int}) (var rec1 := rectype {name=\"Name\", id=0}) in rec1.name := \"asd\")");
+    REQUIRE(output->toStr() == "(let (type rectype = {name:string, id:int}) (var rec1 := (rectype { name=\"Name\", id=0.000000 })) in (rec1.nam := \"asd\") end)");
+    delete output;
+}
+
+TEST_CASE("array expr parsing", "[basic-parsing]") {
+    FILE *myfile = fopen("test/arrayvaluetest.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
+    REQUIRE(output->toStr() == "(let (var a := int [5.000000] of 10.000000) in a end)");
     delete output;
 }
