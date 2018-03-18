@@ -201,7 +201,11 @@ class NoEvalUnaryASTNode : public ASTNode {
  public:
   // Take a single child to evalute, and a string representation of the node:
   NoEvalUnaryASTNode(std::string rep, ASTptr child)
-   : ASTNode(), rep_(rep), child_(child)
+   : ASTNode(), rep1_(rep), rep2_(""), child_(child)
+  {}
+
+  NoEvalUnaryASTNode(std::string rep1, std::string rep2, ASTptr child)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), child_(child)
   {}
 
   virtual ~NoEvalUnaryASTNode()
@@ -217,11 +221,11 @@ class NoEvalUnaryASTNode : public ASTNode {
 
   virtual std::string toStr() const
   {
-    return rep_ + child_->toStr();
+      return rep1_ + child_->toStr() + rep2_;
   }
 
  private:
-  const std::string rep_;  // String representation of node
+  const std::string rep1_, rep2_;  // String representation of node
   const ASTptr child_;
 };
 

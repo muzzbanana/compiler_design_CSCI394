@@ -240,19 +240,19 @@ typedecl: TYPE NAME '=' type {
 type: NAME {
         $$ = new TypeASTNode("", new NameASTNode($1));
   } | '{' typefields_opt '}' {
-        $$ = new TypeASTNode("", $2);
+        $$ = new TypeASTNode("{ ", " }", $2);
   } | ARRAY OF NAME {
         $$ = new TypeASTNode("", new ArrayTypeASTNode("array of", new NameASTNode($3)));
   }
 
 typefields_opt: /* nothing */ {
-        $$ = new RecordTypeASTNode(", ", "{", "}");
+        $$ = new RecordTypeASTNode(", ");
   } | typefields {
         $$ = $1;
   }
 
 typefields: typefield {
-        $$ = new RecordTypeASTNode(", ", "{", "}");
+        $$ = new RecordTypeASTNode(", ");
         $$->add_node($1);
   } | typefields ',' typefield {
         $$ = $1;
@@ -272,7 +272,7 @@ vardecl: VAR NAME ASSIGN expr {
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
         $$ = new UnTypedFuncDeclASTNode("function", "(", ") =", new NameASTNode($2), $4, $7);
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
-        $$ = new TypedFuncDeclASTNode("function ", "(", "):", "=", new NameASTNode($2), $4, new NameASTNode($7), $9);
+        $$ = new TypedFuncDeclASTNode("function", "(", "):", "=", new NameASTNode($2), $4, new NameASTNode($7), $9);
   }
 
 %%
