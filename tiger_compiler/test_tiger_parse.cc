@@ -68,7 +68,7 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in)");
+    REQUIRE(output->toStr() == "(let (var b := 100.000000) (type blah = int) (var c : blah := 20.000000) in )");
     delete output;
 }
 
