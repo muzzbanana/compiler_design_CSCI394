@@ -24,10 +24,12 @@ void yyerror(ASTNode::ASTptr *out, const char *);
     tiger::ASTNode::ASTptr     ast;
     tiger::ASTNode::value_t    val;
 
-    tiger::DeclListASTNode*     decllist_ast;
+    tiger::DeclListASTNode*    decllist_ast;
     tiger::DeclarationASTNode*  decl_ast;
 
-    tiger::FieldListASTNode*    fieldlist_ast;
+    tiger::FieldListASTNode*   fieldlist_ast;
+
+    tiger::ExprSeqASTNode*     exprseq_ast;
 }
 
 %parse-param {tiger::ASTNode::ASTptr *out}
@@ -55,10 +57,11 @@ void yyerror(ASTNode::ASTptr *out, const char *);
 
 %type <ast> program
 %type <ast> expr
-%type <ast> exprseq_opt
-%type <ast> exprlist_opt
+%type <exprseq_ast> exprseq_opt
+%type <exprseq_ast> exprseq
+%type <exprseq_ast> exprlist_opt
+%type <exprseq_ast> exprlist
 %type <ast> fieldlist_opt
-%type <ast> exprseq
 %type <fieldlist_ast> fieldlist
 %type <ast> lvalue
 %type <ast> lvalue_not_id
@@ -145,12 +148,13 @@ expr: STR {
     | '|'             { $$ = '|' } */
 
 exprlist_opt: /* nothing */ {
-        //$$ = new ExprListASTNode();
+        $$ = new ExprSeqASTNode(", ");
   } | exprlist {
+        $$ = $1;
   }
 
 exprseq_opt: /* nothing */ {
-        //$$ = new ExprSeqASTNode();
+        $$ = new ExprSeqASTNode("; ");
   } | exprseq {
         $$ = $1;
   }
@@ -160,11 +164,19 @@ fieldlist_opt: /* nothing */ {
   }
 
 exprseq: expr {
+        $$ = new ExprSeqASTNode("; ");
+        $$->add_node($1);
   } | exprseq ';' expr {
+        $$ = $1;
+        $$->add_node($3);
   }
 
 exprlist: expr {
+        $$ = new ExprSeqASTNode(", ");
+        $$->add_node($1);
   } | exprlist ',' expr {
+        $$ = $1;
+        $$->add_node($3);
   }
 
 fieldlist: NAME '=' expr {
