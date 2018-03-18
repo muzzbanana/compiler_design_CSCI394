@@ -26,7 +26,7 @@ test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o tokens.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
-	bison -d tiger.y
+	bison -d -v tiger.y
 
 lex.yy.c: tiger.l tokens.hh
 	flex tiger.l

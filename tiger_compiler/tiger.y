@@ -179,6 +179,7 @@ fieldlist_opt: /* nothing */ {
   }
 
 exprseq: expr {
+        std::cout << "in exprseq" << std::endl;
         $$ = new ExprSeqASTNode("; ");
         $$->add_node($1);
   } | exprseq ';' expr {
@@ -187,6 +188,7 @@ exprseq: expr {
   }
 
 exprlist: expr {
+        std::cout << "in exprlist" << std::endl;
         $$ = new ExprSeqASTNode(", ");
         $$->add_node($1);
   } | exprlist ',' expr {
@@ -229,6 +231,7 @@ declaration: typedecl {
   } | vardecl {
         $$ = new DeclarationASTNode("", $1);
   } | funcdecl {
+        std::cout << "the decleration is " << $1->toStr() << std::endl;
         $$ = new DeclarationASTNode("", $1);
   }
 
@@ -269,7 +272,9 @@ vardecl: VAR NAME ASSIGN expr {
   }
 
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
+        $$ = new UnTypedFuncDeclASTNode("function", "(", ") =", new NameASTNode($2), $4, $7);
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
+        $$ = new TypedFuncDeclASTNode("function ", "(", "):", "=", new NameASTNode($2), $4, new NameASTNode($7), $9);
   }
 
 %%

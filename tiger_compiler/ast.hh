@@ -345,6 +345,7 @@ class NoEvalBinaryASTNode : public ASTNode {
           }
       }
       ss << right_->toStr();
+      std::cout << "right is " << right_->toStr() << std::endl;
       if (rep3_.length() != 0) {
           if (parens_) {
               ss << " ";
@@ -354,6 +355,7 @@ class NoEvalBinaryASTNode : public ASTNode {
       if (parens_) {
           ss << ")";
       }
+      // std::cout << "the let sting is " << ss.str() << std::endl;
       return ss.str();
   }
 
@@ -524,11 +526,14 @@ class VectorASTNode : public ASTNode {
           if (i != 0) {
               ss << sep_;
           }
+          std::cout << "yes" << std::endl;
           ss << vec_[i]->toStr();
+          std::cout << "the value is " << vec_[i]->toStr() << std::endl;
       }
       if (last_.length() != 0) {
           ss << last_;
       }
+      std::cout << "the return in vector is " << ss.str() << std::endl;
       return ss.str();
   }
 
@@ -787,5 +792,29 @@ class ArrayValue {
 };
 
 using ArrayASTNode = TertiaryASTNode<ArrayValue>;
+
+// represents function declerations
+template <typename Z>
+class UnTypedFuncDecl {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using UnTypedFuncDeclASTNode = TertiaryASTNode<UnTypedFuncDecl>;
+
+// represents function declerations
+template <typename Z>
+class TypedFuncDecl {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            return -1;
+        }
+};
+
+using TypedFuncDeclASTNode = QuaternaryASTNode<TypedFuncDecl>;
 
 } // namespace

@@ -86,7 +86,7 @@ new            { return NEW; }
         std::string result = parse_string(yytext);
         yylval.str = strdup(result.c_str());
     } catch (std::runtime_error e) {
-        yyerror(NULL, "errorL use of illegal escape character in string at line");
+        yyerror(NULL, "error use of illegal escape character in string at line");
     }
     return STR;
 }
