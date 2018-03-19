@@ -234,7 +234,6 @@ declaration: typedecl {
   } | vardecl {
         $$ = new DeclarationASTNode("", $1);
   } | funcdecl {
-        //std::cout << "the decleration is " << $1->toStr() << std::endl;
         $$ = new DeclarationASTNode("", $1);
   }
 
@@ -283,7 +282,7 @@ funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
 %%
 
 void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
-    cout << error << " " << yylineno << endl;
+    cerr << error << " " << yylineno << endl;
 }
 
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.
