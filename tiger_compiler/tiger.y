@@ -232,7 +232,7 @@ type: NAME {
   } | '{' typefields_opt '}' {
         $$ = new TypeASTNode("{ ", " }", $2);
   } | ARRAY OF NAME {
-        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of", name($3)));
+        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of ", name($3)));
   }
 
 typefields_opt: /* nothing */ {
