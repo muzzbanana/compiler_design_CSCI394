@@ -32,6 +32,9 @@ Tiger Parser
  * `%parse-param {tiger::ASTNode::ASTptr *out}` which is declared in .y file allows us to pass
    are parameter to yyparse. This was done so we could access the ASTNode classes and call 
    methods as we saw fit.
+ * Use of `strdup()` in tiger.l was causing memory leaks because it we need to free the space allocated
+   by `strdup()`. A simple way this was to create a function `name()` in tiger.y that creates a new
+   ASTNode::ASTPtr and frees it.
  * **Changes were made to the lexer.**
     - the removal of ERROR tokens. We now use yyerror to report errors. We report the line of 
       the lexical error using yylineno.
