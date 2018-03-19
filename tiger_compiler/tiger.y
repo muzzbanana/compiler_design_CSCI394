@@ -212,7 +212,7 @@ lvalue: NAME {
   }
 
 lvalue_not_id: lvalue '.' NAME {
-      $$ = new DotASTNode(".", $1, new NameASTNode($3), false);
+      $$ = new DotASTNode("(", ".", ")", $1, new NameASTNode($3), false);
   } | NAME '[' expr ']' {
       $$ = new IndexASTNode("", "[", "]", new NameASTNode($1), $3, false);
   } | lvalue_not_id '[' expr ']' {
