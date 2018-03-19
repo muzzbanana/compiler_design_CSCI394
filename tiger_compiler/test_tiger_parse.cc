@@ -155,7 +155,7 @@ TEST_CASE("expr_seq test", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == std::string("(let (type arrtype1 = array of int) in ((arr1[0] := 1;)")+
-            "arr1[9] := 3; arr2[3].name := \"kati\"; arr2[1].age := 23; arr3[34] := \"sfd\") end)");
+    REQUIRE(output->toStr() == std::string("(let (type arrtype1 = array of int) in (arr1[0.000000] := 1.000000); ")+
+            "(arr1[9.000000] := 3.000000); ((arr2[3.000000].name) := \"kati\"); ((arr2[1.000000].age) := 23.000000); (arr3[34.000000] := \"sfd\") end)");
     delete output;
 }
