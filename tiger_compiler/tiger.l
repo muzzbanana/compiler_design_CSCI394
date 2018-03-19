@@ -20,7 +20,7 @@ int current_line = 1;
 int comment_start_line = -1;
 %}
 
-%option noyywrap nodefault yylineno
+%option noyywrap nodefault yylineno nounput
 
 %x COMMENT
 
