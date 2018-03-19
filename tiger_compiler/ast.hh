@@ -379,7 +379,6 @@ class NoEvalBinaryASTNode : public ASTNode {
       if (parens_) {
           ss << ")";
       }
-      // std::cout << "the let sting is " << ss.str() << std::endl;
       return ss.str();
   }
 
@@ -558,7 +557,6 @@ class QuaternaryASTNode : public ASTNode {
       if (parens_) {
           ss << ")";
       }
-      // std::cout << "the let sting is " << ss.str() << std::endl;
       return ss.str();
       return  "(" + rep1_ +
           " " + one_->toStr() +
