@@ -128,6 +128,7 @@ expr: STR {
   } | lvalue ASSIGN expr {
         $$ = new AssignASTNode(":=", $1, $3);
   } | NAME '(' exprlist_opt ')' {
+        $$ = new FuncCallASTNode("(", "(", "))", new NameASTNode($1), $3, false);
   } | '(' exprseq_opt ')' {
   } | NAME '{' fieldlist_opt '}' {
         $$ = new TypeInstASTNode("", "{", "}", new NameASTNode($1), $3);
@@ -229,7 +230,7 @@ declaration: typedecl {
   } | vardecl {
         $$ = new DeclarationASTNode("", $1);
   } | funcdecl {
-        std::cout << "the decleration is " << $1->toStr() << std::endl;
+        //std::cout << "the decleration is " << $1->toStr() << std::endl;
         $$ = new DeclarationASTNode("", $1);
   }
 
@@ -270,9 +271,9 @@ vardecl: VAR NAME ASSIGN expr {
   }
 
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
-        $$ = new UnTypedFuncDeclASTNode("function", "(", ") =", new NameASTNode($2), $4, $7);
+        $$ = new UnTypedFuncDeclASTNode("(function ", "(", ") = ", ")", new NameASTNode($2), $4, $7, false);
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
-        $$ = new TypedFuncDeclASTNode("function", "(", "):", "=", new NameASTNode($2), $4, new NameASTNode($7), $9);
+        $$ = new TypedFuncDeclASTNode("(function ", "(", "):", "=", ")", new NameASTNode($2), $4, new NameASTNode($7), $9, false);
   }
 
 %%

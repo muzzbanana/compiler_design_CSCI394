@@ -105,6 +105,6 @@ TEST_CASE("untyped function parsing", "[basic-parsing]") {
 
     REQUIRE(output != NULL);
     std::cout << output->toStr() << std::endl;
-    REQUIRE(output->toStr() == "(let (function g(a:int) = a) in g(2) end)");
+    REQUIRE(output->toStr() == "(let (function g(a:int) = a) in (g(2.000000)) end)");
     delete output;
 }

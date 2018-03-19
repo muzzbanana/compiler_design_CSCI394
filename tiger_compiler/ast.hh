@@ -301,7 +301,7 @@ using LogicalOrASTNode = BinaryASTNode<std::logical_or>;
 template <template <typename> class O>
 class NoEvalBinaryASTNode : public ASTNode {
  public:
-     // parens flag = whether to surround with parens
+     // parens flag = whether to surround with parens and insert spaces around operators
   NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right, bool parens=true)
    : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right), parens_(parens)
   {}
@@ -374,13 +374,18 @@ class NoEvalBinaryASTNode : public ASTNode {
 template <template <typename> class O>
 class TertiaryASTNode : public ASTNode {
  public:
+  TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
+          ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left), middle_(middle), right_(right), parens_(parens)
+  {}
+
   TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
           ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), middle_(middle), right_(right), parens_(parens)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left), middle_(middle), right_(right), parens_(parens)
   {}
 
   TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), left_(left), middle_(middle), right_(right), parens_(parens)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle), right_(right), parens_(parens)
   {}
 
   virtual ~TertiaryASTNode()
@@ -429,6 +434,12 @@ class TertiaryASTNode : public ASTNode {
           }
       }
       ss << right_->toStr();
+      if (rep4_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep4_;
+      }
       if (parens_) {
           ss << ")";
       }
@@ -436,7 +447,7 @@ class TertiaryASTNode : public ASTNode {
   }
 
  private:
-  const std::string rep1_, rep2_, rep3_;  // String representation of node
+  const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
   const ASTptr left_, middle_, right_;
   bool parens_;
 };
@@ -449,9 +460,15 @@ template <template <typename> class O>
 class QuaternaryASTNode : public ASTNode {
  public:
   QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
-          ASTptr one, ASTptr two, ASTptr three, ASTptr four)
-   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4),
-     one_(one), two_(two), three_(three), four_(four)
+          ASTptr one, ASTptr two, ASTptr three, ASTptr four, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(""),
+     one_(one), two_(two), three_(three), four_(four), parens_(parens)
+  {}
+
+  QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4, std::string rep5,
+          ASTptr one, ASTptr two, ASTptr three, ASTptr four, bool parens=true)
+   : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(rep5),
+     one_(one), two_(two), three_(three), four_(four), parens_(parens)
   {}
 
   virtual ~QuaternaryASTNode()
@@ -470,6 +487,58 @@ class QuaternaryASTNode : public ASTNode {
 
   virtual std::string toStr() const
   {
+      std::stringstream ss;
+      if (parens_) {
+          ss << "(";
+      }
+      if (rep1_.length() != 0) {
+          ss << rep1_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << one_->toStr();
+      if (rep2_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep2_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << two_->toStr();
+      if (rep3_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep3_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << three_->toStr();
+      if (rep4_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep4_;
+          if (parens_) {
+              ss << " ";
+          }
+      }
+      ss << four_->toStr();
+      if (rep5_.length() != 0) {
+          if (parens_) {
+              ss << " ";
+          }
+          ss << rep5_;
+      }
+      if (parens_) {
+          ss << ")";
+      }
+      // std::cout << "the let sting is " << ss.str() << std::endl;
+      return ss.str();
       return  "(" + rep1_ +
           " " + one_->toStr() +
           " " + rep2_ +
@@ -481,8 +550,9 @@ class QuaternaryASTNode : public ASTNode {
   }
 
  private:
-  const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
+  const std::string rep1_, rep2_, rep3_, rep4_, rep5_;  // String representation of node
   const ASTptr one_, two_, three_, four_;
+  bool parens_; // whether to surround with parentheses and put spaces around the 'rep' strings
 };
 
 
@@ -511,12 +581,12 @@ class VectorASTNode : public ASTNode {
 
   value_t eval() const
   {
-    auto op = O<value_t>();
-    return op(vec_);
+      auto op = O<value_t>();
+      return op(vec_);
   }
 
   void add_node(const E* node) {
-    vec_.push_back(node);
+      vec_.push_back(node);
   }
 
   virtual std::string toStr() const
@@ -816,5 +886,17 @@ class TypedFuncDecl {
 };
 
 using TypedFuncDeclASTNode = QuaternaryASTNode<TypedFuncDecl>;
+
+// represents function calls
+template <typename Z>
+class FuncCall {
+    public:
+        // TODO implement variable declaration
+        Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return -1;
+        }
+};
+
+using FuncCallASTNode = NoEvalBinaryASTNode<FuncCall>;
 
 } // namespace
