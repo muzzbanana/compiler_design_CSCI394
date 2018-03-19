@@ -1,0 +1,7 @@
+let
+    type t1 = { name : string, id : int }
+    type t2 = { rec : t1 }
+    var rec1 := t2 { rec = t1 { name = "Bruno", id = 17 } }
+in
+    rec1.rec.name := "Benson"
+end
