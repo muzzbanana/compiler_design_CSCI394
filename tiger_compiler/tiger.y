@@ -130,6 +130,7 @@ expr: STR {
   } | NAME '(' exprlist_opt ')' {
         $$ = new FuncCallASTNode("(", "(", "))", new NameASTNode($1), $3, false);
   } | '(' exprseq_opt ')' {
+        $$ = $2;
   } | NAME '{' fieldlist_opt '}' {
         $$ = new TypeInstASTNode("", "{", "}", new NameASTNode($1), $3);
   } | NAME '[' expr ']' OF expr {     /* array */
@@ -143,6 +144,7 @@ expr: STR {
   } | FOR NAME ASSIGN expr TO expr DO expr {
         $$ = new ForLoopASTNode("for", ":=", "to", "do", new NameASTNode($2), $4, $6, $8);
   } | BREAK {
+        $$ = new BreakASTNode();
   } | LET decllist IN exprseq_opt END {
         $$ = new LetASTNode("let", "in", "end", $2, $4);
   }

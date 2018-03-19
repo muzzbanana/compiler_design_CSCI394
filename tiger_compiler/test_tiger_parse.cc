@@ -108,3 +108,15 @@ TEST_CASE("untyped function parsing", "[basic-parsing]") {
     REQUIRE(output->toStr() == "(let (function g(a:int) = a) in (g(2.000000)) end)");
     delete output;
 }
+
+TEST_CASE("break parsing", "[basic-parsing]") {
+    FILE *myfile = fopen("test/breaktest.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output != NULL);
+    std::cout << output->toStr() << std::endl;
+    REQUIRE(output->toStr() == "(while 1.000000 do break)");
+    delete output;
+}

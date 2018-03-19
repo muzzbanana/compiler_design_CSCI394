@@ -54,6 +54,27 @@ class NilASTNode : public ASTNode {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// A node type representing a "break" statement.
+class BreakASTNode : public ASTNode {
+ public:
+  BreakASTNode()
+   : ASTNode()
+  {}
+  virtual ~BreakASTNode() = default;
+
+
+  virtual value_t eval() const
+  {
+    return -1; /// FIX ME
+  }
+
+  virtual std::string toStr() const
+  {
+    return "break";
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // A node type that evaluates to a numeric constant:
 class NumASTNode : public ASTNode {
  public:
