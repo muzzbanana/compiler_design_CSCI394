@@ -16,7 +16,7 @@ tiger::ASTNode::ASTptr name(const char *str);
 
 %union {
     double              d;
-    const char*         str; /* we can't use a std::string, ask Eitan */
+    const char*         str;
 
     /* all these will need to be declared in ast.hh */
     /* depending on our implementation, we might need all these,
@@ -151,20 +151,6 @@ expr: STR {
         $$ = new LetASTNode("let", "in", "end", $2, $4);
   }
 
-/*binop:
-      '+'             { $$ = '+' }
-    | '-'             { $$ = '-' }
-    | '*'             { $$ = '*' }
-    | '/'             { $$ = '/' }
-    | '='             { $$ = '=' }
-    | POINTIES        { $$ = POINTIES }
-    | '<'             { $$ = '<' }
-    | '>'             { $$ = '>' }
-    | LESS_EQUAL      { $$ = LESS_EQUAL }
-    | GREATER_EQUAL   { $$ = GREATER_EQUAL }
-    | '&'             { $$ = '&' }
-    | '|'             { $$ = '|' } */
-
 exprlist_opt: /* nothing */ {
         $$ = new ExprSeqASTNode(", ");
   } | exprlist {
@@ -234,7 +220,6 @@ declaration: typedecl {
   } | vardecl {
         $$ = new DeclarationASTNode("", $1);
   } | funcdecl {
-        //std::cout << "the decleration is " << $1->toStr() << std::endl;
         $$ = new DeclarationASTNode("", $1);
   }
 

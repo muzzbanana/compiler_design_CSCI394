@@ -1,7 +1,7 @@
 
 CXX=g++-7   # Can switch to g++ if desired
 # # CXX=g++-6
-CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra
+CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra -Wno-unused-parameter
 #CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra -Werror
 #CXXFLAGS=-O3 -std=c++17 -Wall -pedantic -Wextra -Werror
 LDFLAGS=$(CXXFLAGS) -lfl
@@ -19,14 +19,14 @@ parse: test_tiger_parse
 tiger: tiger.o tiger.tab.o tiger.tab.h lex.yy.o ast.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
-test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o tokens.hh
+test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o tokens.hh
+test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
-	bison -d -v tiger.y
+	bison -d tiger.y
 
 lex.yy.c: tiger.l tokens.hh
 	flex tiger.l
@@ -48,4 +48,4 @@ test: all
 	./test_tiger_parse
 
 clean:
-	rm -f *.o tiger test_tiger lex.yy.c tiger.tab.c tiger.tab.h
+	rm -f *.o tiger test_tiger_lex test_tiger_parse lex.yy.c tiger.tab.c tiger.tab.h
