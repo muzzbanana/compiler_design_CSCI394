@@ -149,6 +149,7 @@ TEST_CASE("dot associativity", "[basic-parsing]") {
 TEST_CASE("expr_seq test", "[basic-parsing]") {
     FILE *myfile = fopen("test/exprseq.tig", "r");
     yyin = myfile;
+    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
