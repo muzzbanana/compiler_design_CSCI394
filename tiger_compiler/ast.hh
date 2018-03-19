@@ -614,7 +614,7 @@ class VectorASTNode : public ASTNode {
       if (first_.length() != 0) {
           ss << first_;
       }
-      for (int i = 0; i < vec_.size(); i++) {
+      for (unsigned int i = 0; i < vec_.size(); i++) {
           if (i != 0) {
               ss << sep_;
           }
