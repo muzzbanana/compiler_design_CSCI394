@@ -1,0 +1,8 @@
+/* misuse of reserved words */
+let 
+    function break() = 
+        var for = 1
+in
+
+    break()
+end

@@ -1,0 +1,11 @@
+/* scope test */
+
+let
+    var x = 1
+    function f() =
+        var x = 2
+        print(x)
+in 
+    f()
+end
+

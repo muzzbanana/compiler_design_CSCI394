@@ -1,0 +1,7 @@
+/* repitition of function arguments */
+let 
+    function f(i:int, j:int, i:string) =
+        var k = i + 1
+in
+    f(1,2,"hello")
+end
