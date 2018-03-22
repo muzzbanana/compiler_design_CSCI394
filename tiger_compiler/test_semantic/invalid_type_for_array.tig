@@ -1,7 +1,7 @@
 /* declares array type using an invalid type (not int or string)*/
 let 
     type arrtype = array of dog
-    var arr = arrtype [10] of 0
+    var arr := arrtype [10] of 0
 in
     a = arr[11]
 end

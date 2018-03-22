@@ -1,7 +1,6 @@
 /* repitition of function arguments */
 let 
-    function f(i:int, j:int, i:string) =
-        var k = i + 1
+    function f(i:int, j:int, i:string) = let var k := i + 1 in k end
 in
     f(1,2,"hello")
 end

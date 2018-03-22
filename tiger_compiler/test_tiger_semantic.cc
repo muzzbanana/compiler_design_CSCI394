@@ -153,7 +153,9 @@ TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    REQUIRE(semantic_checks(output) != 0);
+    // this one just has a syntax error, resulting in output being NULL.
+    // I think that's still an appropriate response to misuse of reserved words?
+    REQUIRE(output == NULL);
 
     delete output;
 }
