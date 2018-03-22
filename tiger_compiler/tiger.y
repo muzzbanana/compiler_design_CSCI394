@@ -39,6 +39,7 @@ tiger::ASTNode::ASTptr name(const char *str);
 }
 
 %define parse.error verbose
+%locations
 
 %parse-param {tiger::ASTNode::ASTptr *out}
 
@@ -268,7 +269,8 @@ funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
 %%
 
 void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
-    cerr << error << " " << yylineno << endl;
+    cerr << "ERROR: line " << yylineno << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
+    cerr << error << " " << yylloc.first_line << endl;
 }
 
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.

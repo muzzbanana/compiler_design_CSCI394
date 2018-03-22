@@ -1,15 +1,25 @@
 %{
 #include <iostream>
 #include <sstream>
-//#include "tokens.hh"
 #include "ast.hh"
 #include "tiger.tab.h"
-//#include "snazzle.tab.h"
 
 using namespace std;
 using namespace tiger;
 
 #define YY_DECL extern "C" int yylex()
+int yycolumn = 1;
+void set_yycolumn(int val) {
+    yycolumn = val;
+    yylloc.first_column = yycolumn;
+    yylloc.last_column = yycolumn + yyleng - 1;
+}
+
+#define YY_USER_ACTION { \
+    yylloc.first_line = yylloc.last_line = yylineno; \
+    set_yycolumn(yycolumn); \
+    yycolumn += yyleng; \
+}
 
 extern void yyerror(ASTNode::ASTptr *, const char *);
 extern int yylineno;
