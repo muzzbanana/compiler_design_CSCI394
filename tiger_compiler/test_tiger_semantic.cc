@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "ast.hh"
+#include "semantic.hh"
 #include "catch.hpp"
 #include "tiger.tab.h"
 
@@ -20,6 +21,8 @@ TEST_CASE("fail on bad record type", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -29,6 +32,8 @@ TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) != 0);
 
     delete output;
 }
@@ -40,6 +45,8 @@ TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -49,6 +56,8 @@ TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) != 0);
 
     delete output;
 }
@@ -60,6 +69,8 @@ TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -69,6 +80,8 @@ TEST_CASE("fail on recursive return type mismatch", "[semantic-check]") {
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) != 0);
 
     delete output;
 }
@@ -80,6 +93,8 @@ TEST_CASE("fail on repeated definition of var", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -89,6 +104,8 @@ TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) != 0);
 
     delete output;
 }
@@ -100,6 +117,8 @@ TEST_CASE("fail on array index out of range", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -109,6 +128,8 @@ TEST_CASE("fail on invalid type for array", "[semantic-check]") {
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) != 0);
 
     delete output;
 }
@@ -120,6 +141,8 @@ TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -130,6 +153,8 @@ TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    REQUIRE(semantic_checks(output) != 0);
+
     delete output;
 }
 
@@ -139,6 +164,8 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
+
+    REQUIRE(semantic_checks(output) == 0);
 
     delete output;
 }
