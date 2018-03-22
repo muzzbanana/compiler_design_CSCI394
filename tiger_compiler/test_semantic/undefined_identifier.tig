@@ -3,5 +3,5 @@
 let
     var name := "Lou"
 in
-    nane := "Lee" // oops, a typo!
+    nane := "Lee" /* oops, a typo! */
 end

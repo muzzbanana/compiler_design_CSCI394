@@ -1,3 +1,5 @@
+#ifndef _AST_HH_
+#define _AST_HH_
 /* Companion source code for "flex & bison", published by O'Reilly
  * Media, ISBN 978-0-596-15597-1
  * Copyright (c) 2009, Taughannock Networks. All rights reserved.
@@ -919,3 +921,5 @@ class FuncCall {
 using FuncCallASTNode = NoEvalBinaryASTNode<FuncCall>;
 
 } // namespace
+
+#endif

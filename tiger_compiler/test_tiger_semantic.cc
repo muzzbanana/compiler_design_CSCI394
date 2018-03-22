@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "ast.hh"
+#include "semantic.hh"
 #include "catch.hpp"
 #include "tiger.tab.h"
 
@@ -20,7 +21,11 @@ TEST_CASE("fail on bad record type", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
@@ -30,7 +35,11 @@ TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
@@ -40,7 +49,11 @@ TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]") {
@@ -50,7 +63,11 @@ TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
@@ -60,7 +77,11 @@ TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on recursive return type mismatch", "[semantic-check]") {
@@ -70,7 +91,11 @@ TEST_CASE("fail on recursive return type mismatch", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on repeated definition of var", "[semantic-check]") {
@@ -80,7 +105,11 @@ TEST_CASE("fail on repeated definition of var", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
@@ -90,7 +119,11 @@ TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on array index out of range", "[semantic-check]") {
@@ -100,7 +133,11 @@ TEST_CASE("fail on array index out of range", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on invalid type for array", "[semantic-check]") {
@@ -110,7 +147,11 @@ TEST_CASE("fail on invalid type for array", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
@@ -120,7 +161,12 @@ TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+
+    REQUIRE(check_result != 0);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
@@ -130,7 +176,12 @@ TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    // this one just has a syntax error, resulting in output being NULL.
+    // I think that's still an appropriate response to misuse of reserved words?
+    REQUIRE(output == NULL);
+
     delete output;
+    fclose(myfile);
 }
 
 TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-check]") {
@@ -140,5 +191,9 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
     delete output;
+    fclose(myfile);
 }

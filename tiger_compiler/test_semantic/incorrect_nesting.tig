@@ -1,9 +1,4 @@
 /* Incorrect nesting. Not sure what this actually means? */
 
-let
-    var x := 5
-in
-    x + 3
-end;
+(let var x := 5 in x + y end ; x)
 
-x
