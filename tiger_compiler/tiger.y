@@ -194,17 +194,17 @@ fieldlist: NAME '=' expr {
   }
 
 lvalue: NAME {
-      $$ = name($1);
+        $$ = name($1);
   } | lvalue_not_id {
-      $$ = $1;
+        $$ = $1;
   }
 
 lvalue_not_id: lvalue '.' NAME {
-      $$ = new DotASTNode("(", ".", ")", $1, name($3), false);
+        $$ = new DotASTNode("(", ".", ")", $1, name($3), false);
   } | NAME '[' expr ']' {
-      $$ = new IndexASTNode("", "[", "]", name($1), $3, false);
+        $$ = new IndexASTNode("", "[", "]", name($1), $3, false);
   } | lvalue_not_id '[' expr ']' {
-      $$ = new IndexASTNode("", "[", "]", $1, $3, false);
+        $$ = new IndexASTNode("", "[", "]", $1, $3, false);
   }
 
 decllist: declaration {
