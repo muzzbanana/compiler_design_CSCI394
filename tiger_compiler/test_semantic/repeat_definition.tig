@@ -1,0 +1,9 @@
+/* Defining an identifier more than once in the same scope. */
+
+let
+    var portland_bridge_name := "Morrison Bridge"
+    var portland_bridge_name := "Tillikum Crossing"
+    var portland_bridge_name := "Burnside Bridge"
+in
+    portland_bridge_name
+end

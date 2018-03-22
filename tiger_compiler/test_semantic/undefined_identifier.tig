@@ -1,0 +1,7 @@
+/* Use of an undefined identifier. */
+
+let
+    var name := "Lou"
+in
+    nane := "Lee" // oops, a typo!
+end

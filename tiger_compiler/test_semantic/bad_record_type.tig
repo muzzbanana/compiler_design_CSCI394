@@ -1,0 +1,9 @@
+/* Use of incorrect field in record type. */
+
+let
+    type fruit = { color : string, size : int }
+    var banana : fruit := fruit { color="yellow", size=10 }
+in
+    // oh no this property doesn't exist
+    banana.tastiness := 4
+end

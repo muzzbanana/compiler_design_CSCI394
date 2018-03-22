@@ -1,0 +1,5 @@
+let
+    var x : string := "hi"
+in
+    x + 4
+end

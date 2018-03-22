@@ -1,0 +1,7 @@
+/* Mismatched return type of single recursive function */
+
+let
+    function f (a : string) : string = f("hello") + 2
+in
+    f("goodbye")
+end

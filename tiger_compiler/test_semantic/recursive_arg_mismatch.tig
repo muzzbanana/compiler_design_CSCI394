@@ -1,0 +1,7 @@
+/* Mismatched argument type of single recursive function */
+
+let
+    function f (a : string) : string = f(15)
+in
+    f("abcdefg")
+end
