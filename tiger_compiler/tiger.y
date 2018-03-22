@@ -89,7 +89,7 @@ tiger::ASTNode::ASTptr name(const char *str);
 %%
 
 program: expr {
-       *out = $$;
+       *out = $1;
   }
 
 expr: STR {
