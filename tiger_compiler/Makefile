@@ -8,13 +8,16 @@ LDFLAGS=$(CXXFLAGS) -lfl
 LIBS=
 
 
-all: test_tiger_lex test_tiger_parse tiger
+all: test_tiger_lex test_tiger_parse test_tiger_semantic tiger
 
 lex: test_tiger_lex
 	./test_tiger_lex
 
 parse: test_tiger_parse
 	./test_tiger_parse
+
+semantic: test_tiger_semantic
+	./test_tiger_semantic
 
 tiger: tiger.o tiger.tab.o tiger.tab.h lex.yy.o ast.hh
 	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
@@ -23,6 +26,9 @@ test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o ast.hh
+	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
+
+test_tiger_semantic: tiger.tab.o lex.yy.o test_tiger_semantic.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
