@@ -54,4 +54,4 @@ test: all
 	./test_tiger_parse
 
 clean:
-	rm -f *.o tiger test_tiger_lex test_tiger_parse lex.yy.c tiger.tab.c tiger.tab.h
+	rm -f *.o tiger test_tiger_lex test_tiger_parse test_tiger_semantic lex.yy.c tiger.tab.c tiger.tab.h
