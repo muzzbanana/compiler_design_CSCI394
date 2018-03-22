@@ -92,3 +92,53 @@ TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
 
     delete output;
 }
+
+TEST_CASE("fail on array index out of range", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/array_index_out_of_range.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    delete output;
+}
+
+TEST_CASE("fail on invalid type for array", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/invalid_type_for_array.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    delete output;
+}
+
+TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/repitition_of_func_args.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    delete output;
+}
+
+TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/reserved_words.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    delete output;
+}
+
+TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/same_name_diff_scope.tg", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    delete output;
+}
