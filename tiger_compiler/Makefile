@@ -28,7 +28,7 @@ test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o ast.hh
 test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-test_tiger_semantic: tiger.tab.o lex.yy.o test_tiger_semantic.o tiger.o ast.hh
+test_tiger_semantic: semantic.o tiger.tab.o lex.yy.o test_tiger_semantic.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
