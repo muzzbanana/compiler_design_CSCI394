@@ -11,7 +11,6 @@ using namespace tiger;
 
 int yyparse(ASTNode::ASTptr *out);
 extern FILE *yyin;
-extern int yylineno;
 
 TEST_CASE("if then parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/ifthentest.tig", "r");
