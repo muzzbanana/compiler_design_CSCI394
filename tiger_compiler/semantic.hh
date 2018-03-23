@@ -86,12 +86,12 @@ class SymbolTable {
         ~SymbolTable();
 
         // Create a symbol table that's the same as this one but with another entry
-        void insert(string name, type_t);
+        void insert(string name, tiger_type);
 
-        type_t lookup(string name);
+        tiger_type lookup(string name);
 
     private:
-        map<string, type_t> symbols_;
+        map<string, tiger_type> symbols_;
         SymbolTable *parent_;
 };
 
