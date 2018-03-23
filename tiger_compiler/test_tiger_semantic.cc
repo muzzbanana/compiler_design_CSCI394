@@ -48,8 +48,59 @@ TEST_CASE("check simple string type", "[type-evaluation]") {
     fclose(myfile);
 }
 
+TEST_CASE("check exprseq type", "[type-evaluation]") {
+    FILE *myfile = fopen("test_semantic/sequence_type_test.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::INT);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]") {
     FILE *myfile = fopen("test_semantic/string_plus_int.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::ERROR);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/error_inside_sequence.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::ERROR);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on body of while loop error", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/while_mistake.tig", "r");
     yyin = myfile;
     yylineno = 1;
     ASTNode::ASTptr output = NULL;

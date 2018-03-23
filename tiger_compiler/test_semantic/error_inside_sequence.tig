@@ -1,0 +1,3 @@
+/* An error in the middle of an expr sequence should still be an error. */
+
+(4; "A" + 5; 5)

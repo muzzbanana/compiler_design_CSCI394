@@ -1,0 +1,3 @@
+/* check return type of expression sequence */
+
+("a"; 431; 5 + 7)

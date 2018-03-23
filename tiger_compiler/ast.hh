@@ -726,8 +726,14 @@ class WhileDo {
         }
 
         tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            tiger_type cond_type = left_->type_verify();
+            tiger_type do_type = right_->type_verify();
+
+            if (cond_type == tiger_type::INT && do_type != tiger_type::ERROR) {
+                return tiger_type::NIL;
+            } else {
+                return tiger_type::ERROR;
+            }
         }
 };
 
@@ -857,8 +863,14 @@ class ExprSeq {
         }
 
         tiger_type type_verify(std::vector<const ASTNode*> vec_) {
-            std::cout << "not implemented yet!*" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            tiger_type return_type = tiger_type::NIL;
+            for (auto node : vec_) {
+                return_type = node->type_verify();
+                if (return_type == tiger_type::ERROR) {
+                    return tiger_type::ERROR;
+                }
+            }
+            return return_type;
         }
 };
 
