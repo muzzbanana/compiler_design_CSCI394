@@ -85,7 +85,7 @@ new            { return NEW; }
 \>=            { return GREATER_EQUAL; }
 \:=            { return ASSIGN;}
 
-\r\n|\n\r|\n|\r { current_line++; }
+\r\n|\n\r|\n|\r { current_line++; yycolumn = 1;}
 \"([^"\n\r]|\\.)*\" {
     /* a string literal is a quote, followed by 0 or more repetitions
        of things that are either (a) not a quote, or (b) \ followed by
@@ -114,7 +114,7 @@ new            { return NEW; }
     yylval.str = strdup(yytext);
     return NAME;
 }
-\/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; }
+\/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; yycolumn = 1;}
 \*\/          { yyerror(NULL, "error: invalid comment syntax at line"); }
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
@@ -137,6 +137,8 @@ new            { return NEW; }
        otherwise resetting yyin makes the line number go up
        really high */
     current_line = 1;
+    yylineno = 1;
+    yycolumn = 1;
     comment_start_line = -1;
     return 0;
 }

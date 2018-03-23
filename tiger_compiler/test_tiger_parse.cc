@@ -11,12 +11,10 @@ using namespace tiger;
 
 int yyparse(ASTNode::ASTptr *out);
 extern FILE *yyin;
-extern int yylineno;
 
 TEST_CASE("if then parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/ifthentest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -29,7 +27,6 @@ TEST_CASE("if then parsing", "[basic-parsing]") {
 TEST_CASE("nested if-else", "[basic-parsing]") {
     FILE *myfile = fopen("test/nestedifelse.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -42,7 +39,6 @@ TEST_CASE("nested if-else", "[basic-parsing]") {
 TEST_CASE("while parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/whiletest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -55,7 +51,6 @@ TEST_CASE("while parsing", "[basic-parsing]") {
 TEST_CASE("for parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/fortest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -68,7 +63,6 @@ TEST_CASE("for parsing", "[basic-parsing]") {
 TEST_CASE("var decl parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/vardecltest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -81,7 +75,6 @@ TEST_CASE("var decl parsing", "[basic-parsing]") {
 TEST_CASE("field list parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/fieldtest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -94,7 +87,6 @@ TEST_CASE("field list parsing", "[basic-parsing]") {
 TEST_CASE("array expr parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/arrayvaluetest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -108,7 +100,6 @@ TEST_CASE("array expr parsing", "[basic-parsing]") {
 TEST_CASE("untyped function parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/untypedfunc.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -121,7 +112,6 @@ TEST_CASE("untyped function parsing", "[basic-parsing]") {
 TEST_CASE("break parsing", "[basic-parsing]") {
     FILE *myfile = fopen("test/breaktest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -134,7 +124,6 @@ TEST_CASE("break parsing", "[basic-parsing]") {
 TEST_CASE("dot associativity", "[basic-parsing]") {
     FILE *myfile = fopen("test/multidottest.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
@@ -149,7 +138,6 @@ TEST_CASE("dot associativity", "[basic-parsing]") {
 TEST_CASE("expr_seq test", "[basic-parsing]") {
     FILE *myfile = fopen("test/exprseq.tig", "r");
     yyin = myfile;
-    yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
