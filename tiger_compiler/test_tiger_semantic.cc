@@ -14,6 +14,57 @@ int yyparse(ASTNode::ASTptr *out);
 extern FILE *yyin;
 extern int yylineno;
 
+TEST_CASE("check simple int type", "[type-evaluation]") {
+    FILE *myfile = fopen("test_semantic/oneplusone.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::INT);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check simple string type", "[type-evaluation]") {
+    FILE *myfile = fopen("test_semantic/string_test.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::STRING);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/string_plus_int.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    tiger_type type = output->type_verify();
+    REQUIRE(type == tiger_type::ERROR);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on bad record type", "[semantic-check]") {
     FILE *myfile = fopen("test_semantic/bad_record_type.tig", "r");
     yyin = myfile;
@@ -169,21 +220,6 @@ TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
     fclose(myfile);
 }
 
-TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
-    FILE *myfile = fopen("test_semantic/reserved_words.tig", "r");
-    yyin = myfile;
-    yylineno = 1;
-    ASTNode::ASTptr output = NULL;
-    yyparse(&output);
-
-    // this one just has a syntax error, resulting in output being NULL.
-    // I think that's still an appropriate response to misuse of reserved words?
-    REQUIRE(output == NULL);
-
-    delete output;
-    fclose(myfile);
-}
-
 TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-check]") {
     FILE *myfile = fopen("test_semantic/same_name_diff_scope.tg", "r");
     yyin = myfile;
@@ -197,3 +233,17 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
     delete output;
     fclose(myfile);
 }
+
+// this one is just a syntax error, not a semantic error.
+/* TEST_CASE("fail on incorrect use of reserved words", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/reserved_words.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    REQUIRE(output == NULL);
+
+    delete output;
+    fclose(myfile);
+} */

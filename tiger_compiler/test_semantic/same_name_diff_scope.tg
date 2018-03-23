@@ -1,11 +1,11 @@
 /* scope test */
 
 let
-    var x = 1
+    var x := 1
     function f() =
-        var x = 2
-        print(x)
-in 
+        let var x := 2
+        in print(x) end
+in
     f()
 end
 

@@ -1,0 +1,5 @@
+/* check if strings typecheck right as well */
+
+if 32 - 16
+    then "we're safe!"
+    else "math is broken, 32 = 16"

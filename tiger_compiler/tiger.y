@@ -176,6 +176,8 @@ exprseq: expr {
   } | exprseq ';' expr {
         $$ = $1;
         $$->add_node($3);
+  } | error ';' {
+        yyerrok;
   }
 
 exprlist: expr {
@@ -214,6 +216,8 @@ decllist: declaration {
   } | decllist declaration {
         $$ = $1;
         $$->add_node($2);
+  } | decllist error {
+        yyerrok;
   }
 
 declaration: typedecl {
@@ -251,7 +255,7 @@ typefields: typefield {
   }
 
 typefield: NAME ':' NAME {
-       $$ = new RecordFieldASTNode(":", name($1), name($3), false);
+        $$ = new RecordFieldASTNode(":", name($1), name($3), false);
   }
 
 vardecl: VAR NAME ASSIGN expr {
