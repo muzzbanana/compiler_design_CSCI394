@@ -17,6 +17,7 @@ void SymbolTable::insert(std::string name, Type *t) {
 }
 
 Type *SymbolTable::lookup(std::string name) {
+    return symbols_[name];
 }
 
 int semantic_checks(ASTNode::ASTptr ast) {
