@@ -1,23 +1,32 @@
+#ifndef _SEMANTIC_HH_
+#define _SEMANTIC_HH_
+
 #include <map>
+#include <vector>
+#include <sstream>
+#include <memory>
 #include "ast.hh"
 
-using namespace tiger;
+using namespace std;
 
-class Type {
+namespace tiger {
+
+
+/* class Type {
     public:
         Type();
         Type(Type& other);
 
-        virtual std::string toStr();
+        virtual string toStr();
 };
 
-class FunctionType {
+class FunctionType : public Type {
     public:
         FunctionType();
         FunctionType(FunctionType& other);
 
-        virtual std::string toStr() {
-              std::stringstream ss;
+        virtual string toStr() {
+              stringstream ss;
               for (int i = 0; i < inputs_.size(); i++) {
                   if (i != 0) ss << ", ";
                   ss << inputs_[i]->toStr();
@@ -29,42 +38,45 @@ class FunctionType {
         }
 
     private:
-        std::vector<shared_ptr<Type> > inputs_;
+        vector<shared_ptr<Type> > inputs_;
         shared_ptr<Type> output;
 };
 
-class IntType {
+class BaseType : public Type {
     public:
-        IntType();
-        IntType(IntType& other);
+        BaseType(string repr) : repr_(repr) { }
+        BaseType(BaseType& other);
 
-        virtual std::string toStr() {
-            return "int";
+        virtual string toStr() {
+            return repr_;
         }
+
+    private:
+        string repr_;
 };
 
-class StringType {
+class StringType : public Type {
     public:
         StringType();
         StringType(StringType& other);
 
-        virtual std::string toStr() {
+        virtual string toStr() {
             return "string";
         }
 };
 
-class ArrayType {
+class ArrayType : public Type {
     public:
         ArrayType(shared_ptr<Type> array_of);
         ArrayType(ArrayType& other);
 
-        virtual std::string toStr() {
-            return std::string("array of ") + array_of->toStr();
+        virtual string toStr() {
+            return string("array of ") + array_of->toStr();
         }
 
     private:
         shared_ptr<Type> array_of;
-};
+}; */
 
 class SymbolTable {
     public:
@@ -74,13 +86,17 @@ class SymbolTable {
         ~SymbolTable();
 
         // Create a symbol table that's the same as this one but with another entry
-        void insert(std::string name, Type *t);
+        void insert(string name, type_t);
 
-        Type *lookup(std::string name);
+        type_t lookup(string name);
 
     private:
-        std::map<std::string, Type*> symbols_;
+        map<string, type_t> symbols_;
         SymbolTable *parent_;
 };
 
 int semantic_checks(ASTNode::ASTptr ast);
+
+}//namespace
+
+#endif

@@ -15,6 +15,7 @@
 #include <functional>
 #include <string>
 #include <cmath>
+#include "typeenum.hh"
 
 /* interface to the lexer */
 //void yyerror(tiger::ASTNode::ASTptr *out, char *s, ...);
@@ -30,6 +31,7 @@ class ASTNode {
 
   ASTNode() = default;
   virtual ~ASTNode() = default;
+  virtual type_t type_verify() const = 0; // Determine type of expression
   virtual value_t eval() const = 0;  // Evaluate expression tree
   virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -43,6 +45,9 @@ class NilASTNode : public ASTNode {
   {}
   virtual ~NilASTNode() = default;
 
+  virtual type_t type_verify() const {
+      return NIL_TYPE;
+  }
 
   virtual value_t eval() const
   {
@@ -64,6 +69,10 @@ class BreakASTNode : public ASTNode {
   {}
   virtual ~BreakASTNode() = default;
 
+  virtual type_t type_verify() const {
+      std::cout << "not implemented yet!break" << std::endl;
+      return ERROR_TYPE;
+  }
 
   virtual value_t eval() const
   {
@@ -85,6 +94,9 @@ class NumASTNode : public ASTNode {
   {}
   virtual ~NumASTNode() = default;
 
+  virtual type_t type_verify() const {
+      return INT_TYPE;
+  }
 
   virtual value_t eval() const
   {
@@ -111,6 +123,9 @@ class StrASTNode : public ASTNode {
   {}
   virtual ~StrASTNode() = default;
 
+  virtual type_t type_verify() const {
+      return STRING_TYPE;
+  }
 
   virtual std::string toStr() const
   {
@@ -140,6 +155,11 @@ class NameASTNode : public ASTNode {
       return -1; /// FIX ME
   }
 
+  virtual type_t type_verify() const {
+      std::cout << "not implemented yet name!@$!" << std::endl;
+      return ERROR_TYPE;
+  }
+
   virtual std::string toStr() const
   {
     return value_;
@@ -150,34 +170,6 @@ class NameASTNode : public ASTNode {
   const std::string value_;
 };
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Example node: absolute value. This could be implemented in terms of
-// UnaryASTNode by defining a functor class for absolute value.
-class AbsASTNode : public ASTNode {
- public:
-  AbsASTNode(ASTptr child)
-   : ASTNode(), child_(child)
-  {}
-
-  virtual ~AbsASTNode()
-  {
-    delete child_;
-  }
-
-  value_t eval() const
-  {
-    return std::abs(child_->eval());
-  }
-
-  virtual std::string toStr() const
-  {
-    return "|" + child_->toStr() + "|";
-  }
-
- private:
-  const ASTptr child_;   // Sub-expression
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // A node type for a unary operator (e.g., generalizing  AbsASTNode).
@@ -196,6 +188,11 @@ class UnaryASTNode : public ASTNode {
   virtual ~UnaryASTNode()
   {
     delete child_;
+  }
+
+  virtual type_t type_verify() const {
+      std::cout << "not implemented yet! unary" << std::endl;
+      return ERROR_TYPE;
   }
 
   value_t eval() const
@@ -236,6 +233,11 @@ class NoEvalUnaryASTNode : public ASTNode {
     delete child_;
   }
 
+  virtual type_t type_verify() const {
+      auto op = O<value_t>();
+      return op.type_verify(child_);
+  }
+
   value_t eval() const
   {
     auto op = O<value_t>();
@@ -273,6 +275,15 @@ class BinaryASTNode : public ASTNode {
   {
     delete left_;
     delete right_;
+  }
+
+  virtual type_t type_verify() const {
+      if (left_->type_verify() == INT_TYPE
+              && right_->type_verify() == INT_TYPE) {
+          return INT_TYPE;
+      } else {
+          return ERROR_TYPE;
+      }
   }
 
   value_t eval() const
@@ -349,6 +360,11 @@ class NoEvalBinaryASTNode : public ASTNode {
     return op(left_, right_);
   }
 
+  virtual type_t type_verify() const {
+      auto op = O<value_t>();
+      return op.type_verify(left_, right_);
+  }
+
   virtual std::string toStr() const
   {
       std::stringstream ss;
@@ -415,6 +431,11 @@ class TertiaryASTNode : public ASTNode {
     delete left_;
     delete middle_;
     delete right_;
+  }
+
+  virtual type_t type_verify() const {
+      auto op = O<value_t>();
+      return op.type_verify(left_, middle_, right_);
   }
 
   value_t eval() const
@@ -499,6 +520,11 @@ class QuaternaryASTNode : public ASTNode {
     delete two_;
     delete three_;
     delete four_;
+  }
+
+  virtual type_t type_verify() const {
+      auto op = O<value_t>();
+      return op.type_verify(one_, two_, three_, four_);
   }
 
   value_t eval() const
@@ -600,6 +626,11 @@ class VectorASTNode : public ASTNode {
       }
   }
 
+  virtual type_t type_verify() const {
+      auto op = O<value_t>();
+      return op.type_verify(vec_);
+  }
+
   value_t eval() const
   {
       auto op = O<value_t>();
@@ -640,6 +671,16 @@ class Assignment {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            type_t name_type = left_->type_verify();
+            type_t value_type = right_->type_verify();
+            if (name_type == value_type) {
+                return value_type;
+            } else {
+                return ERROR_TYPE;
+            }
+        }
 };
 
 using AssignASTNode = NoEvalBinaryASTNode<Assignment>;
@@ -656,6 +697,19 @@ class IfThenElse {
                 return -1; /// FIX ME
             }
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            type_t cond_type = left_->type_verify();
+            type_t then_type = middle_->type_verify();
+            type_t else_type = right_->type_verify();
+            if (cond_type == INT_TYPE && then_type == else_type) {
+                return then_type;
+            } else if (cond_type != INT_TYPE) {
+                return ERROR_TYPE;
+            } else {
+                return ERROR_TYPE;
+            }
+        }
 };
 
 using ConditionalASTNode = TertiaryASTNode<IfThenElse>;
@@ -670,6 +724,11 @@ class WhileDo {
             }
             return result;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using WhileLoopASTNode = NoEvalBinaryASTNode<WhileDo>;
@@ -680,6 +739,11 @@ class ForTo {
         // TODO this is not actually right, we don't have binding yet?
         Z operator() (ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            std::cout << "not implemented yet!!!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -692,6 +756,11 @@ class UntypedVarDeclaration {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using UntypedVarDeclASTNode = NoEvalBinaryASTNode<UntypedVarDeclaration>;
@@ -703,6 +772,11 @@ class TypedVarDeclaration {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using TypedVarDeclASTNode = TertiaryASTNode<TypedVarDeclaration>;
@@ -713,6 +787,11 @@ class TypeDeclaration {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -726,6 +805,11 @@ class LetBlock {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
@@ -736,6 +820,11 @@ class Declaration {
     public:
         Z operator() (ASTNode::ASTptr child_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr child_) {
+            std::cout << "not implemented yet!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -749,6 +838,11 @@ class DeclList {
         Z operator() (std::vector<const DeclarationASTNode*> declarations) {
             return -1;
         }
+
+        type_t type_verify(std::vector<const DeclarationASTNode*> vec_) {
+            std::cout << "not implemented yet!*" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using DeclListASTNode = VectorASTNode<DeclList, DeclarationASTNode>;
@@ -761,6 +855,11 @@ class ExprSeq {
         Z operator() (std::vector<const ASTNode*> members) {
             return -1;
         }
+
+        type_t type_verify(std::vector<const ASTNode*> vec_) {
+            std::cout << "not implemented yet!*" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using ExprSeqASTNode = VectorASTNode<ExprSeq, ASTNode>;
@@ -771,6 +870,11 @@ class FieldMember {
     public:
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -784,6 +888,11 @@ class FieldList {
         Z operator() (std::vector<const FieldMemberASTNode*> members) {
             return -1;
         }
+
+        type_t type_verify(std::vector<const FieldMemberASTNode*> vec_) {
+            std::cout << "not implemented yet!*" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using FieldListASTNode = VectorASTNode<FieldList, FieldMemberASTNode>;
@@ -795,6 +904,11 @@ class TypeInstantiation {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -808,6 +922,11 @@ class TypeValue {
         Z operator() (ASTNode::ASTptr child_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr child_) {
+            std::cout << "not implemented yet!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using TypeASTNode = NoEvalUnaryASTNode<TypeValue>;
@@ -819,6 +938,11 @@ class RecordField {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -832,21 +956,31 @@ class RecordType {
         Z operator() (std::vector<const RecordFieldASTNode*> fields) {
             return -1;
         }
+
+        type_t type_verify(std::vector<const RecordFieldASTNode*> vec_) {
+            std::cout << "not implemented yet!*" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using RecordTypeASTNode = VectorASTNode<RecordType, RecordFieldASTNode>;
 
 // "array of" whatever type
 template <typename Z>
-class ArrayType {
+class ArrayTypeImplementation {
     public:
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr child_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr child_) {
+            std::cout << "not implemented yet!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
-using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayType>;
+using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayTypeImplementation>;
 
 // represents lvalue.identifier
 template <typename Z>
@@ -855,6 +989,11 @@ class DotAccess {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -868,6 +1007,11 @@ class IndexAccess {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using IndexASTNode = NoEvalBinaryASTNode<IndexAccess>;
@@ -879,6 +1023,11 @@ class ArrayValue {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
@@ -892,6 +1041,11 @@ class UnTypedFuncDecl {
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using UnTypedFuncDeclASTNode = TertiaryASTNode<UnTypedFuncDecl>;
@@ -904,6 +1058,11 @@ class TypedFuncDecl {
         Z operator() (ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
             return -1;
         }
+
+        type_t type_verify(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            std::cout << "not implemented yet!!!!" << std::endl;
+            return ERROR_TYPE;
+        }
 };
 
 using TypedFuncDeclASTNode = QuaternaryASTNode<TypedFuncDecl>;
@@ -915,6 +1074,11 @@ class FuncCall {
         // TODO implement variable declaration
         Z operator() (ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return -1;
+        }
+
+        type_t type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            std::cout << "not implemented yet!!" << std::endl;
+            return ERROR_TYPE;
         }
 };
 
