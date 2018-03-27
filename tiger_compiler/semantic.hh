@@ -5,11 +5,13 @@
 #include <vector>
 #include <sstream>
 #include <memory>
-#include "ast.hh"
+#include "typeenum.hh"
 
 using namespace std;
 
 namespace tiger {
+
+    class ASTNode;
 
 /* class Type {
     public:
@@ -85,7 +87,7 @@ class SymbolTable {
         ~SymbolTable();
 
         // Create a symbol table that's the same as this one but with another entry
-        void insert(string name, tiger_type);
+        void insert(string name, tiger_type type);
 
         tiger_type lookup(string name);
 
@@ -93,8 +95,6 @@ class SymbolTable {
         map<string, tiger_type> symbols_;
         SymbolTable *parent_;
 };
-
-int semantic_checks(ASTNode::ASTptr ast);
 
 }//namespace
 

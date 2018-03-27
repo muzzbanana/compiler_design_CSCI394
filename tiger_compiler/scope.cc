@@ -16,9 +16,10 @@ void Scope::pop_off_scope(){
    found, return error, otherwise return type of symbol*/
 tiger_type
 Scope::search(const std::string& s){
-    for (symbol_scope_t::reverse_iterator scope = scope_.rbegin();
+    for (table_stack_::reverse_iterator scope = scope_.rbegin();
         scope != scope_.rend(); scope++){
-        if (tiger_type the_type = scope->lookup(s)){
+        tiger_type the_type = scope->lookup(s);
+        if (the_type != tiger_type::ERROR){
             return the_type;
         }
     }

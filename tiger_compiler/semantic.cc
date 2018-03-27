@@ -22,13 +22,4 @@ tiger_type SymbolTable::lookup(string name) {
     return symbols_[name];
 }
 
-int semantic_checks(ASTNode::ASTptr ast) {
-    tiger_type t = ast->type_verify();
-    if (t != tiger_type::ERROR) {
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
 }//namespace

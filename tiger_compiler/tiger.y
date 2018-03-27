@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "ast.hh"
+#include "semantic_checks.hh"
 //#define YY_DECL extern "C" int yylex()
 
 using namespace std;

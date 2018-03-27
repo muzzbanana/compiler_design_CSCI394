@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "ast.hh"
 #include "semantic.hh"
+#include "semantic_checks.hh"
 #include "catch.hpp"
 #include "tiger.tab.h"
 
@@ -21,7 +22,8 @@ TEST_CASE("check simple int type", "[type-evaluation]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::INT);
 
     int check_result = semantic_checks(output);
@@ -38,7 +40,8 @@ TEST_CASE("check simple string type", "[type-evaluation]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::STRING);
 
     int check_result = semantic_checks(output);
@@ -55,7 +58,8 @@ TEST_CASE("check exprseq type", "[type-evaluation]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::INT);
 
     int check_result = semantic_checks(output);
@@ -72,7 +76,8 @@ TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]")
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::ERROR);
 
     int check_result = semantic_checks(output);
@@ -89,7 +94,8 @@ TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::ERROR);
 
     int check_result = semantic_checks(output);
@@ -106,7 +112,8 @@ TEST_CASE("fail on body of while loop error", "[semantic-check]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    tiger_type type = output->type_verify();
+    Scope *s = new Scope();
+    tiger_type type = output->type_verify(s);
     REQUIRE(type == tiger_type::ERROR);
 
     int check_result = semantic_checks(output);
