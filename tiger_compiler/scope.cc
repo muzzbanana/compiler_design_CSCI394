@@ -26,4 +26,8 @@ Scope::search(const std::string& s){
     return tiger_type::ERROR;
 }
 
+void Scope::symbol_insert(const std::string &s, tiger_type type) {
+    scope_[scope_.size()-1].insert(s, type);
+}
+
 } //namespace

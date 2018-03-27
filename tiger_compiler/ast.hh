@@ -159,8 +159,7 @@ class NameASTNode : public ASTNode {
   }
 
   virtual tiger_type type_verify(Scope* scope) const {
-      std::cout << "not implemented yet name!@$!" << std::endl;
-      return tiger_type::NOTIMPLEMENTED;
+      return scope->search(value_);
   }
 
   virtual std::string toStr() const
@@ -803,8 +802,29 @@ class TypedVarDeclaration {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            std::string variable_name = left_->toStr();
+            std::string type_name = middle_->toStr();
+
+            tiger_type value_type = right_->type_verify(scope);
+
+            tiger_type var_type;
+            if (type_name == "int") {
+                var_type = tiger_type::INT;
+            } else if (type_name == "string") {
+                var_type = tiger_type::STRING;
+            } else {
+                cerr << "unknown type " << type_name << endl;
+                return tiger_type::ERROR;
+            }
+
+            if (value_type == var_type) {
+                /* we think this should return value_type, but we're just following the rules here */
+                return tiger_type::NIL;
+            } else {
+                cerr << "cannot assign expression of type <1%#!$?!?!> to variable "
+                     << variable_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
+                return tiger_type::ERROR;
+            }
         }
 };
 
@@ -836,8 +856,18 @@ class LetBlock {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            // Create a new scope for the duration of the declaration section and body
+            // section.
+            scope->push_onto_scope();
+            tiger_type declaration_type = left_->type_verify(scope);
+            tiger_type body_type = right_->type_verify(scope);
+            scope->pop_off_scope();
+
+            if (declaration_type != tiger_type::ERROR && body_type != tiger_type::ERROR) {
+                return body_type;
+            } else {
+                return tiger_type::ERROR;
+            }
         }
 };
 
@@ -852,8 +882,7 @@ class Declaration {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
-            std::cout << "not implemented yet!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            return child_->type_verify(scope);
         }
 };
 
@@ -869,8 +898,13 @@ class DeclList {
         }
 
         tiger_type type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_) {
-            std::cout << "not implemented yet!*" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            for (auto decl : vec_) {
+                tiger_type t = decl->type_verify(scope);
+                if (t == tiger_type::ERROR) {
+                    return tiger_type::ERROR;
+                }
+            }
+            return tiger_type::NIL;
         }
 };
 

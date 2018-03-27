@@ -14,7 +14,7 @@ SymbolTable::SymbolTable(SymbolTable *parent) : parent_(parent) {
 SymbolTable::~SymbolTable() {
 }
 
-void SymbolTable::insert(string name, tiger_type type) {
+void SymbolTable::insert(const string name, tiger_type type) {
     symbols_.insert(make_pair(name, type));
 }
 
