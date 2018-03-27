@@ -19,7 +19,13 @@ void SymbolTable::insert(const string name, tiger_type type) {
 }
 
 tiger_type SymbolTable::lookup(string name) {
-    return symbols_[name];
+    //return symbols_[name];
+    auto iter = symbols_.find(name);
+    if (iter != symbols_.end()) {
+        return iter->second;
+    } else {
+        return tiger_type::NOTFOUND;
+    }
 }
 
 }//namespace
