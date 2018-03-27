@@ -17,6 +17,8 @@
 #include <cmath>
 #include "typeenum.hh"
 
+using namespace std;
+
 /* interface to the lexer */
 //void yyerror(tiger::ASTNode::ASTptr *out, char *s, ...);
 
@@ -677,6 +679,9 @@ class Assignment {
             tiger_type value_type = right_->type_verify();
             if (name_type == value_type) {
                 return value_type;
+            } else if (name_type != tiger_type::ERROR && value_type != tiger_type::ERROR) {
+                cerr << "error: assignment of variable to wrong type" << endl;
+                return tiger_type::ERROR;
             } else {
                 return tiger_type::ERROR;
             }
@@ -702,9 +707,13 @@ class IfThenElse {
             tiger_type cond_type = left_->type_verify();
             tiger_type then_type = middle_->type_verify();
             tiger_type else_type = right_->type_verify();
-            if (cond_type == tiger_type::INT && then_type == else_type) {
+            if (cond_type == tiger_type::INT && then_type == else_type && then_type != tiger_type::ERROR) {
                 return then_type;
             } else if (cond_type != tiger_type::INT) {
+                cerr << "error: condition in 'if' statement must evaluate to integer" << endl;
+                return tiger_type::ERROR;
+            } else if (then_type != else_type) {
+                cerr << "error: true and false condition expressions in 'if' statement must have the same type" << endl;
                 return tiger_type::ERROR;
             } else {
                 return tiger_type::ERROR;
@@ -731,6 +740,9 @@ class WhileDo {
 
             if (cond_type == tiger_type::INT && do_type != tiger_type::ERROR) {
                 return tiger_type::NIL;
+            } else if (cond_type != tiger_type::INT) {
+                cerr << "error: condition of 'while' loop must evaluate to integer" << endl;
+                return tiger_type::ERROR;
             } else {
                 return tiger_type::ERROR;
             }
@@ -748,8 +760,18 @@ class ForTo {
         }
 
         tiger_type type_verify(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-            std::cout << "not implemented yet!!!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            tiger_type first_type = two_->type_verify();
+            tiger_type last_type = three_->type_verify();
+            tiger_type body_type = four_->type_verify();
+            if (first_type == tiger_type::INT && last_type == tiger_type::INT
+                    && body_type != tiger_type::ERROR) {
+                return tiger_type::NIL;
+            } else if (first_type != tiger_type::INT || last_type != tiger_type::INT) {
+                cerr << "error: 'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
+                return tiger_type::ERROR;
+            } else {
+                return tiger_type::ERROR;
+            }
         }
 };
 
@@ -1021,8 +1043,16 @@ class IndexAccess {
         }
 
         tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            // TODO check left side is an array
+            //tiger_type left_type = left_->type_verify();
+            tiger_type index_type = right_->type_verify();
+            if (index_type != tiger_type::INT) {
+                cerr << "error: index of the array must be an integer expression" << endl;
+                return tiger_type::ERROR;
+            } else {
+                // TODO return type the array is of
+                return tiger_type::INT;
+            }
         }
 };
 
@@ -1038,8 +1068,16 @@ class ArrayValue {
         }
 
         tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            // TODO check left side is an array
+            //tiger_type left_type = left_->type_verify();
+            tiger_type index_type = right_->type_verify();
+            if (index_type != tiger_type::INT) {
+                cerr << "error: index of the array must be an integer expression" << endl;
+                return tiger_type::ERROR;
+            } else {
+                // TODO return type the array is of
+                return tiger_type::INT;
+            }
         }
 };
 

@@ -28,7 +28,7 @@ test_tiger_lex: tiger.tab.o lex.yy.o test_tiger_lex.o tiger.o ast.hh
 test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-test_tiger_semantic: semantic.o tiger.tab.o lex.yy.o test_tiger_semantic.o tiger.o ast.hh
+test_tiger_semantic: tiger.o tiger.tab.o lex.yy.o semantic.o test_tiger_semantic.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
@@ -52,6 +52,7 @@ tiger.tab.o: tiger.tab.c
 test: all
 	./test_tiger_lex
 	./test_tiger_parse
+	./test_tiger_semantic
 
 clean:
 	rm -f *.o tiger test_tiger_lex test_tiger_parse test_tiger_semantic lex.yy.c tiger.tab.c tiger.tab.h

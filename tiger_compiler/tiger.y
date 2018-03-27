@@ -1,3 +1,6 @@
+%code requires {
+    using namespace tiger;
+}
 
 %{
 #include <iostream>
@@ -5,12 +8,11 @@
 #include "ast.hh"
 //#define YY_DECL extern "C" int yylex()
 
-using namespace tiger;
 using namespace std;
 
 extern "C" int yylex(void);
 extern "C" int yylineno;
-void yyerror(ASTNode::ASTptr *out, const char *);
+void yyerror(tiger::ASTNode::ASTptr *out, const char *);
 tiger::ASTNode::ASTptr name(const char *str);
 %}
 
