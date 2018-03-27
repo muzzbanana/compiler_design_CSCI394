@@ -33,7 +33,7 @@ class ASTNode {
 
   ASTNode() = default;
   virtual ~ASTNode() = default;
-  virtual tiger_type type_verify() const = 0; // Determine type of expression
+  virtual tiger_type type_verify(Scope& scope) const = 0; // Determine type of expression
   virtual value_t eval() const = 0;  // Evaluate expression tree
   virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -47,7 +47,7 @@ class NilASTNode : public ASTNode {
   {}
   virtual ~NilASTNode() = default;
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       return tiger_type::NIL;
   }
 
@@ -71,7 +71,7 @@ class BreakASTNode : public ASTNode {
   {}
   virtual ~BreakASTNode() = default;
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       std::cout << "not implemented yet!break" << std::endl;
       return tiger_type::NOTIMPLEMENTED;
   }
@@ -96,7 +96,7 @@ class NumASTNode : public ASTNode {
   {}
   virtual ~NumASTNode() = default;
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       return tiger_type::INT;
   }
 
@@ -125,7 +125,7 @@ class StrASTNode : public ASTNode {
   {}
   virtual ~StrASTNode() = default;
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       return tiger_type::STRING;
   }
 
@@ -157,7 +157,7 @@ class NameASTNode : public ASTNode {
       return -1; /// FIX ME
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       std::cout << "not implemented yet name!@$!" << std::endl;
       return tiger_type::NOTIMPLEMENTED;
   }
@@ -192,7 +192,7 @@ class UnaryASTNode : public ASTNode {
     delete child_;
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       std::cout << "not implemented yet! unary" << std::endl;
       return tiger_type::NOTIMPLEMENTED;
   }
@@ -235,7 +235,7 @@ class NoEvalUnaryASTNode : public ASTNode {
     delete child_;
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
       return op.type_verify(child_);
   }
@@ -279,9 +279,9 @@ class BinaryASTNode : public ASTNode {
     delete right_;
   }
 
-  virtual tiger_type type_verify() const {
-      if (left_->type_verify() == tiger_type::INT
-              && right_->type_verify() == tiger_type::INT) {
+  virtual tiger_type type_verify(Scope& scope) const {
+      if (left_->type_verify(scope) == tiger_type::INT
+              && right_->type_verify(scope) == tiger_type::INT) {
           return tiger_type::INT;
       } else {
           return tiger_type::ERROR;
@@ -362,7 +362,7 @@ class NoEvalBinaryASTNode : public ASTNode {
     return op(left_, right_);
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
       return op.type_verify(left_, right_);
   }
@@ -435,7 +435,7 @@ class TertiaryASTNode : public ASTNode {
     delete right_;
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
       return op.type_verify(left_, middle_, right_);
   }
@@ -524,7 +524,7 @@ class QuaternaryASTNode : public ASTNode {
     delete four_;
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
       return op.type_verify(one_, two_, three_, four_);
   }
@@ -628,7 +628,7 @@ class VectorASTNode : public ASTNode {
       }
   }
 
-  virtual tiger_type type_verify() const {
+  virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
       return op.type_verify(vec_);
   }
@@ -674,9 +674,9 @@ class Assignment {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            tiger_type name_type = left_->type_verify();
-            tiger_type value_type = right_->type_verify();
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            tiger_type name_type = left_->type_verify(scope);
+            tiger_type value_type = right_->type_verify(scope);
             if (name_type == value_type) {
                 return value_type;
             } else if (name_type != tiger_type::ERROR && value_type != tiger_type::ERROR) {
@@ -703,10 +703,10 @@ class IfThenElse {
             }
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-            tiger_type cond_type = left_->type_verify();
-            tiger_type then_type = middle_->type_verify();
-            tiger_type else_type = right_->type_verify();
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            tiger_type cond_type = left_->type_verify(scope);
+            tiger_type then_type = middle_->type_verify(scope);
+            tiger_type else_type = right_->type_verify(scope);
             if (cond_type == tiger_type::INT && then_type == else_type && then_type != tiger_type::ERROR) {
                 return then_type;
             } else if (cond_type != tiger_type::INT) {
@@ -734,9 +734,9 @@ class WhileDo {
             return result;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            tiger_type cond_type = left_->type_verify();
-            tiger_type do_type = right_->type_verify();
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            tiger_type cond_type = left_->type_verify(scope);
+            tiger_type do_type = right_->type_verify(scope);
 
             if (cond_type == tiger_type::INT && do_type != tiger_type::ERROR) {
                 return tiger_type::NIL;
@@ -759,10 +759,10 @@ class ForTo {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-            tiger_type first_type = two_->type_verify();
-            tiger_type last_type = three_->type_verify();
-            tiger_type body_type = four_->type_verify();
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            tiger_type first_type = two_->type_verify(scope);
+            tiger_type last_type = three_->type_verify(scope);
+            tiger_type body_type = four_->type_verify(scope);
             if (first_type == tiger_type::INT && last_type == tiger_type::INT
                     && body_type != tiger_type::ERROR) {
                 return tiger_type::NIL;
@@ -785,7 +785,7 @@ class UntypedVarDeclaration {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -801,7 +801,7 @@ class TypedVarDeclaration {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -817,7 +817,7 @@ class TypeDeclaration {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -834,7 +834,7 @@ class LetBlock {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -850,7 +850,7 @@ class Declaration {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr child_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr child_) {
             std::cout << "not implemented yet!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -867,7 +867,7 @@ class DeclList {
             return -1;
         }
 
-        tiger_type type_verify(std::vector<const DeclarationASTNode*> vec_) {
+        tiger_type type_verify(Scope& scope, std::vector<const DeclarationASTNode*> vec_) {
             std::cout << "not implemented yet!*" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -884,10 +884,10 @@ class ExprSeq {
             return -1;
         }
 
-        tiger_type type_verify(std::vector<const ASTNode*> vec_) {
+        tiger_type type_verify(Scope& scope, std::vector<const ASTNode*> vec_) {
             tiger_type return_type = tiger_type::NIL;
             for (auto node : vec_) {
-                return_type = node->type_verify();
+                return_type = node->type_verify(scope);
                 if (return_type == tiger_type::ERROR) {
                     return tiger_type::ERROR;
                 }
@@ -906,7 +906,7 @@ class FieldMember {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -923,7 +923,7 @@ class FieldList {
             return -1;
         }
 
-        tiger_type type_verify(std::vector<const FieldMemberASTNode*> vec_) {
+        tiger_type type_verify(Scope& scope, std::vector<const FieldMemberASTNode*> vec_) {
             std::cout << "not implemented yet!*" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -940,7 +940,7 @@ class TypeInstantiation {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -957,7 +957,7 @@ class TypeValue {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr child_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr child_) {
             std::cout << "not implemented yet!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -974,7 +974,7 @@ class RecordField {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -991,7 +991,7 @@ class RecordType {
             return -1;
         }
 
-        tiger_type type_verify(std::vector<const RecordFieldASTNode*> vec_) {
+        tiger_type type_verify(Scope& scope, std::vector<const RecordFieldASTNode*> vec_) {
             std::cout << "not implemented yet!*" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -1008,7 +1008,7 @@ class ArrayTypeImplementation {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr child_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr child_) {
             std::cout << "not implemented yet!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -1025,7 +1025,7 @@ class DotAccess {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -1042,10 +1042,10 @@ class IndexAccess {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             // TODO check left side is an array
-            //tiger_type left_type = left_->type_verify();
-            tiger_type index_type = right_->type_verify();
+            //tiger_type left_type = left_->type_verify(scope);
+            tiger_type index_type = right_->type_verify(scope);
             if (index_type != tiger_type::INT) {
                 cerr << "error: index of the array must be an integer expression" << endl;
                 return tiger_type::ERROR;
@@ -1067,10 +1067,10 @@ class ArrayValue {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             // TODO check left side is an array
-            //tiger_type left_type = left_->type_verify();
-            tiger_type index_type = right_->type_verify();
+            //tiger_type left_type = left_->type_verify(scope);
+            tiger_type index_type = right_->type_verify(scope);
             if (index_type != tiger_type::INT) {
                 cerr << "error: index of the array must be an integer expression" << endl;
                 return tiger_type::ERROR;
@@ -1092,7 +1092,7 @@ class UnTypedFuncDecl {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -1109,7 +1109,7 @@ class TypedFuncDecl {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
             std::cout << "not implemented yet!!!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
@@ -1126,7 +1126,7 @@ class FuncCall {
             return -1;
         }
 
-        tiger_type type_verify(ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        tiger_type type_verify(Scope& scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             std::cout << "not implemented yet!!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
