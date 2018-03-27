@@ -16,6 +16,7 @@
 #include <string>
 #include <cmath>
 #include "typeenum.hh"
+#include "scope.hh"
 
 using namespace std;
 
@@ -237,7 +238,7 @@ class NoEvalUnaryASTNode : public ASTNode {
 
   virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
-      return op.type_verify(child_);
+      return op.type_verify(scope, child_);
   }
 
   value_t eval() const
@@ -364,7 +365,7 @@ class NoEvalBinaryASTNode : public ASTNode {
 
   virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
-      return op.type_verify(left_, right_);
+      return op.type_verify(scope, left_, right_);
   }
 
   virtual std::string toStr() const
@@ -437,7 +438,7 @@ class TertiaryASTNode : public ASTNode {
 
   virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
-      return op.type_verify(left_, middle_, right_);
+      return op.type_verify(scope, left_, middle_, right_);
   }
 
   value_t eval() const
@@ -526,7 +527,7 @@ class QuaternaryASTNode : public ASTNode {
 
   virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
-      return op.type_verify(one_, two_, three_, four_);
+      return op.type_verify(scope, one_, two_, three_, four_);
   }
 
   value_t eval() const
@@ -630,7 +631,7 @@ class VectorASTNode : public ASTNode {
 
   virtual tiger_type type_verify(Scope& scope) const {
       auto op = O<value_t>();
-      return op.type_verify(vec_);
+      return op.type_verify(scope, vec_);
   }
 
   value_t eval() const

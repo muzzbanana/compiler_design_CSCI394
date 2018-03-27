@@ -11,7 +11,6 @@ using namespace std;
 
 namespace tiger {
 
-
 /* class Type {
     public:
         Type();

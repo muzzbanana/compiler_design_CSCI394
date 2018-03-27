@@ -2,7 +2,7 @@
 #include <map>
 #include <vector>
 
-namespace Tiger {
+namespace tiger {
 
 class Scope{
     public:
@@ -15,6 +15,6 @@ class Scope{
         using symbol_scope_t = std::vector<SymbolTable>;
         symbol_scope_t scope_;
 
-       
-}
+
+};
 } // namespace
