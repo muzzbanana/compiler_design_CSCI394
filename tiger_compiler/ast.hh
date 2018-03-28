@@ -1061,7 +1061,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 return right_->type_verify(scope);
             }
     };
