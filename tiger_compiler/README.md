@@ -49,14 +49,16 @@ but not syntactic. Will fix soon.
 
    * Type mismatch in expression
    * Same variable name in different scopes
-      `let
+   ```
+      let
          var x := 1
          function f(int: i) =
             let var x := 2
             in x + 1 end
        in
          f(4)
-       end`
+       end
+   ```
    * Recursive and mutually recursive functions
       `let
          function f (a : string) : string = f(15)
