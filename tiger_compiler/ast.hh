@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <cmath>
+#include <set>
 #include "type.hh"
 #include "scope.hh"
 
@@ -65,7 +66,7 @@ class BreakASTNode : public ASTNode {
         virtual ~BreakASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
-            std::cout << "not implemented yet!break" << std::endl;
+            std::cout << "break not implemented yet!" << std::endl;
             return Type::notImplementedType;
         }
 
@@ -184,7 +185,7 @@ template <template <typename> class O>
             }
 
             virtual const Type *type_verify(Scope* scope) const {
-                std::cout << "not implemented yet! unary" << std::endl;
+                std::cout << "unary not implemented yet!" << std::endl;
                 return Type::notImplementedType;
             }
 
@@ -1061,8 +1062,22 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
-                std::cout << "not implemented yet!*" << std::endl;
-                return Type::notImplementedType;
+              set<string> string_set;
+              cout << "checking vectors" << endl;
+              for (unsigned int i = 0; i < vec_.size(); i++){
+                string s = vec_[i]->toStr();
+                string t = s.substr(0,s.find(":"));
+                t.erase(remove(t.begin(), t.end(), ' '), t.end());
+                string_set.insert(t);
+              }
+              if (string_set.size() != vec_.size()){
+                error_reporting();
+                cerr << "       repeated use of variable names" << endl;
+                return Type::ERROR;
+              }
+
+                std::cout << "record type not implemented yet!*" << std::endl;
+                return Type::NOTIMPLEMENTED;
             }
     };
 
@@ -1115,6 +1130,7 @@ template <typename Z>
                 if (index_type != Type::intType) {
                     error_reporting();
                     cerr << "       index of the array must be an integer expression" << endl;
+
                     return Type::errorType;
                 } else {
                     // TODO return type the array is of
@@ -1170,6 +1186,13 @@ template <typename Z>
                     return Type::errorType;
                 }
 
+                tiger_type arguments = middle_->type_verify(scope);
+                if (arguments == tiger_type::ERROR){
+                  return tiger_type::ERROR;
+                }
+                // TODO make this take a scope that has the parameters in it
+                tiger_type return_type = right_->type_verify(scope);
+
                 scope->symbol_insert(func_name, return_type);
 
                 return Type::nilType;
@@ -1209,13 +1232,12 @@ template <typename Z>
                 if (scope->preexisting(func_name)) {
                     error_reporting();
                     cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
+
                     return Type::errorType;
                 }
 
-                if (declared_func_type == Type::intType && return_type == Type::intType) {
-                    // it's an int
-                } else if (declared_func_type == Type::stringType && return_type == Type::stringType) {
-                    // it's a string
+                if (return_type == declared_func_type) {
+                    // we're good!
                 } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
                     error_reporting();
                     cerr << "       function " << func_name << " declared as returning " << declared_func_type->toStr()
@@ -1253,6 +1275,7 @@ template <typename Z>
                 if (return_type == Type::notFoundType) {
                     error_reporting();
                     cerr << "       unknown function " << func_name << endl;
+
                     return Type::errorType;
                 }
 
