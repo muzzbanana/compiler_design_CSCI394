@@ -154,8 +154,7 @@ class NameASTNode : public ASTNode {
             return scope->search(value_);
         }
 
-        virtual std::string toStr() const
-        {
+        virtual std::string toStr() const {
             return value_;
         }
 
@@ -272,12 +271,19 @@ template <template <typename> class O>
             }
 
             virtual const Type *type_verify(Scope* scope) const {
-                if (left_->type_verify(scope) == Type::intType
-                        && right_->type_verify(scope) == Type::intType) {
+                const Type *left_type = left_->type_verify(scope);
+                const Type *right_type = right_->type_verify(scope);
+                if (left_type == Type::intType
+                        && right_type == Type::intType) {
                     return Type::intType;
+                } else if (left_type == Type::errorType || right_type == Type::errorType) {
+                    /* this means the error was further down below, so we just pass
+                     * it up again */
+                    return Type::errorType;
                 } else {
                     error_reporting();
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
+                    cerr << "       (the types are '" << left_type->toStr() << "' and '" << right_type->toStr() << "')" << endl;
                     return Type::errorType;
                 }
             }
@@ -671,11 +677,18 @@ template <typename Z>
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 const Type *name_type = left_->type_verify(scope);
                 const Type *value_type = right_->type_verify(scope);
-                if (name_type == value_type) {
+                if (name_type == Type::notFoundType) {
+                    error_reporting();
+                    cerr << "       unknown variable " << left_->toStr() << endl;
+                    return Type::errorType;
+                }
+
+                if (name_type == value_type && name_type != Type::errorType) {
                     return value_type;
                 } else if (name_type != Type::errorType && value_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       assignment of variable to wrong type" << endl;
+                    cerr << "       variable type mismatch: " << left_->toStr() << " declared as type " <<
+                            name_type->toStr() << " but is being assigned type " << value_type->toStr() << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -707,10 +720,15 @@ template <typename Z>
                 } else if (cond_type != Type::intType) {
                     error_reporting();
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
+                    cerr << "       (evaluates to '" << cond_type->toStr() << "' instead)" << endl;
+                    return Type::errorType;
+                } else if (then_type == Type::errorType || else_type == Type::errorType) {
+                    /* error was somewhere below us, just pass it on */
                     return Type::errorType;
                 } else if (then_type != else_type) {
                     error_reporting();
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
+                    cerr << "       (types are '" << then_type->toStr() << "' and '" << else_type->toStr() << "')" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -831,11 +849,13 @@ template <typename Z>
                 }
 
                 if (value_type == var_type) {
+                    scope->symbol_insert(var_name, var_type);
+
                     return Type::nilType;
                 } else {
                     error_reporting();
-                    cerr << "cannot assign expression of type <1%#!$?!?!> to variable "
-                        << var_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
+                    cerr << "       cannot assign expression of type " << value_type->toStr() << " to variable "
+                        << var_name << ", which is of type " << var_type->toStr() << "." << endl;
                     return Type::errorType;
                 }
             }
@@ -851,7 +871,11 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "type declaration not implemented yet!!" << std::endl;
+                string type_name = left_->toStr();
+                const Type *new_type = right_->type_verify(scope);
+
+                scope->type_insert(type_name, new_type);
+
                 return Type::notImplementedType;
             }
     };
@@ -871,7 +895,12 @@ template <typename Z>
                 // section.
                 scope->push_scope();
                 const Type *declaration_type = left_->type_verify(scope);
-                const Type *body_type = right_->type_verify(scope);
+                const Type *body_type;
+                if (declaration_type != Type::errorType) {
+                    body_type = right_->type_verify(scope);
+                } else {
+                    body_type = Type::errorType;
+                }
                 scope->pop_scope();
 
                 if (declaration_type != Type::errorType && body_type != Type::errorType) {
@@ -1158,10 +1187,22 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-                // TODO make this actually declare something
+                // one: func name
+                // two: func params
+                // three: func return type
+                // four: func body
                 string func_name = one_->toStr();
 
-                string declared_func_type = two_->toStr();
+                // TODO handle arguments
+
+                const Type *declared_func_type = scope->type_search(three_->toStr());
+
+                if (declared_func_type == Type::notFoundType) {
+                    error_reporting();
+                    cerr << "       function " << func_name << " declared as returning nonexistent type " << three_->toStr() << endl;
+                    return Type::errorType;
+                }
+
                 // TODO make this take a scope that has the parameters in it
                 const Type *return_type = four_->type_verify(scope);
 
@@ -1171,21 +1212,22 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                // TODO compare types here
-                if (declared_func_type == "int" && return_type == Type::intType) {
+                if (declared_func_type == Type::intType && return_type == Type::intType) {
                     // it's an int
-                } else if (declared_func_type == "string" && return_type == Type::stringType) {
+                } else if (declared_func_type == Type::stringType && return_type == Type::stringType) {
                     // it's a string
-                } else if (return_type != Type::errorType) {
+                } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       function " << func_name << " declared as returning <%$#$#@>, "
-                         << "but evaluates to <#$@$#>" << endl;
+                    cerr << "       function " << func_name << " declared as returning " << declared_func_type->toStr()
+                         << " but evaluates to " << return_type->toStr() << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
                 }
 
-                scope->symbol_insert(func_name, return_type);
+                FunctionType *functype = new FunctionType(func_name, return_type);
+
+                scope->symbol_insert(func_name, functype);
 
                 return Type::nilType;
             }
@@ -1208,7 +1250,7 @@ template <typename Z>
 
                 const Type *return_type = scope->search(func_name);
 
-                if (return_type == Type::errorType) {
+                if (return_type == Type::notFoundType) {
                     error_reporting();
                     cerr << "       unknown function " << func_name << endl;
                     return Type::errorType;

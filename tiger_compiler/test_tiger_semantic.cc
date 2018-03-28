@@ -70,6 +70,7 @@ TEST_CASE("check exprseq type", "[type-evaluation]") {
 }
 
 TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]") {
+    cout << "== STRING PLUS INT ==" << endl;
     FILE *myfile = fopen("test_semantic/string_plus_int.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -88,6 +89,7 @@ TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]")
 }
 
 TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
+    cout << "== ERROR INSIDE EXPRSEQ ==" << endl;
     FILE *myfile = fopen("test_semantic/error_inside_sequence.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -106,6 +108,7 @@ TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
 }
 
 TEST_CASE("fail on body of while loop error", "[semantic-check]") {
+    cout << "== ERROR INSIDE WHILE ==" << endl;
     FILE *myfile = fopen("test_semantic/while_mistake.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -124,6 +127,7 @@ TEST_CASE("fail on body of while loop error", "[semantic-check]") {
 }
 
 TEST_CASE("fail on bad record type", "[semantic-check]") {
+    cout << "== ERROR ON RECORD TYPE ==" << endl;
     FILE *myfile = fopen("test_semantic/bad_record_type.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -138,6 +142,7 @@ TEST_CASE("fail on bad record type", "[semantic-check]") {
 }
 
 TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
+    cout << "== EXPR TYPE MISMATCH ==" << endl;
     FILE *myfile = fopen("test_semantic/expr_type_mismatch.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -152,7 +157,23 @@ TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
 }
 
 TEST_CASE("fail on function expression not matching declared return type", "[semantic-check]") {
+    cout << "== FUNC WRONG TYPE DECL ==" << endl;
     FILE *myfile = fopen("test_semantic/func_wrong_type_decl.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on function returning fake return type", "[semantic-check]") {
+    cout << "== NONEXISTENT RETURN ==" << endl;
+    FILE *myfile = fopen("test_semantic/func_nonexistent_return.tig", "r");
     yyin = myfile;
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
@@ -301,6 +322,20 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on declaring a variable with the wrong type", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/var_declare_wrong_type.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
 
     delete output;
     fclose(myfile);
