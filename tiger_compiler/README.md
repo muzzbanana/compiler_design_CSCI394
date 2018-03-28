@@ -10,7 +10,7 @@ functional system with immutable scope objects in a tree structure.)
 Types are defined using a class `Type`. This serves as the base for the for
    - BaseType which is used for ints, strings, nil, error, things that not yet implemented
      (in case we didn't complete the assignment), and as a hack a type to represent when
-     we didn't find a type.
+     we didn't find a variable or type in scope.
    - ArrayType for arrays
    - RecordType for records
    - FunctionType for functions
@@ -51,7 +51,7 @@ The class has three simple functionalities:
 
    * Misuse of types
    * Indexing out of range of array
-      
+
 
 Tiger Parser
 ============
@@ -79,7 +79,7 @@ Tiger Parser
                      declerations in let statements (decllist), members in field types
                      (fieldlist). The class makes use of a vector and has a method add_node
                      that adds elements to the end of the vector.
-                         
+
  * toStr() now uses std::stringstram rather than std::to_string. Tokens are added to a buffer
    and then converted to a string when we reach end of tokens.
  
