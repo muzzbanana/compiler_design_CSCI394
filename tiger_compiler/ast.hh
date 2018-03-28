@@ -1032,9 +1032,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
-                std::cout << "not implemented yet!" << std::endl;
-                std::cout << "typevalue not implemented yet!" << std::endl;
-                return Type::notImplementedType;
+                return child_->type_verify(scope);
             }
     };
 
@@ -1058,31 +1056,33 @@ using RecordFieldASTNode = NoEvalBinaryASTNode<RecordField>;
 
 // a record type -- i.e. a sequence of RecordFields
 template <typename Z>
-    class RecordTypeAST {
-        public:
-            Z operator() (std::vector<const RecordFieldASTNode*> fields) {
-                return -1;
-            }
+class RecordTypeAST {
+    public:
+        Z operator() (std::vector<const RecordFieldASTNode*> fields) {
+            return -1;
+        }
 
-            const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
-              set<string> string_set;
-              cout << "checking vectors" << endl;
-              for (unsigned int i = 0; i < vec_.size(); i++){
+        const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
+            set<string> string_set;
+            for (unsigned int i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();
                 string t = s.substr(0,s.find(":"));
                 t.erase(remove(t.begin(), t.end(), ' '), t.end());
+                if (string_set.count(t) > 0) {
+                    error_reporting();
+                    cerr << "       name '" << t << "' used multiple times in function or record declaration" << endl;
+                    return Type::errorType;
+                }
                 string_set.insert(t);
-              }
-              if (string_set.size() != vec_.size()){
-                error_reporting();
-                cerr << "       repeated use of variable names" << endl;
-                return Type::errorType;
-              }
-
-                std::cout << "record type not implemented yet!*" << std::endl;
-                return Type::notImplementedType;
             }
-    };
+            if (string_set.size() != vec_.size()){
+                //
+            }
+
+            std::cout << "record type not implemented yet!*" << std::endl;
+            return Type::notImplementedType;
+        }
+};
 
 using RecordTypeASTNode = VectorASTNode<RecordTypeAST, RecordFieldASTNode>;
 
@@ -1095,8 +1095,16 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
-                std::cout << "array not implemented yet!" << std::endl;
-                return Type::notImplementedType;
+                string type_name = child_->toStr();
+                const Type *arrayof = scope->type_search(type_name);
+
+                if (arrayof == Type::notFoundType) {
+                    error_reporting();
+                    cerr << "       cannot create array of nonexistent type '" << type_name << "'" << endl;
+                    return Type::errorType;
+                }
+
+                return new ArrayType(arrayof);
             }
     };
 

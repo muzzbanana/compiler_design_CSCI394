@@ -43,7 +43,7 @@ class Type {
 
 class ArrayType : public Type {
     public:
-        ArrayType(string name, Type *what_of);
+        ArrayType(const Type *what_of);
 
         string toStr() const;
 

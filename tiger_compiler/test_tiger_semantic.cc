@@ -243,6 +243,7 @@ TEST_CASE("fail on recursive return type mismatch", "[semantic-check]") {
 }
 
 TEST_CASE("fail on repeated definition of var", "[semantic-check]") {
+    cout << "== REPEATED DEFINITION OF VAR ==" << endl;
     FILE *myfile = fopen("test_semantic/repeat_definition.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -257,6 +258,7 @@ TEST_CASE("fail on repeated definition of var", "[semantic-check]") {
 }
 
 TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
+    cout << "== UNDEFINED IDENTIFIER ==" << endl;
     FILE *myfile = fopen("test_semantic/undefined_identifier.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -271,6 +273,7 @@ TEST_CASE("fail on use of undefined identifier", "[semantic-check]") {
 }
 
 TEST_CASE("fail on array index out of range", "[semantic-check]") {
+    cout << "== ARRAY INDEX OUT OF RANGE ==" << endl;
     FILE *myfile = fopen("test_semantic/array_index_out_of_range.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -285,6 +288,7 @@ TEST_CASE("fail on array index out of range", "[semantic-check]") {
 }
 
 TEST_CASE("fail on invalid type for array", "[semantic-check]") {
+    cout << "== INVALID TYPE FOR ARRAY ==" << endl;
     FILE *myfile = fopen("test_semantic/invalid_type_for_array.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -299,12 +303,12 @@ TEST_CASE("fail on invalid type for array", "[semantic-check]") {
 }
 
 TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
+    cout << "== REPETITION OF FUNCTION ARGUMENTS ==" << endl;
     FILE *myfile = fopen("test_semantic/repitition_of_func_args.tig", "r");
     yyin = myfile;
     yylineno = 1;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
-    std::cout<<"repetition"<<std::endl;
     Scope *s = new Scope();
     const Type *type = output->type_verify(s);
     REQUIRE(type == Type::errorType);
@@ -318,6 +322,8 @@ TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
 }
 
 TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-check]") {
+    cout << "== SAME NAME, DIFFERENT SCOPE ==" << endl;
+    cout << "(should succeed)" << endl;
     FILE *myfile = fopen("test_semantic/same_name_diff_scope.tg", "r");
     yyin = myfile;
     yylineno = 1;
@@ -332,6 +338,7 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
 }
 
 TEST_CASE("fail on declaring a variable with the wrong type", "[semantic-check]") {
+    cout << "== DECLARING VARIABLE WRONG TYPE ==" << endl;
     FILE *myfile = fopen("test_semantic/var_declare_wrong_type.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -346,6 +353,7 @@ TEST_CASE("fail on declaring a variable with the wrong type", "[semantic-check]"
 }
 
 TEST_CASE("fail on assigning a variable the wrong type", "[semantic-check]") {
+    cout << "== ASSIGNING VARIABLE WRONG TYPE ==" << endl;
     FILE *myfile = fopen("test_semantic/var_assign_wrong_type.tig", "r");
     yyin = myfile;
     yylineno = 1;
