@@ -283,6 +283,7 @@ template <template <typename> class O>
                     return Type::errorType;
                 } else {
                     error_reporting();
+                    cerr << "       in expression '" << toStr() << "'" << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     cerr << "       (the types are '" << left_type->toStr() << "' and '" << right_type->toStr() << "')" << endl;
                     return Type::errorType;
@@ -680,7 +681,7 @@ template <typename Z>
                 const Type *value_type = right_->type_verify(scope);
                 if (name_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       unknown variable " << left_->toStr() << endl;
+                    cerr << "       unknown variable '" << left_->toStr() << "'" << endl;
                     return Type::errorType;
                 }
 
@@ -688,8 +689,8 @@ template <typename Z>
                     return value_type;
                 } else if (name_type != Type::errorType && value_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       variable type mismatch: " << left_->toStr() << " declared as type " <<
-                            name_type->toStr() << " but is being assigned type " << value_type->toStr() << endl;
+                    cerr << "       variable type mismatch: '" << left_->toStr() << "' declared as type '" <<
+                            name_type->toStr() << "' but is being assigned type '" << value_type->toStr() << "'" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -811,7 +812,7 @@ template <typename Z>
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -835,20 +836,16 @@ template <typename Z>
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
 
                 const Type *value_type = right_->type_verify(scope);
 
-                const Type *var_type;
-                if (type_name == "int") {
-                    var_type = Type::intType;
-                } else if (type_name == "string") {
-                    var_type = Type::stringType;
-                } else {
+                const Type *var_type = scope->type_search(type_name);
+                if (var_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       unknown type " << type_name << endl;
+                    cerr << "       variable '" << var_name << "' declared as unknown type '" << type_name << "'" << endl;
                     return Type::errorType;
                 }
 
@@ -858,8 +855,8 @@ template <typename Z>
                     return Type::nilType;
                 } else {
                     error_reporting();
-                    cerr << "       cannot assign expression of type " << value_type->toStr() << " to variable "
-                        << var_name << ", which is of type " << var_type->toStr() << "." << endl;
+                    cerr << "       cannot assign expression of type '" << value_type->toStr() << "' to variable '"
+                        << var_name << "', which is of type '" << var_type->toStr() << "'." << endl;
                     return Type::errorType;
                 }
             }
@@ -880,7 +877,11 @@ template <typename Z>
 
                 scope->type_insert(type_name, new_type);
 
-                return Type::notImplementedType;
+                if (new_type == Type::errorType) {
+                    return Type::errorType;
+                } else {
+                    return Type::nilType;
+                }
             }
     };
 
@@ -1190,7 +1191,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -1233,7 +1234,8 @@ template <typename Z>
 
                 if (declared_func_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       function " << func_name << " declared as returning nonexistent type " << three_->toStr() << endl;
+                    cerr << "       function '" << func_name << "' declared as returning nonexistent type '" <<
+                            three_->toStr() << "'" << endl;
                     return Type::errorType;
                 }
 
@@ -1242,7 +1244,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
 
                     return Type::errorType;
                 }
@@ -1251,8 +1253,8 @@ template <typename Z>
                     // we're good!
                 } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       function " << func_name << " declared as returning " << declared_func_type->toStr()
-                         << " but evaluates to " << return_type->toStr() << endl;
+                    cerr << "       function '" << func_name << "' declared as returning '" << declared_func_type->toStr()
+                         << "', but evaluates to '" << return_type->toStr() << "'" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -1285,7 +1287,7 @@ template <typename Z>
 
                 if (return_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       unknown function " << func_name << endl;
+                    cerr << "       unknown function '" << func_name << "'" << endl;
 
                     return Type::errorType;
                 }

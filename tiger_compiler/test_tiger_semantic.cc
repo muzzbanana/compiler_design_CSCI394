@@ -187,6 +187,7 @@ TEST_CASE("fail on function returning fake return type", "[semantic-check]") {
 }
 
 TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
+    cout << "== INCORRECT NESTING ==" << endl;
     FILE *myfile = fopen("test_semantic/incorrect_nesting.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -201,6 +202,7 @@ TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
 }
 
 TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]") {
+    cout << "== MUTUAL RECURSIVE MISMATCH ==" << endl;
     FILE *myfile = fopen("test_semantic/mutual_recursive_mismatch.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -215,6 +217,7 @@ TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]
 }
 
 TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
+    cout << "== RECURSIVE ARGUMENT TYPE MISMATCH ==" << endl;
     FILE *myfile = fopen("test_semantic/recursive_arg_mismatch.tig", "r");
     yyin = myfile;
     yylineno = 1;
@@ -229,6 +232,7 @@ TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
 }
 
 TEST_CASE("fail on recursive return type mismatch", "[semantic-check]") {
+    cout << "== RECURSIVE RETURN TYPE MISMATCH ==" << endl;
     FILE *myfile = fopen("test_semantic/recursive_func_mismatch.tig", "r");
     yyin = myfile;
     yylineno = 1;
