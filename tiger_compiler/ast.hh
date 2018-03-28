@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <cmath>
+#include <set>
 #include "typeenum.hh"
 #include "scope.hh"
 
@@ -65,7 +66,7 @@ class BreakASTNode : public ASTNode {
         virtual ~BreakASTNode() = default;
 
         virtual tiger_type type_verify(Scope* scope) const {
-            std::cout << "not implemented yet!break" << std::endl;
+            std::cout << "break not implemented yet!" << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 
@@ -185,7 +186,7 @@ template <template <typename> class O>
             }
 
             virtual tiger_type type_verify(Scope* scope) const {
-                std::cout << "not implemented yet! unary" << std::endl;
+                std::cout << "unary not implemented yet!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
 
@@ -834,7 +835,7 @@ template <typename Z>
                     return tiger_type::NIL;
                 } else {
                     error_reporting();
-                    cerr << "cannot assign expression of type <1%#!$?!?!> to variable "
+                    cerr << "       cannot assign expression of type <1%#!$?!?!> to variable "
                         << var_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
                     return tiger_type::ERROR;
                 }
@@ -851,7 +852,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                
+
                 std::cout << "type decleration not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
@@ -1031,7 +1032,21 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
-                std::cout << "not implemented yet!*" << std::endl;
+              set<string> string_set;
+              cout << "checking vectors" << endl;
+              for (unsigned int i = 0; i < vec_.size(); i++){
+                string s = vec_[i]->toStr();
+                string t = s.substr(0,s.find(":"));
+                t.erase(remove(t.begin(), t.end(), ' '), t.end());
+                string_set.insert(t);
+              }
+              if (string_set.size() != vec_.size()){
+                error_reporting();
+                cerr << "       repeated use of variable names" << endl;
+                return tiger_type::ERROR;
+              }
+
+                std::cout << "record type not implemented yet!*" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -1084,7 +1099,7 @@ template <typename Z>
                 tiger_type index_type = right_->type_verify(scope);
                 if (index_type != tiger_type::INT) {
                     error_reporting();
-                    cerr << "error: index of the array must be an integer expression" << endl;
+                    cerr << "       index of the array must be an integer expression" << endl;
                     return tiger_type::ERROR;
                 } else {
                     // TODO return type the array is of
@@ -1109,7 +1124,7 @@ template <typename Z>
                 tiger_type index_type = right_->type_verify(scope);
                 if (index_type != tiger_type::INT) {
                     error_reporting();
-                    cerr << "error: index of the array must be an integer expression" << endl;
+                    cerr << "       index of the array must be an integer expression" << endl;
                     return tiger_type::ERROR;
                 } else {
                     // TODO return type the array is of
@@ -1131,14 +1146,18 @@ template <typename Z>
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
                 // TODO make this actually declare something
                 string func_name = left_->toStr();
-                // TODO make this take a scope that has the parameters in it
-                tiger_type return_type = right_->type_verify(scope);
-
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
+
+                tiger_type arguments = middle_->type_verify(scope);
+                if (arguments == tiger_type::ERROR){
+                  return tiger_type::ERROR;
+                }
+                // TODO make this take a scope that has the parameters in it
+                tiger_type return_type = right_->type_verify(scope);
 
                 scope->symbol_insert(func_name, return_type);
 
@@ -1166,7 +1185,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
 
@@ -1176,7 +1195,7 @@ template <typename Z>
                 } else if (declared_func_type == "string" && return_type == tiger_type::STRING) {
                     // it's a string
                 } else if (return_type != tiger_type::ERROR) {
-                    cerr << "error: function " << func_name << " declared as returning <%$#$#@>, "
+                    cerr << "       function " << func_name << " declared as returning <%$#$#@>, "
                          << "but evaluates to <#$@$#>" << endl;
                     return tiger_type::ERROR;
                 } else {
@@ -1208,7 +1227,7 @@ template <typename Z>
 
                 if (return_type == tiger_type::ERROR) {
                     error_reporting();
-                    cerr << "error: unknown function " << func_name << endl;
+                    cerr << "       unknown function " << func_name << endl;
                     return tiger_type::ERROR;
                 }
 
