@@ -1,0 +1,5 @@
+let
+    var a := int[10] of "hello"
+in
+    a
+end

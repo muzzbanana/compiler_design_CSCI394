@@ -1,6 +1,7 @@
 #ifndef _TYPE_HH_
 #define _TYPE_HH_
 
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -31,9 +32,13 @@ class Type {
         static BaseType *notImplementedType;
         static BaseType *notFoundType;
 
-        Type(string name);
+        Type(string name, tiger_type type);
+
+        virtual bool equivalent(const Type *other) const;
 
         virtual string toStr() const =0;
+
+        tiger_type getKind() const;
 
     protected:
         tiger_type type_;
@@ -46,6 +51,8 @@ class ArrayType : public Type {
         ArrayType(const Type *what_of);
 
         string toStr() const;
+
+        bool equivalent(const Type *other) const;
 
         const Type *type_of_;
 };

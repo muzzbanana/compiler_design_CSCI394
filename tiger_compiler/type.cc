@@ -12,13 +12,21 @@ BaseType *Type::errorType = new BaseType("<error>");
 BaseType *Type::notImplementedType = new BaseType("<not implemented>");
 BaseType *Type::notFoundType = new BaseType("<not found>");
 
-Type::Type(string name) {
+Type::Type(string name, tiger_type type) {
     name_ = name;
+    type_ = type;
 }
 
-ArrayType::ArrayType(const Type *what_of) : Type("array") {
+tiger_type Type::getKind() const {
+    return type_;
+}
+
+bool Type::equivalent(const Type *other) const {
+    return (this == other);
+}
+
+ArrayType::ArrayType(const Type *what_of) : Type("array", tiger_type::ARRAY) {
     type_of_ = what_of;
-    type_ = tiger_type::ARRAY;
 }
 
 string ArrayType::toStr() const {
@@ -28,8 +36,15 @@ string ArrayType::toStr() const {
     return ss.str();
 }
 
-RecordType::RecordType(string name) : Type(name) {
-    type_ = tiger_type::RECORD;
+bool ArrayType::equivalent(const Type *other) const {
+    if (other->getKind() != tiger_type::ARRAY) return false;
+    // I feel bad for doing this. But we know it's an array type!
+    // There's probably a better C++-y way to do it, though.
+    const ArrayType *o = static_cast<const ArrayType*>(other);
+    return o->type_of_ == type_of_;
+}
+
+RecordType::RecordType(string name) : Type(name, tiger_type::RECORD) {
 }
 
 void RecordType::add_field(string name, const Type* type) {
@@ -40,7 +55,7 @@ std::string RecordType::toStr() const {
     return name_;
 }
 
-FunctionType::FunctionType(string name, const Type* rettype) : Type(name) {
+FunctionType::FunctionType(string name, const Type* rettype) : Type(name, tiger_type::FUNCTION) {
     rettype_ = rettype;
     type_ = tiger_type::FUNCTION;
 }
@@ -61,7 +76,7 @@ string FunctionType::toStr() const {
     return ss.str();
 }
 
-BaseType::BaseType(string name) : Type(name) {
+BaseType::BaseType(string name) : Type(name, tiger_type::BASE) {
     type_ = tiger_type::BASE;
 }
 

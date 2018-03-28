@@ -1,0 +1,6 @@
+let
+    type intarr = array of int
+    var a : intarr := int[10] of 3
+in
+    a["boo"]
+end

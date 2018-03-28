@@ -306,6 +306,36 @@ TEST_CASE("fail on invalid type for array", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on indexing array with non-integer", "[semantic-check]") {
+    cout << "== NON-INTEGER ARRAY INDEX ==" << endl;
+    FILE *myfile = fopen("test_semantic/non_int_array_index.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on array default not matching array type", "[semantic-check]") {
+    cout << "== ARRAY DEFAULT MISMATCH ==" << endl;
+    FILE *myfile = fopen("test_semantic/wrong_array_default.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
     cout << "== REPETITION OF FUNCTION ARGUMENTS ==" << endl;
     FILE *myfile = fopen("test_semantic/repitition_of_func_args.tig", "r");

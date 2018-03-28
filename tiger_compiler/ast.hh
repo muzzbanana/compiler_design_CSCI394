@@ -849,7 +849,7 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                if (value_type == var_type) {
+                if (value_type->equivalent(var_type)) {
                     scope->symbol_insert(var_name, var_type);
 
                     return Type::nilType;
@@ -1136,24 +1136,32 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                // TODO check left side is an array
-                //const Type *left_type = left_->type_verify(scope);
+                const Type *left_type = left_->type_verify(scope);
+                if (left_type->getKind() != tiger_type::ARRAY) {
+                    error_reporting();
+                    cerr << "       attempt to index into '" << left_->toStr() << "', which is not an array" << endl;
+                    cerr << "       (it is of type '" << left_type->toStr() << "'.)" << endl;
+                    return Type::errorType;
+                }
+
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
                     error_reporting();
                     cerr << "       index of the array must be an integer expression" << endl;
+                    cerr << "       (got '" << right_->toStr() << "', which is of type '" << index_type->toStr() << "')" << endl;
 
                     return Type::errorType;
                 } else {
-                    // TODO return type the array is of
-                    return Type::intType;
+                    // We know it's an ArrayType, because if it wasn't, we would have thrown
+                    // it away up there.
+                    return static_cast<const ArrayType*>(left_type)->type_of_;
                 }
             }
     };
 
 using IndexASTNode = NoEvalBinaryASTNode<IndexAccess>;
 
-// represents array[index]
+// represents type[length] of value
 template <typename Z>
     class ArrayValue {
         public:
@@ -1162,17 +1170,29 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-                // TODO check left side is an array
-                //const Type *left_type = left_->type_verify(scope);
-                const Type *index_type = right_->type_verify(scope);
-                if (index_type != Type::intType) {
+                string type_name = left_->toStr();
+
+                const Type *length_type = middle_->type_verify(scope);
+
+                if (length_type != Type::intType) {
                     error_reporting();
-                    cerr << "       index of the array must be an integer expression" << endl;
+                    cerr << "       length of the array must be an integer expression" << endl;
+                    cerr << "       (got '" << middle_->toStr() << "', which is of type '" << length_type->toStr() << "'." << endl;
                     return Type::errorType;
-                } else {
-                    // TODO return type the array is of
-                    return Type::intType;
                 }
+
+                const Type *arr_type = scope->type_search(type_name);
+
+                const Type *value_type = right_->type_verify(scope);
+
+                if (!arr_type->equivalent(value_type)) {
+                    error_reporting();
+                    cerr << "       declaring an array of values of type '" << type_name << "', but default value given is '" <<
+                            right_->toStr() << "', which is of type '" << value_type->toStr() << "'" << endl;
+                    return Type::errorType;
+                }
+
+                return new ArrayType(value_type);
             }
     };
 
