@@ -401,6 +401,20 @@ TEST_CASE("fail on assigning a variable the wrong type", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on instantiating nonexistent record type", "[semantic-check]") {
+    cout << "== INSTANTIATE FAKE RECORD TYPE ==" << endl;
+    FILE *myfile = fopen("test_semantic/nonexistent_record_type.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 
 // this one is just a syntax error, not a semantic error.

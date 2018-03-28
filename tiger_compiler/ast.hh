@@ -265,8 +265,7 @@ template <template <typename> class O>
                 : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
             {}
 
-            virtual ~BinaryASTNode()
-            {
+            virtual ~BinaryASTNode() {
                 delete left_;
                 delete right_;
             }
@@ -274,8 +273,7 @@ template <template <typename> class O>
             virtual const Type *type_verify(Scope* scope) const {
                 const Type *left_type = left_->type_verify(scope);
                 const Type *right_type = right_->type_verify(scope);
-                if (left_type == Type::intType
-                        && right_type == Type::intType) {
+                if (left_type == Type::intType && right_type == Type::intType) {
                     return Type::intType;
                 } else if (left_type == Type::errorType || right_type == Type::errorType) {
                     /* this means the error was further down below, so we just pass
@@ -290,14 +288,12 @@ template <template <typename> class O>
                 }
             }
 
-            value_t eval() const
-            {
+            value_t eval() const {
                 auto op = O<value_t>();
                 return op(left_->eval(), right_->eval());
             }
 
-            virtual std::string toStr() const
-            {
+            virtual std::string toStr() const {
                 if (rep1_.length() == 0) {
                     return  "(" + left_->toStr() +
                         " " + rep2_ + " " +
@@ -724,7 +720,7 @@ template <typename Z>
                     return Type::errorType;
                 } else if (cond_type != Type::intType) {
                     error_reporting();
-                    cerr << "       condition in 'if' statement must evaluate to integer" << endl;
+                    cerr << "       condition in ‘if’ statement must evaluate to integer" << endl;
                     cerr << "       (evaluates to ‘" << cond_type->toStr() << "’ instead)" << endl;
                     return Type::errorType;
                 } else if (then_type == Type::errorType || else_type == Type::errorType) {
@@ -732,7 +728,7 @@ template <typename Z>
                     return Type::errorType;
                 } else if (then_type != else_type) {
                     error_reporting();
-                    cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
+                    cerr << "       true and false condition expressions in ‘if’ statement must have the same type" << endl;
                     cerr << "       (types are ‘" << then_type->toStr() << "’ and ‘" << else_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 } else {
@@ -762,7 +758,7 @@ template <typename Z>
                     return Type::nilType;
                 } else if (cond_type != Type::intType) {
                     error_reporting();
-                    cerr << "       condition of 'while' loop must evaluate to integer" << endl;
+                    cerr << "       condition of ‘while’ loop must evaluate to integer" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -789,7 +785,7 @@ template <typename Z>
                     return Type::nilType;
                 } else if (first_type != Type::intType || last_type != Type::intType) {
                     error_reporting();
-                    cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
+                    cerr << "       ‘from’ and ‘to’ expressions in ‘for’ loop must be integer expressions" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -1001,7 +997,28 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
-                std::cout << "fieldlsit not implemented yet!*" << std::endl;
+                /* Similar to the declaration, we parse the toStr's to get
+                 * the field names and make sure there are no duplicates. */
+                set<string> string_set;
+
+                RecordType *rec = new RecordType("");
+
+                for (unsigned int i = 0; i < vec_.size(); i++){
+                    string s = vec_[i]->toStr();
+                    string t = s.substr(0,s.find(":"));
+                    t.erase(remove(t.begin(), t.end(), ' '), t.end());
+
+                    if (string_set.count(t) > 0) {
+                        error_reporting();
+                        cerr << "       name ‘" << t << "’ used multiple times in function or record declaration" << endl;
+                        return Type::errorType;
+                    }
+
+                    string_set.insert(t);
+
+                    rec->add_field(t, vec_[i]->type_verify(scope));
+                }
+
                 return Type::notImplementedType;
             }
     };
@@ -1017,7 +1034,14 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "type instantiation not implemented yet!!" << std::endl;
+                const Type *instantiating_type = scope->type_search(left_->toStr());
+
+                if (instantiating_type == Type::notFoundType) {
+                    error_reporting();
+                    cerr << "       cannot instantiate nonexistent record type ‘" << left_->toStr() << "’" << endl;
+                    return Type::errorType;
+                }
+
                 return Type::notImplementedType;
             }
     };
