@@ -1064,6 +1064,9 @@ class RecordTypeAST {
         }
 
         const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
+          /* dealing with multiple declerations (function arguments)
+             using sets allows us to check the count on a given variable
+             name, if there are more duplicates, return errorType */
             set<string> string_set;
             for (unsigned int i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();
@@ -1074,10 +1077,6 @@ class RecordTypeAST {
                     cerr << "       name '" << t << "' used multiple times in function or record declaration" << endl;
                     return Type::errorType;
                 }
-                string_set.insert(t);
-            }
-            if (string_set.size() != vec_.size()){
-                //
             }
 
             std::cout << "record type not implemented yet!*" << std::endl;

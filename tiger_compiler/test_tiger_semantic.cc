@@ -87,6 +87,24 @@ TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]")
     fclose(myfile);
 }
 
+TEST_CASE("fail on basic inconsistency then <int> else <string>", "[semantic-check]") {
+    cout << "== STRING PLUS INT ==" << endl;
+    FILE *myfile = fopen("test_semantic/ifthenelse_type_mismatch.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    Scope *s = new Scope();
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::errorType);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
     cout << "== ERROR INSIDE EXPRSEQ ==" << endl;
     FILE *myfile = fopen("test_semantic/error_inside_sequence.tig", "r");

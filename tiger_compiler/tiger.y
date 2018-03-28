@@ -281,7 +281,7 @@ void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
 }
 
 void error_reporting() {
-  cerr << "ERROR: line " << yylloc.first_line - 1 << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
+  cerr << "ERROR: line " << yylineno << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
 }
 
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.
