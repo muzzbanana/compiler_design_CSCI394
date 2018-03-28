@@ -5,6 +5,7 @@ namespace tiger {
 
 enum class tiger_type {
     NOTIMPLEMENTED,
+    NOTFOUND,
     ERROR,
     INT,
     STRING,

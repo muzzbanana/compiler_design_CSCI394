@@ -16,6 +16,7 @@ class Scope{
         void push_onto_scope();
         void pop_off_scope();
         void symbol_insert(const std::string &s, tiger_type type);
+        bool preexisting(const std::string& s);
         tiger_type search(const std::string &s);
 
     private:

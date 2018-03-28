@@ -151,6 +151,20 @@ TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on function expression not matching declared return type", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/func_wrong_type_decl.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on incorrect nesting", "[semantic-check]") {
     FILE *myfile = fopen("test_semantic/incorrect_nesting.tig", "r");
     yyin = myfile;
@@ -287,6 +301,20 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on assigning a variable the wrong type", "[semantic-check]") {
+    FILE *myfile = fopen("test_semantic/var_assign_wrong_type.tig", "r");
+    yyin = myfile;
+    yylineno = 1;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
 
     delete output;
     fclose(myfile);

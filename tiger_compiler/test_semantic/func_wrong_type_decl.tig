@@ -1,0 +1,5 @@
+let
+    function f () : int = "hi"
+in
+    f()
+end

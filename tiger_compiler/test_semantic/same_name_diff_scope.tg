@@ -4,7 +4,7 @@ let
     var x := 1
     function f() =
         let var x := 2
-        in print(x) end
+        in x + 1 end
 in
     f()
 end
