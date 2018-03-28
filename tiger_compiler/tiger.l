@@ -22,6 +22,7 @@ void set_yycolumn(int val) {
 }
 
 extern void yyerror(ASTNode::ASTptr *, const char *);
+extern void error_reporting();
 extern int yylineno;
 std::string parse_string(const char *text);
 

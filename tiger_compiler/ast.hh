@@ -13,9 +13,6 @@
 
 using namespace std;
 
-/* interface to the lexer */
-extern void error_reporting();
-
 namespace tiger {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,8 +57,8 @@ class NilASTNode : public ASTNode {
 // A node type representing a "break" statement.
 class BreakASTNode : public ASTNode {
     public:
-        BreakASTNode()
-            : ASTNode()
+        BreakASTNode(int loc)
+            : ASTNode(), location_(loc)
         {}
         virtual ~BreakASTNode() = default;
 
@@ -79,6 +76,9 @@ class BreakASTNode : public ASTNode {
         {
             return "break";
         }
+
+    private:
+        int location_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,6 +162,7 @@ class NameASTNode : public ASTNode {
 
     private:
         const std::string value_;
+        int location_;
 };
 
 
@@ -175,8 +176,8 @@ template <template <typename> class O>
     class UnaryASTNode : public ASTNode {
         public:
             // Take a single child to evalute, and a string representation of the node:
-            UnaryASTNode(std::string rep, ASTptr child)
-                : ASTNode(), rep_(rep), child_(child)
+            UnaryASTNode(std::string rep, ASTptr child, int loc)
+                : ASTNode(), rep_(rep), child_(child), location_(loc)
             {}
 
             virtual ~UnaryASTNode()
@@ -203,6 +204,7 @@ template <template <typename> class O>
         private:
             const std::string rep_;  // String representation of node
             const ASTptr child_;
+            int location_;
     };
 
 // Example usage of UnaryASTNode:
@@ -214,12 +216,12 @@ template <template <typename> class O>
     class NoEvalUnaryASTNode : public ASTNode {
         public:
             // Take a single child to evalute, and a string representation of the node:
-            NoEvalUnaryASTNode(std::string rep, ASTptr child)
-                : ASTNode(), rep1_(rep), rep2_(""), child_(child)
+            NoEvalUnaryASTNode(std::string rep, ASTptr child, int loc)
+                : ASTNode(), rep1_(rep), rep2_(""), child_(child), location_(loc)
             {}
 
-            NoEvalUnaryASTNode(std::string rep1, std::string rep2, ASTptr child)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), child_(child)
+            NoEvalUnaryASTNode(std::string rep1, std::string rep2, ASTptr child, int loc)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), child_(child), location_(loc)
             {}
 
             virtual ~NoEvalUnaryASTNode()
@@ -229,7 +231,7 @@ template <template <typename> class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
-                return op.type_verify(scope, child_);
+                return op.type_verify(scope, child_, location_);
             }
 
             value_t eval() const
@@ -246,6 +248,7 @@ template <template <typename> class O>
         private:
             const std::string rep1_, rep2_;  // String representation of node
             const ASTptr child_;
+            int location_;
     };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -257,12 +260,12 @@ template <template <typename> class O>
 template <template <typename> class O>
     class BinaryASTNode : public ASTNode {
         public:
-            BinaryASTNode(std::string rep, ASTptr left, ASTptr right)
-                : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right)
+            BinaryASTNode(std::string rep, ASTptr left, ASTptr right, int loc)
+                : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right), location_(loc)
             {}
 
-            BinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right)
+            BinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right, int loc)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right), location_(loc)
             {}
 
             virtual ~BinaryASTNode()
@@ -282,7 +285,7 @@ template <template <typename> class O>
                      * it up again */
                     return Type::errorType;
                 } else {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       in expression '" << toStr() << "'" << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     cerr << "       (the types are '" << left_type->toStr() << "' and '" << right_type->toStr() << "')" << endl;
@@ -312,6 +315,7 @@ template <template <typename> class O>
         private:
             const std::string rep1_, rep2_;  // String representation of node
             const ASTptr left_, right_;
+            int location_;
     };
 
 
@@ -340,16 +344,16 @@ template <template <typename> class O>
     class NoEvalBinaryASTNode : public ASTNode {
         public:
             // parens flag = whether to surround with parens and insert spaces around operators
-            NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right), parens_(parens)
+            NoEvalBinaryASTNode(std::string rep, ASTptr left, ASTptr right, int loc, bool parens=true)
+                : ASTNode(), rep1_(""), rep2_(rep), left_(left), right_(right), parens_(parens), location_(loc)
             {}
 
-            NoEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right), parens_(parens)
+            NoEvalBinaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr right, int loc, bool parens=true)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), left_(left), right_(right), parens_(parens), location_(loc)
             {}
 
-            NoEvalBinaryASTNode(std::string rep1, std::string rep2, std::string rep3, ASTptr left, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), right_(right), parens_(parens)
+            NoEvalBinaryASTNode(std::string rep1, std::string rep2, std::string rep3, ASTptr left, ASTptr right, int loc, bool parens=true)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), left_(left), right_(right), parens_(parens), location_(loc)
             {}
 
             virtual ~NoEvalBinaryASTNode()
@@ -366,7 +370,7 @@ template <template <typename> class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
-                return op.type_verify(scope, left_, right_);
+                return op.type_verify(scope, left_, right_, location_);
             }
 
             virtual std::string toStr() const
@@ -408,6 +412,7 @@ template <template <typename> class O>
             const std::string rep1_, rep2_, rep3_;  // String representation of node (rep3 goes at end)
             const ASTptr left_, right_;
             const bool parens_;
+            int location_;
     };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -417,17 +422,21 @@ template <template <typename> class O>
     class TertiaryASTNode : public ASTNode {
         public:
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
-                    ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left), middle_(middle), right_(right), parens_(parens)
+                    ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left), 
+                middle_(middle), right_(right), parens_(parens), location_(loc)
             {}
 
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
-                    ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left), middle_(middle), right_(right), parens_(parens)
+                    ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left), 
+                middle_(middle), right_(right), parens_(parens), location_(loc)
             {}
 
-            TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle), right_(right), parens_(parens)
+            TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right, 
+                    int loc, bool parens=true)
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle), 
+                right_(right), parens_(parens), location_(loc)
             {}
 
             virtual ~TertiaryASTNode()
@@ -439,7 +448,7 @@ template <template <typename> class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
-                return op.type_verify(scope, left_, middle_, right_);
+                return op.type_verify(scope, left_, middle_, right_, location_);
             }
 
             value_t eval() const
@@ -497,6 +506,7 @@ template <template <typename> class O>
             const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
             const ASTptr left_, middle_, right_;
             bool parens_;
+            int location_;
     };
 
 
@@ -507,15 +517,15 @@ template <template <typename> class O>
     class QuaternaryASTNode : public ASTNode {
         public:
             QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
-                    ASTptr one, ASTptr two, ASTptr three, ASTptr four, bool parens=true)
+                    ASTptr one, ASTptr two, ASTptr three, ASTptr four, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(""),
-                one_(one), two_(two), three_(three), four_(four), parens_(parens)
+                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc)
         {}
 
             QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4, std::string rep5,
-                    ASTptr one, ASTptr two, ASTptr three, ASTptr four, bool parens=true)
+                    ASTptr one, ASTptr two, ASTptr three, ASTptr four, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(rep5),
-                one_(one), two_(two), three_(three), four_(four), parens_(parens)
+                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc)
         {}
 
             virtual ~QuaternaryASTNode()
@@ -528,7 +538,7 @@ template <template <typename> class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
-                return op.type_verify(scope, one_, two_, three_, four_);
+                return op.type_verify(scope, one_, two_, three_, four_, location_);
             }
 
             value_t eval() const
@@ -604,6 +614,7 @@ template <template <typename> class O>
             const std::string rep1_, rep2_, rep3_, rep4_, rep5_;  // String representation of node
             const ASTptr one_, two_, three_, four_;
             bool parens_; // whether to surround with parentheses and put spaces around the 'rep' strings
+            int location_;
     };
 
 
@@ -615,12 +626,12 @@ template <template <typename> class O, class E> // E is the elements of the vect
         public:
             using VASTptr = const VectorASTNode*; // Can't use smart ptr in union :(
 
-            VectorASTNode(std::string separator)
-                : ASTNode(), sep_(separator), first_(""), last_("")
+            VectorASTNode(std::string separator, int loc)
+                : ASTNode(), sep_(separator), first_(""), last_(""), location_(loc)
             {}
 
-            VectorASTNode(std::string separator, std::string first, std::string last)
-                : ASTNode(), sep_(separator), first_(first), last_(last)
+            VectorASTNode(std::string separator, std::string first, std::string last, int loc)
+                : ASTNode(), sep_(separator), first_(first), last_(last), location_(loc)
             {}
 
             virtual ~VectorASTNode()
@@ -632,7 +643,7 @@ template <template <typename> class O, class E> // E is the elements of the vect
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
-                return op.type_verify(scope, vec_);
+                return op.type_verify(scope, vec_, location_);
             }
 
             value_t eval() const
@@ -651,7 +662,7 @@ template <template <typename> class O, class E> // E is the elements of the vect
                 if (first_.length() != 0) {
                     ss << first_;
                 }
-                for (unsigned int i = 0; i < vec_.size(); i++) {
+                for (unsigned i = 0; i < vec_.size(); i++) {
                     if (i != 0) {
                         ss << sep_;
                     }
@@ -666,6 +677,7 @@ template <template <typename> class O, class E> // E is the elements of the vect
         private:
             std::vector<const E*> vec_;
             const std::string sep_, first_, last_;
+            int location_;
     };
 
 template <typename Z>
@@ -676,11 +688,11 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 const Type *name_type = left_->type_verify(scope);
                 const Type *value_type = right_->type_verify(scope);
                 if (name_type == Type::notFoundType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       unknown variable '" << left_->toStr() << "'" << endl;
                     return Type::errorType;
                 }
@@ -688,7 +700,7 @@ template <typename Z>
                 if (name_type == value_type && name_type != Type::errorType) {
                     return value_type;
                 } else if (name_type != Type::errorType && value_type != Type::errorType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       variable type mismatch: '" << left_->toStr() << "' declared as type '" <<
                             name_type->toStr() << "' but is being assigned type '" << value_type->toStr() << "'" << endl;
                     return Type::errorType;
@@ -713,7 +725,7 @@ template <typename Z>
                 }
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_) {
                 const Type *cond_type = left_->type_verify(scope);
                 const Type *then_type = middle_->type_verify(scope);
                 const Type *else_type = right_->type_verify(scope);
@@ -723,7 +735,7 @@ template <typename Z>
                     /* there was an error in the condition -- just propagate upward */
                     return Type::errorType;
                 } else if (cond_type != Type::intType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
                     cerr << "       (evaluates to '" << cond_type->toStr() << "' instead)" << endl;
                     return Type::errorType;
@@ -731,7 +743,7 @@ template <typename Z>
                     /* error was somewhere below us, just pass it on */
                     return Type::errorType;
                 } else if (then_type != else_type) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
                     cerr << "       (types are '" << then_type->toStr() << "' and '" << else_type->toStr() << "')" << endl;
                     return Type::errorType;
@@ -754,14 +766,14 @@ template <typename Z>
                 return result;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 const Type *cond_type = left_->type_verify(scope);
                 const Type *do_type = right_->type_verify(scope);
 
                 if (cond_type == Type::intType && do_type != Type::errorType) {
                     return Type::nilType;
                 } else if (cond_type != Type::intType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       condition of 'while' loop must evaluate to integer" << endl;
                     return Type::errorType;
                 } else {
@@ -780,7 +792,8 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, 
+              ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_) {
                 const Type *first_type = two_->type_verify(scope);
                 const Type *last_type = three_->type_verify(scope);
                 const Type *body_type = four_->type_verify(scope);
@@ -788,7 +801,7 @@ template <typename Z>
                         && body_type != Type::errorType) {
                     return Type::nilType;
                 } else if (first_type != Type::intType || last_type != Type::intType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
                     return Type::errorType;
                 } else {
@@ -806,12 +819,12 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 string var_name = left_->toStr();
                 const Type *expr_type = right_->type_verify(scope);
 
                 if (scope->preexisting(var_name)) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
@@ -830,12 +843,12 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_) {
                 std::string var_name = left_->toStr();
                 std::string type_name = middle_->toStr();
 
                 if (scope->preexisting(var_name)) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
@@ -844,7 +857,7 @@ template <typename Z>
 
                 const Type *var_type = scope->type_search(type_name);
                 if (var_type == Type::notFoundType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       variable '" << var_name << "' declared as unknown type '" << type_name << "'" << endl;
                     return Type::errorType;
                 }
@@ -854,7 +867,7 @@ template <typename Z>
 
                     return Type::nilType;
                 } else {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot assign expression of type '" << value_type->toStr() << "' to variable '"
                         << var_name << "', which is of type '" << var_type->toStr() << "'." << endl;
                     return Type::errorType;
@@ -871,7 +884,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 string type_name = left_->toStr();
                 const Type *new_type = right_->type_verify(scope);
 
@@ -895,7 +908,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 // Create a new scope for the duration of the declaration section and body
                 // section.
                 scope->push_scope();
@@ -926,7 +939,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_) {
                 return child_->type_verify(scope);
             }
     };
@@ -941,7 +954,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_, int location_) {
                 for (auto decl : vec_) {
                     const Type *t = decl->type_verify(scope);
                     if (t == Type::errorType) {
@@ -962,7 +975,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, std::vector<const ASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const ASTNode*> vec_, int location_) {
                 const Type *return_type = Type::nilType;
                 for (auto node : vec_) {
                     return_type = node->type_verify(scope);
@@ -984,7 +997,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 std::cout << "field member not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
@@ -1000,7 +1013,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_, int location_) {
                 std::cout << "fieldlsit not implemented yet!*" << std::endl;
                 return Type::notImplementedType;
             }
@@ -1016,7 +1029,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 std::cout << "type instantiation not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
@@ -1032,7 +1045,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_) {
                 return child_->type_verify(scope);
             }
     };
@@ -1047,7 +1060,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 std::cout << "record not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
@@ -1063,17 +1076,17 @@ class RecordTypeAST {
             return -1;
         }
 
-        const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
+        const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_, int location_) {
           /* dealing with multiple declerations (function arguments)
              using sets allows us to check the count on a given variable
              name, if there are more duplicates, return errorType */
             set<string> string_set;
-            for (unsigned int i = 0; i < vec_.size(); i++){
+            for (unsigned i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();
                 string t = s.substr(0,s.find(":"));
                 t.erase(remove(t.begin(), t.end(), ' '), t.end());
                 if (string_set.count(t) > 0) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       name '" << t << "' used multiple times in function or record declaration" << endl;
                     return Type::errorType;
                 }
@@ -1094,12 +1107,12 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_) {
                 string type_name = child_->toStr();
                 const Type *arrayof = scope->type_search(type_name);
 
                 if (arrayof == Type::notFoundType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot create array of nonexistent type '" << type_name << "'" << endl;
                     return Type::errorType;
                 }
@@ -1118,7 +1131,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 std::cout << "not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
@@ -1134,10 +1147,10 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 const Type *left_type = left_->type_verify(scope);
                 if (left_type->getKind() != tiger_type::ARRAY) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       attempt to index into '" << left_->toStr() << "', which is not an array" << endl;
                     cerr << "       (it is of type '" << left_type->toStr() << "'.)" << endl;
                     return Type::errorType;
@@ -1145,7 +1158,7 @@ template <typename Z>
 
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       index of the array must be an integer expression" << endl;
                     cerr << "       (got '" << right_->toStr() << "', which is of type '" << index_type->toStr() << "')" << endl;
 
@@ -1168,13 +1181,13 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_) {
                 string type_name = left_->toStr();
 
                 const Type *length_type = middle_->type_verify(scope);
 
                 if (length_type != Type::intType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       length of the array must be an integer expression" << endl;
                     cerr << "       (got '" << middle_->toStr() << "', which is of type '" << length_type->toStr() << "'." << endl;
                     return Type::errorType;
@@ -1185,7 +1198,7 @@ template <typename Z>
                 const Type *value_type = right_->type_verify(scope);
 
                 if (!arr_type->equivalent(value_type)) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       declaring an array of values of type '" << type_name << "', but default value given is '" <<
                             right_->toStr() << "', which is of type '" << value_type->toStr() << "'" << endl;
                     return Type::errorType;
@@ -1205,11 +1218,11 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_) {
                 string func_name = left_->toStr();
 
                 if (scope->preexisting(func_name)) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
                     return Type::errorType;
                 }
@@ -1241,7 +1254,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_) {
                 // one: func name
                 // two: func params
                 // three: func return type
@@ -1253,7 +1266,7 @@ template <typename Z>
                 const Type *declared_func_type = scope->type_search(three_->toStr());
 
                 if (declared_func_type == Type::notFoundType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       function '" << func_name << "' declared as returning nonexistent type '" <<
                             three_->toStr() << "'" << endl;
                     return Type::errorType;
@@ -1263,7 +1276,7 @@ template <typename Z>
                 const Type *return_type = four_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
 
                     return Type::errorType;
@@ -1272,7 +1285,7 @@ template <typename Z>
                 if (return_type == declared_func_type) {
                     // we're good!
                 } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       function '" << func_name << "' declared as returning '" << declared_func_type->toStr()
                          << "', but evaluates to '" << return_type->toStr() << "'" << endl;
                     return Type::errorType;
@@ -1298,7 +1311,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
                 // TODO when we have function types, look up the function by return type and
                 // verify argument types correct
                 string func_name = left_->toStr();
@@ -1306,7 +1319,7 @@ template <typename Z>
                 const Type *return_type = scope->search(func_name);
 
                 if (return_type == Type::notFoundType) {
-                    error_reporting();
+                    cerr << "ERROR: line " << location_ << endl;
                     cerr << "       unknown function '" << func_name << "'" << endl;
 
                     return Type::errorType;
