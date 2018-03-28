@@ -5,26 +5,23 @@ namespace tiger {
 /*Type::Type(Type& other) {
 }*/
 
-SymbolTable::SymbolTable() : parent_(NULL) {
-}
-
-SymbolTable::SymbolTable(SymbolTable *parent) : parent_(parent) {
+SymbolTable::SymbolTable() {
 }
 
 SymbolTable::~SymbolTable() {
 }
 
-void SymbolTable::insert(const string name, tiger_type type) {
+void SymbolTable::insert(const string name, const Type *type) {
     symbols_.insert(make_pair(name, type));
 }
 
-tiger_type SymbolTable::lookup(string name) {
+const Type *SymbolTable::lookup(string name) {
     //return symbols_[name];
     auto iter = symbols_.find(name);
     if (iter != symbols_.end()) {
         return iter->second;
     } else {
-        return tiger_type::NOTFOUND;
+        return Type::notFoundType;
     }
 }
 

@@ -3,7 +3,7 @@
 
 #include <map>
 #include <vector>
-#include "typeenum.hh"
+#include "type.hh"
 #include "semantic.hh"
 
 namespace tiger {
@@ -15,9 +15,9 @@ class Scope{
         Scope();
         void push_onto_scope();
         void pop_off_scope();
-        void symbol_insert(const std::string &s, tiger_type type);
+        void symbol_insert(const std::string &s, const Type *type);
         bool preexisting(const std::string& s);
-        tiger_type search(const std::string &s);
+        const Type *search(const std::string& s);
 
     private:
         using table_stack_ = std::vector<SymbolTable>;
