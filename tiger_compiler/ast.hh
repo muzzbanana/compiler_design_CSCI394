@@ -1085,7 +1085,7 @@ template <typename Z>
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
                     error_reporting();
-                    cerr << "error: index of the array must be an integer expression" << endl;
+                    cerr << "       index of the array must be an integer expression" << endl;
                     return Type::errorType;
                 } else {
                     // TODO return type the array is of
@@ -1110,7 +1110,7 @@ template <typename Z>
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
                     error_reporting();
-                    cerr << "error: index of the array must be an integer expression" << endl;
+                    cerr << "       index of the array must be an integer expression" << endl;
                     return Type::errorType;
                 } else {
                     // TODO return type the array is of
@@ -1137,7 +1137,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -1167,7 +1167,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
+                    cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -1177,7 +1177,8 @@ template <typename Z>
                 } else if (declared_func_type == "string" && return_type == Type::stringType) {
                     // it's a string
                 } else if (return_type != Type::errorType) {
-                    cerr << "error: function " << func_name << " declared as returning <%$#$#@>, "
+                    error_reporting();
+                    cerr << "       function " << func_name << " declared as returning <%$#$#@>, "
                          << "but evaluates to <#$@$#>" << endl;
                     return Type::errorType;
                 } else {
@@ -1209,7 +1210,7 @@ template <typename Z>
 
                 if (return_type == Type::errorType) {
                     error_reporting();
-                    cerr << "error: unknown function " << func_name << endl;
+                    cerr << "       unknown function " << func_name << endl;
                     return Type::errorType;
                 }
 
