@@ -1220,6 +1220,7 @@ template <typename Z>
                   return Type::errorType;
                 }
                 // TODO make this take a scope that has the parameters in it
+
                 const Type *return_type = right_->type_verify(scope);
 
                 FunctionType *functype = new FunctionType(func_name, return_type);

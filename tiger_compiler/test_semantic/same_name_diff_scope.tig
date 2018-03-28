@@ -2,10 +2,10 @@
 
 let
     var x := 1
-    function f() =
+    function f(int: i) =
         let var x := 2
         in x + 1 end
 in
-    f()
+    f(4)
 end
 
