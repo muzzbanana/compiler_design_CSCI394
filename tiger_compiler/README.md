@@ -3,18 +3,17 @@ Tiger Semantics
 
 We chose to implement our semantic checks using the **"functional style"**.
 This means we maintain a permanent environment and create temporary ones when
-needed. (Sort of. But we are still mutating a vector, so it's not a totally
-functional system with immutable scope objects in a tree structure.)
+needed.
 
 ### Types (type.hh, type.cc)
 Types are defined using a class `Type`. This serves as the base for the for
    - BaseType which is used for ints, strings, nil, error, things that not yet implemented
      (in case we didn't complete the assignment), and as a hack a type to represent when
-     we didn't find a variable or type in scope.
+     we didn't find a type.
    - ArrayType for arrays
    - RecordType for records
    - FunctionType for functions
-
+   
 
 ### Symbol Tables (semantic.hh, semantic.cc)
 Symbol Tables are created using a class `SymbolTable`.
@@ -35,23 +34,32 @@ The class has three simple functionalities:
 
     * **push_scope**    : this adds a new scope
     * **pop_scope**     : this removes the newest scope from the vector
-    * **preexisting**   : this checks if a variable exists in the most recent scope, to
-                          make sure two variables with the same name can't be declared
-                          at the same time.
+    * **preexisting**   : this checks if a variable exists in its larger scope
     * **search**        : this takes a string and terates through the vector in reverse
                           order to check if variable has already been declared, if found,
                           it returns its type, if not returns error type
     * **insert**        : this takes a string and its corresponding type and adds the binding
                           to its parent scopes
-
+                          
 ## Error Handling
-
+Not working propely. Columns and lines do not update correctly. Works well for semantic errors
+but not syntactic. Will fix soon.
 
 ## Testing
 
-   * Misuse of types
+   * Type mismatch in expression
+   * Same variable name in different scopes
+   * Recursive and mutually recursive functions
+   * Higher-order and nested functions
+   * Undefined identifiers
+   * Repeatedly defined identifiers
+   * Misuse of reserved words (Syntactic Error)
+   * Incorrest nesting (Syntactic Error)
+   * Repition of variables in function arguments
+   * Declerations with invalid types
+   * Bad record types
    * Indexing out of range of array
-
+      
 
 Tiger Parser
 ============
@@ -79,7 +87,7 @@ Tiger Parser
                      declerations in let statements (decllist), members in field types
                      (fieldlist). The class makes use of a vector and has a method add_node
                      that adds elements to the end of the vector.
-
+                         
  * toStr() now uses std::stringstram rather than std::to_string. Tokens are added to a buffer
    and then converted to a string when we reach end of tokens.
  
