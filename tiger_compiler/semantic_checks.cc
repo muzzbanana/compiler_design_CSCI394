@@ -6,8 +6,8 @@ namespace tiger {
  * we need to include scope.hh, which includes ast.hh, which includes this file. */
 int semantic_checks(ASTNode::ASTptr ast) {
     Scope *scope = new Scope();
-    tiger_type t = ast->type_verify(scope);
-    if (t != tiger_type::ERROR) {
+    const Type *t = ast->type_verify(scope);
+    if (t != Type::errorType) {
         return 0;
     } else {
         return 1;

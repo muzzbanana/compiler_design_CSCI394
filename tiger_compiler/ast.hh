@@ -8,7 +8,7 @@
 #include <string>
 #include <cmath>
 #include <set>
-#include "typeenum.hh"
+#include "type.hh"
 #include "scope.hh"
 
 using namespace std;
@@ -27,7 +27,7 @@ class ASTNode {
 
         ASTNode() = default;
         virtual ~ASTNode() = default;
-        virtual tiger_type type_verify(Scope* scope) const = 0; // Determine type of expression
+        virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -41,8 +41,8 @@ class NilASTNode : public ASTNode {
         {}
         virtual ~NilASTNode() = default;
 
-        virtual tiger_type type_verify(Scope* scope) const {
-            return tiger_type::NIL;
+        virtual const Type *type_verify(Scope* scope) const {
+            return Type::nilType;
         }
 
         virtual value_t eval() const
@@ -65,9 +65,9 @@ class BreakASTNode : public ASTNode {
         {}
         virtual ~BreakASTNode() = default;
 
-        virtual tiger_type type_verify(Scope* scope) const {
+        virtual const Type *type_verify(Scope* scope) const {
             std::cout << "break not implemented yet!" << std::endl;
-            return tiger_type::NOTIMPLEMENTED;
+            return Type::notImplementedType;
         }
 
         virtual value_t eval() const
@@ -90,8 +90,8 @@ class NumASTNode : public ASTNode {
         {}
         virtual ~NumASTNode() = default;
 
-        virtual tiger_type type_verify(Scope* scope) const {
-            return tiger_type::INT;
+        virtual const Type *type_verify(Scope* scope) const {
+            return Type::intType;
         }
 
         virtual value_t eval() const
@@ -119,8 +119,8 @@ class StrASTNode : public ASTNode {
         {}
         virtual ~StrASTNode() = default;
 
-        virtual tiger_type type_verify(Scope* scope) const {
-            return tiger_type::STRING;
+        virtual const Type *type_verify(Scope* scope) const {
+            return Type::stringType;
         }
 
         virtual std::string toStr() const
@@ -151,7 +151,7 @@ class NameASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual tiger_type type_verify(Scope* scope) const {
+        virtual const Type *type_verify(Scope* scope) const {
             return scope->search(value_);
         }
 
@@ -185,9 +185,9 @@ template <template <typename> class O>
                 delete child_;
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 std::cout << "unary not implemented yet!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
 
             value_t eval() const
@@ -228,7 +228,7 @@ template <template <typename> class O>
                 delete child_;
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
                 return op.type_verify(scope, child_);
             }
@@ -272,14 +272,14 @@ template <template <typename> class O>
                 delete right_;
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
-                if (left_->type_verify(scope) == tiger_type::INT
-                        && right_->type_verify(scope) == tiger_type::INT) {
-                    return tiger_type::INT;
+            virtual const Type *type_verify(Scope* scope) const {
+                if (left_->type_verify(scope) == Type::intType
+                        && right_->type_verify(scope) == Type::intType) {
+                    return Type::intType;
                 } else {
                     error_reporting();
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
 
@@ -357,7 +357,7 @@ template <template <typename> class O>
                 return op(left_, right_);
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
                 return op.type_verify(scope, left_, right_);
             }
@@ -430,7 +430,7 @@ template <template <typename> class O>
                 delete right_;
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
                 return op.type_verify(scope, left_, middle_, right_);
             }
@@ -519,7 +519,7 @@ template <template <typename> class O>
                 delete four_;
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
                 return op.type_verify(scope, one_, two_, three_, four_);
             }
@@ -623,7 +623,7 @@ template <template <typename> class O, class E> // E is the elements of the vect
                 }
             }
 
-            virtual tiger_type type_verify(Scope* scope) const {
+            virtual const Type *type_verify(Scope* scope) const {
                 auto op = O<value_t>();
                 return op.type_verify(scope, vec_);
             }
@@ -669,17 +669,17 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                tiger_type name_type = left_->type_verify(scope);
-                tiger_type value_type = right_->type_verify(scope);
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+                const Type *name_type = left_->type_verify(scope);
+                const Type *value_type = right_->type_verify(scope);
                 if (name_type == value_type) {
                     return value_type;
-                } else if (name_type != tiger_type::ERROR && value_type != tiger_type::ERROR) {
+                } else if (name_type != Type::errorType && value_type != Type::errorType) {
                     error_reporting();
                     cerr << "       assignment of variable to wrong type" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -699,22 +699,22 @@ template <typename Z>
                 }
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-                tiger_type cond_type = left_->type_verify(scope);
-                tiger_type then_type = middle_->type_verify(scope);
-                tiger_type else_type = right_->type_verify(scope);
-                if (cond_type == tiger_type::INT && then_type == else_type && then_type != tiger_type::ERROR) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+                const Type *cond_type = left_->type_verify(scope);
+                const Type *then_type = middle_->type_verify(scope);
+                const Type *else_type = right_->type_verify(scope);
+                if (cond_type == Type::intType && then_type == else_type && then_type != Type::errorType) {
                     return then_type;
-                } else if (cond_type != tiger_type::INT) {
+                } else if (cond_type != Type::intType) {
                     error_reporting();
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else if (then_type != else_type) {
                     error_reporting();
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -732,18 +732,18 @@ template <typename Z>
                 return result;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                tiger_type cond_type = left_->type_verify(scope);
-                tiger_type do_type = right_->type_verify(scope);
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+                const Type *cond_type = left_->type_verify(scope);
+                const Type *do_type = right_->type_verify(scope);
 
-                if (cond_type == tiger_type::INT && do_type != tiger_type::ERROR) {
-                    return tiger_type::NIL;
-                } else if (cond_type != tiger_type::INT) {
+                if (cond_type == Type::intType && do_type != Type::errorType) {
+                    return Type::nilType;
+                } else if (cond_type != Type::intType) {
                     error_reporting();
                     cerr << "       condition of 'while' loop must evaluate to integer" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -758,19 +758,19 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-                tiger_type first_type = two_->type_verify(scope);
-                tiger_type last_type = three_->type_verify(scope);
-                tiger_type body_type = four_->type_verify(scope);
-                if (first_type == tiger_type::INT && last_type == tiger_type::INT
-                        && body_type != tiger_type::ERROR) {
-                    return tiger_type::NIL;
-                } else if (first_type != tiger_type::INT || last_type != tiger_type::INT) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+                const Type *first_type = two_->type_verify(scope);
+                const Type *last_type = three_->type_verify(scope);
+                const Type *body_type = four_->type_verify(scope);
+                if (first_type == Type::intType && last_type == Type::intType
+                        && body_type != Type::errorType) {
+                    return Type::nilType;
+                } else if (first_type != Type::intType || last_type != Type::intType) {
                     error_reporting();
                     cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -784,18 +784,18 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 string var_name = left_->toStr();
-                tiger_type expr_type = right_->type_verify(scope);
+                const Type *expr_type = right_->type_verify(scope);
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
                     cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
 
                 scope->symbol_insert(var_name, expr_type);
-                return tiger_type::NIL;
+                return Type::nilType;
             }
     };
 
@@ -808,36 +808,36 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
                 std::string var_name = left_->toStr();
                 std::string type_name = middle_->toStr();
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
                     cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
 
-                tiger_type value_type = right_->type_verify(scope);
+                const Type *value_type = right_->type_verify(scope);
 
-                tiger_type var_type;
+                const Type *var_type;
                 if (type_name == "int") {
-                    var_type = tiger_type::INT;
+                    var_type = Type::intType;
                 } else if (type_name == "string") {
-                    var_type = tiger_type::STRING;
+                    var_type = Type::stringType;
                 } else {
                     error_reporting();
                     cerr << "       unknown type " << type_name << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
 
                 if (value_type == var_type) {
-                    return tiger_type::NIL;
+                    return Type::nilType;
                 } else {
                     error_reporting();
                     cerr << "       cannot assign expression of type <1%#!$?!?!> to variable "
                         << var_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -851,10 +851,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-
-                std::cout << "type decleration not implemented yet!!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+                std::cout << "type declaration not implemented yet!!" << std::endl;
+                return Type::notImplementedType;
             }
     };
 
@@ -868,18 +867,18 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 // Create a new scope for the duration of the declaration section and body
                 // section.
-                scope-> push_scope();
-                tiger_type declaration_type = left_->type_verify(scope);
-                tiger_type body_type = right_->type_verify(scope);
-                scope-> pop_scope();
+                scope->push_scope();
+                const Type *declaration_type = left_->type_verify(scope);
+                const Type *body_type = right_->type_verify(scope);
+                scope->pop_scope();
 
-                if (declaration_type != tiger_type::ERROR && body_type != tiger_type::ERROR) {
+                if (declaration_type != Type::errorType && body_type != Type::errorType) {
                     return body_type;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
             }
     };
@@ -894,7 +893,7 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
                 return child_->type_verify(scope);
             }
     };
@@ -909,14 +908,14 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_) {
                 for (auto decl : vec_) {
-                    tiger_type t = decl->type_verify(scope);
-                    if (t == tiger_type::ERROR) {
-                        return tiger_type::ERROR;
+                    const Type *t = decl->type_verify(scope);
+                    if (t == Type::errorType) {
+                        return Type::errorType;
                     }
                 }
-                return tiger_type::NIL;
+                return Type::nilType;
             }
     };
 
@@ -930,12 +929,12 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, std::vector<const ASTNode*> vec_) {
-                tiger_type return_type = tiger_type::NIL;
+            const Type *type_verify(Scope* scope, std::vector<const ASTNode*> vec_) {
+                const Type *return_type = Type::nilType;
                 for (auto node : vec_) {
                     return_type = node->type_verify(scope);
-                    if (return_type == tiger_type::ERROR) {
-                        return tiger_type::ERROR;
+                    if (return_type == Type::errorType) {
+                        return Type::errorType;
                     }
                 }
                 return return_type;
@@ -952,9 +951,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 std::cout << "field member not implemented yet!!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -968,9 +967,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
                 std::cout << "fieldlsit not implemented yet!*" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -984,9 +983,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 std::cout << "type instantiation not implemented yet!!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -999,9 +998,11 @@ template <typename Z>
             Z operator() (ASTNode::ASTptr child_) {
                 return -1;
             }
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
+
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
+                std::cout << "not implemented yet!" << std::endl;
                 std::cout << "typevalue not implemented yet!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -1015,9 +1016,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 std::cout << "record not implemented yet!!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -1025,13 +1026,13 @@ using RecordFieldASTNode = NoEvalBinaryASTNode<RecordField>;
 
 // a record type -- i.e. a sequence of RecordFields
 template <typename Z>
-    class RecordType {
+    class RecordTypeAST {
         public:
             Z operator() (std::vector<const RecordFieldASTNode*> fields) {
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
+            const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_) {
               set<string> string_set;
               cout << "checking vectors" << endl;
               for (unsigned int i = 0; i < vec_.size(); i++){
@@ -1043,31 +1044,31 @@ template <typename Z>
               if (string_set.size() != vec_.size()){
                 error_reporting();
                 cerr << "       repeated use of variable names" << endl;
-                return tiger_type::ERROR;
+                return Type::ERROR;
               }
 
                 std::cout << "record type not implemented yet!*" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::NOTIMPLEMENTED;
             }
     };
 
-using RecordTypeASTNode = VectorASTNode<RecordType, RecordFieldASTNode>;
+using RecordTypeASTNode = VectorASTNode<RecordTypeAST, RecordFieldASTNode>;
 
 // "array of" whatever type
 template <typename Z>
-    class ArrayTypeImplementation {
+    class ArrayTypeAST {
         public:
             Z operator() (ASTNode::ASTptr child_) {
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
                 std::cout << "array not implemented yet!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
-using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayTypeImplementation>;
+using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayTypeAST>;
 
 // represents lvalue.identifier
 template <typename Z>
@@ -1077,9 +1078,9 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "dot not implemented yet!!" << std::endl;
-                return tiger_type::NOTIMPLEMENTED;
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+                std::cout << "not implemented yet!!" << std::endl;
+                return Type::notImplementedType;
             }
     };
 
@@ -1093,17 +1094,18 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 // TODO check left side is an array
-                //tiger_type left_type = left_->type_verify(scope);
-                tiger_type index_type = right_->type_verify(scope);
-                if (index_type != tiger_type::INT) {
+                //const Type *left_type = left_->type_verify(scope);
+                const Type *index_type = right_->type_verify(scope);
+                if (index_type != Type::intType) {
                     error_reporting();
                     cerr << "       index of the array must be an integer expression" << endl;
-                    return tiger_type::ERROR;
+
+                    return Type::errorType;
                 } else {
                     // TODO return type the array is of
-                    return tiger_type::INT;
+                    return Type::intType;
                 }
             }
     };
@@ -1118,17 +1120,17 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
                 // TODO check left side is an array
-                //tiger_type left_type = left_->type_verify(scope);
-                tiger_type index_type = right_->type_verify(scope);
-                if (index_type != tiger_type::INT) {
+                //const Type *left_type = left_->type_verify(scope);
+                const Type *index_type = right_->type_verify(scope);
+                if (index_type != Type::intType) {
                     error_reporting();
                     cerr << "       index of the array must be an integer expression" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
                     // TODO return type the array is of
-                    return tiger_type::INT;
+                    return Type::intType;
                 }
             }
     };
@@ -1143,13 +1145,16 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
                 // TODO make this actually declare something
                 string func_name = left_->toStr();
+                // TODO make this take a scope that has the parameters in it
+                const Type *return_type = right_->type_verify(scope);
+
                 if (scope->preexisting(func_name)) {
                     error_reporting();
                     cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
 
                 tiger_type arguments = middle_->type_verify(scope);
@@ -1161,7 +1166,7 @@ template <typename Z>
 
                 scope->symbol_insert(func_name, return_type);
 
-                return tiger_type::NIL;
+                return Type::nilType;
             }
     };
 
@@ -1175,36 +1180,39 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
                 // TODO make this actually declare something
                 string func_name = one_->toStr();
 
                 string declared_func_type = two_->toStr();
                 // TODO make this take a scope that has the parameters in it
-                tiger_type return_type = four_->type_verify(scope);
+                const Type *return_type = four_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
                     cerr << "       cannot redeclare function " << func_name << " in the same scope" << endl;
-                    return tiger_type::ERROR;
+
+                    return Type::errorType;
                 }
 
                 // TODO compare types here
-                if (declared_func_type == "int" && return_type == tiger_type::INT) {
+                if (declared_func_type == "int" && return_type == Type::intType) {
                     // it's an int
-                } else if (declared_func_type == "string" && return_type == tiger_type::STRING) {
+                } else if (declared_func_type == "string" && return_type == Type::stringType) {
                     // it's a string
-                } else if (return_type != tiger_type::ERROR) {
+
+                } else if (return_type != Type::errorType) {
+                    error_reporting();
                     cerr << "       function " << func_name << " declared as returning <%$#$#@>, "
                          << "but evaluates to <#$@$#>" << endl;
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 } else {
-                    return tiger_type::ERROR;
+                    return Type::errorType;
                 }
 
                 scope->symbol_insert(func_name, return_type);
 
-                return tiger_type::NIL;
+                return Type::nilType;
             }
     };
 
@@ -1218,17 +1226,18 @@ template <typename Z>
                 return -1;
             }
 
-            tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 // TODO when we have function types, look up the function by return type and
                 // verify argument types correct
                 string func_name = left_->toStr();
 
-                tiger_type return_type = scope->search(func_name);
+                const Type *return_type = scope->search(func_name);
 
-                if (return_type == tiger_type::ERROR) {
+                if (return_type == Type::errorType) {
                     error_reporting();
                     cerr << "       unknown function " << func_name << endl;
-                    return tiger_type::ERROR;
+
+                    return Type::errorType;
                 }
 
                 return return_type;

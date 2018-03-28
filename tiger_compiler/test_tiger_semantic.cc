@@ -23,8 +23,8 @@ TEST_CASE("check simple int type", "[type-evaluation]") {
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::INT);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::intType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result == 0);
@@ -41,8 +41,8 @@ TEST_CASE("check simple string type", "[type-evaluation]") {
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::STRING);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::stringType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result == 0);
@@ -59,8 +59,8 @@ TEST_CASE("check exprseq type", "[type-evaluation]") {
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::INT);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::intType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result == 0);
@@ -77,8 +77,8 @@ TEST_CASE("fail on basic type inconsistency (string + int)", "[semantic-check]")
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::ERROR);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::errorType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result != 0);
@@ -95,8 +95,8 @@ TEST_CASE("fail on type inconsistency within expr seq", "[semantic-check]") {
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::ERROR);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::errorType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result != 0);
@@ -113,8 +113,8 @@ TEST_CASE("fail on body of while loop error", "[semantic-check]") {
     yyparse(&output);
 
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::ERROR);
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::errorType);
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result != 0);

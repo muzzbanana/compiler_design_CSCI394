@@ -12,15 +12,16 @@ type string and type tiger_type which is a self defined variable that indicates
 the type of a tiger variable.
 
 This class has 2 simple functionalities beyond consturction and destruction.
+
     * **insert** : adds a string, type-tiger pair to the symbol table
     * **lookup** : takes a string and returns the type of the string
-    
 
 
 ## Scopes
 Scopes are handled through a class `Scope`.
 This is uses a vector of sybmol tables. We then mimic a stack using the vector.
 The class has three simple functionalities:
+
     * **push_scope** : this adds a new scope
     * **pop_scope**  : this removes the newest scope from the vector
 
