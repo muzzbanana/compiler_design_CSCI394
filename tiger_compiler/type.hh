@@ -38,6 +38,8 @@ class Type {
 
         virtual string toStr() const =0;
 
+        virtual ~Type() =default;
+
         tiger_type getKind() const;
 
     protected:
@@ -59,13 +61,18 @@ class ArrayType : public Type {
 
 class RecordType : public Type {
     public:
-        RecordType(string name);
+        /* create blank record type */
+        RecordType();
+
+        /* create record type that is the same but with a new name */
+        RecordType(string name, const RecordType *other);
 
         void add_field(string name, const Type* type);
 
         string toStr() const;
 
-    protected:
+        const Type *field_type(string name) const;
+
         std::vector<std::pair<string, const Type*> > fields_;
 };
 

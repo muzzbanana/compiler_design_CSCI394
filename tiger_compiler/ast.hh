@@ -619,8 +619,7 @@ template <template <typename> class O, class E> // E is the elements of the vect
                 : ASTNode(), sep_(separator), first_(first), last_(last)
             {}
 
-            virtual ~VectorASTNode()
-            {
+            virtual ~VectorASTNode() {
                 for (auto a : vec_) {
                     delete a;
                 }
@@ -871,6 +870,14 @@ template <typename Z>
                 string type_name = left_->toStr();
                 const Type *new_type = right_->type_verify(scope);
 
+                if (new_type->getKind() == tiger_type::RECORD) {
+                    /* the record type wants to know the name it's assigned to, but these
+                     * types are const, so we create a new one and delete the old one. */
+                    RecordType *new_rec = new RecordType(type_name, static_cast<const RecordType*>(new_type));
+                    delete static_cast<const RecordType*>(new_type);
+                    new_type = new_rec;
+                }
+
                 scope->type_insert(type_name, new_type);
 
                 if (new_type == Type::errorType) {
@@ -1001,22 +1008,78 @@ template <typename Z>
                  * the field names and make sure there are no duplicates. */
                 set<string> string_set;
 
-                RecordType *rec = new RecordType("");
+                /* Get the currently-instantiating record type from the TypeInstantiation node
+                 * above us. */
+                const Type *insttype = scope->type_search("_current_rectype");
 
-                for (unsigned int i = 0; i < vec_.size(); i++){
+                if (insttype->getKind() != tiger_type::RECORD) {
+                    cerr << "       cannot instantiate non-record type ‘" << insttype->toStr() << "’" << endl;
+                    return Type::errorType;
+                }
+
+                if (insttype == Type::notFoundType) {
+                    /* we should only be able to get here from a TypeInstantiation calling us
+                     * with this thing set in the scope */
+                    cerr << "how did you get here???" << endl;
+                    return Type::errorType;
+                }
+
+                const RecordType *rectype = static_cast<const RecordType*>(insttype);
+
+                set<string> undeclared;
+
+                /* Keep track of which fields have yet to be declared, so we can report when
+                 * they are absent. */
+                for (unsigned int i = 0; i < rectype->fields_.size(); i++) {
+                    undeclared.insert(rectype->fields_[i].first);
+                }
+
+                for (unsigned int i = 0; i < vec_.size(); i++) {
                     string s = vec_[i]->toStr();
-                    string t = s.substr(0,s.find(":"));
+                    string t = s.substr(0,s.find("="));
                     t.erase(remove(t.begin(), t.end(), ' '), t.end());
 
-                    if (string_set.count(t) > 0) {
-                        error_reporting();
-                        cerr << "       name ‘" << t << "’ used multiple times in function or record declaration" << endl;
+                    const Type *field_type = rectype->field_type(t);
+
+                    if (field_type == Type::notFoundType) {
+                        cerr << "       type ‘" << rectype->toStr() << "’ has no field ‘" << t << "’" << endl;
                         return Type::errorType;
                     }
 
-                    string_set.insert(t);
+                    if (string_set.count(t) > 0) {
+                        error_reporting();
+                        cerr << "       name ‘" << t << "’ used multiple times in record instantiation" << endl;
+                        return Type::errorType;
+                    }
 
-                    rec->add_field(t, vec_[i]->type_verify(scope));
+                    undeclared.erase(t);
+
+                    string_set.insert(t);
+                }
+
+                if (undeclared.size() > 0) {
+                    if (undeclared.size() == 1) {
+                        cerr << "       no value given for field ‘" << *(undeclared.begin())
+                             << "’ of record type ‘" << rectype->toStr() << "’" << endl;
+                    } else if (undeclared.size() == 2) {
+                        cerr << "       no value given for field ‘" << *(undeclared.begin())
+                             << "’ or ‘" << *(next(undeclared.begin()))
+                             << "’ of record type ‘" << rectype->toStr() << "’" << endl;
+                    } else {
+                        cerr << "       no value given for field ";
+                        for (auto it = undeclared.begin(); it != undeclared.end(); it++) {
+                            cerr << "‘" << *it << "’";
+                            if (next(it) == undeclared.end()) {
+                                /* at end, don't do anything */
+                            } else if (next(next(it)) == undeclared.end()) {
+                                cerr << ", or ";
+                            } else {
+                                cerr << ", ";
+                            }
+                        }
+                        cerr << " of record type ‘" << rectype->toStr() << "’" << endl;
+                    }
+                    return Type::errorType;
                 }
 
                 return Type::notImplementedType;
@@ -1039,6 +1102,20 @@ template <typename Z>
                 if (instantiating_type == Type::notFoundType) {
                     error_reporting();
                     cerr << "       cannot instantiate nonexistent record type ‘" << left_->toStr() << "’" << endl;
+                    return Type::errorType;
+                }
+
+                scope->push_scope();
+
+                /* We do this to pass the attempted instantiating type to the child node,
+                 * so that it can check whether the fields are valid. */
+                scope->type_insert("_current_rectype", instantiating_type);
+
+                const Type *instantiated_type = right_->type_verify(scope);
+
+                scope->pop_scope();
+
+                if (instantiated_type == Type::errorType) {
                     return Type::errorType;
                 }
 
@@ -1072,7 +1149,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                return right_->type_verify(scope);
+                return scope->type_search(right_->toStr());
             }
     };
 
@@ -1092,7 +1169,7 @@ class RecordTypeAST {
              name, if there are more duplicates, return errorType */
             set<string> string_set;
 
-            RecordType *rec = new RecordType("");
+            RecordType *rec = new RecordType();
 
             for (unsigned int i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();

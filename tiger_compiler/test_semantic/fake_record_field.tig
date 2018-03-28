@@ -1,0 +1,4 @@
+let
+    type fruit = { size: int, weight: int, color: string }
+    var orange := fruit { size = 40, weight = 2, color = "orange", tastiness = 30 }
+in orange end
