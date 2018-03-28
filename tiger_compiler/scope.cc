@@ -5,11 +5,11 @@ namespace tiger{
 
 Scope::Scope(){}
 
-void Scope::push_onto_scope(){
+void Scope:: push_scope(){
     scope_.push_back(SymbolTable());
 }
 
-void Scope::pop_off_scope(){
+void Scope:: pop_scope(){
     scope_.pop_back();
 }
 

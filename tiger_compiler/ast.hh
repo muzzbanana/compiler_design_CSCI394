@@ -10,10 +10,6 @@
 #include "typeenum.hh"
 #include "scope.hh"
 
-// extern int yycolumn;
-// extern int yylineno;
-
-
 using namespace std;
 
 /* interface to the lexer */
@@ -280,6 +276,8 @@ template <template <typename> class O>
                         && right_->type_verify(scope) == tiger_type::INT) {
                     return tiger_type::INT;
                 } else {
+                    error_reporting();
+                    cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     return tiger_type::ERROR;
                 }
             }
@@ -676,7 +674,8 @@ template <typename Z>
                 if (name_type == value_type) {
                     return value_type;
                 } else if (name_type != tiger_type::ERROR && value_type != tiger_type::ERROR) {
-                    cerr << "error: assignment of variable to wrong type" << endl;
+                    error_reporting();
+                    cerr << "       assignment of variable to wrong type" << endl;
                     return tiger_type::ERROR;
                 } else {
                     return tiger_type::ERROR;
@@ -706,10 +705,12 @@ template <typename Z>
                 if (cond_type == tiger_type::INT && then_type == else_type && then_type != tiger_type::ERROR) {
                     return then_type;
                 } else if (cond_type != tiger_type::INT) {
-                    cerr << "error: condition in 'if' statement must evaluate to integer" << endl;
+                    error_reporting();
+                    cerr << "       condition in 'if' statement must evaluate to integer" << endl;
                     return tiger_type::ERROR;
                 } else if (then_type != else_type) {
-                    cerr << "error: true and false condition expressions in 'if' statement must have the same type" << endl;
+                    error_reporting();
+                    cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
                     return tiger_type::ERROR;
                 } else {
                     return tiger_type::ERROR;
@@ -737,7 +738,8 @@ template <typename Z>
                 if (cond_type == tiger_type::INT && do_type != tiger_type::ERROR) {
                     return tiger_type::NIL;
                 } else if (cond_type != tiger_type::INT) {
-                    cerr << "error: condition of 'while' loop must evaluate to integer" << endl;
+                    error_reporting();
+                    cerr << "       condition of 'while' loop must evaluate to integer" << endl;
                     return tiger_type::ERROR;
                 } else {
                     return tiger_type::ERROR;
@@ -763,7 +765,8 @@ template <typename Z>
                         && body_type != tiger_type::ERROR) {
                     return tiger_type::NIL;
                 } else if (first_type != tiger_type::INT || last_type != tiger_type::INT) {
-                    cerr << "error: 'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
+                    error_reporting();
+                    cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
                     return tiger_type::ERROR;
                 } else {
                     return tiger_type::ERROR;
@@ -785,7 +788,8 @@ template <typename Z>
                 tiger_type expr_type = right_->type_verify(scope);
 
                 if (scope->preexisting(var_name)) {
-                    cerr << "error: cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    error_reporting();
+                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
 
@@ -808,7 +812,8 @@ template <typename Z>
                 std::string type_name = middle_->toStr();
 
                 if (scope->preexisting(var_name)) {
-                    cerr << "error: cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    error_reporting();
+                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
 
@@ -820,13 +825,15 @@ template <typename Z>
                 } else if (type_name == "string") {
                     var_type = tiger_type::STRING;
                 } else {
-                    cerr << "unknown type " << type_name << endl;
+                    error_reporting();
+                    cerr << "       unknown type " << type_name << endl;
                     return tiger_type::ERROR;
                 }
 
                 if (value_type == var_type) {
                     return tiger_type::NIL;
                 } else {
+                    error_reporting();
                     cerr << "cannot assign expression of type <1%#!$?!?!> to variable "
                         << var_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
                     return tiger_type::ERROR;
@@ -844,7 +851,8 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                
+                std::cout << "type decleration not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -862,10 +870,10 @@ template <typename Z>
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 // Create a new scope for the duration of the declaration section and body
                 // section.
-                scope->push_onto_scope();
+                scope-> push_scope();
                 tiger_type declaration_type = left_->type_verify(scope);
                 tiger_type body_type = right_->type_verify(scope);
-                scope->pop_off_scope();
+                scope-> pop_scope();
 
                 if (declaration_type != tiger_type::ERROR && body_type != tiger_type::ERROR) {
                     return body_type;
@@ -944,7 +952,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "field member not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -960,7 +968,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
-                std::cout << "not implemented yet!*" << std::endl;
+                std::cout << "fieldlsit not implemented yet!*" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -976,7 +984,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "type instantiation not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -991,7 +999,7 @@ template <typename Z>
                 return -1;
             }
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
-                std::cout << "not implemented yet!" << std::endl;
+                std::cout << "typevalue not implemented yet!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -1007,7 +1015,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "record not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -1039,7 +1047,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
-                std::cout << "not implemented yet!" << std::endl;
+                std::cout << "array not implemented yet!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -1055,7 +1063,7 @@ template <typename Z>
             }
 
             tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "dot not implemented yet!!" << std::endl;
                 return tiger_type::NOTIMPLEMENTED;
             }
     };
@@ -1075,6 +1083,7 @@ template <typename Z>
                 //tiger_type left_type = left_->type_verify(scope);
                 tiger_type index_type = right_->type_verify(scope);
                 if (index_type != tiger_type::INT) {
+                    error_reporting();
                     cerr << "error: index of the array must be an integer expression" << endl;
                     return tiger_type::ERROR;
                 } else {
@@ -1099,6 +1108,7 @@ template <typename Z>
                 //tiger_type left_type = left_->type_verify(scope);
                 tiger_type index_type = right_->type_verify(scope);
                 if (index_type != tiger_type::INT) {
+                    error_reporting();
                     cerr << "error: index of the array must be an integer expression" << endl;
                     return tiger_type::ERROR;
                 } else {
@@ -1125,6 +1135,7 @@ template <typename Z>
                 tiger_type return_type = right_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
+                    error_reporting();
                     cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
@@ -1154,6 +1165,7 @@ template <typename Z>
                 tiger_type return_type = four_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
+                    error_reporting();
                     cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
                     return tiger_type::ERROR;
                 }
@@ -1195,6 +1207,7 @@ template <typename Z>
                 tiger_type return_type = scope->search(func_name);
 
                 if (return_type == tiger_type::ERROR) {
+                    error_reporting();
                     cerr << "error: unknown function " << func_name << endl;
                     return tiger_type::ERROR;
                 }

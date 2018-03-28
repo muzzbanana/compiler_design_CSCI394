@@ -1,5 +1,6 @@
 #ifndef _TYPE_ENUM_HH_
 #define _TYPE_ENUM_HH_
+#include <map>
 
 namespace tiger {
 
