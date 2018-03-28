@@ -395,7 +395,7 @@ TEST_CASE("fail on assigning a variable the wrong type", "[semantic-check]") {
     yyparse(&output);
 
     int check_result = semantic_checks(output);
-    REQUIRE(check_result == 0);
+    REQUIRE(check_result != 0);
 
     delete output;
     fclose(myfile);

@@ -19,7 +19,7 @@ namespace tiger {
 // Base AST node class, to define the hierarchy.
 class ASTNode {
     public:
-        using value_t = double;  // All values will be floating-point
+        using value_t = int;  // All values will be floating-point
         using ASTptr = const ASTNode*; // Can't use smart ptr in union :(
 
         ASTNode() = default;
@@ -288,7 +288,7 @@ template <template <typename> class O>
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       in expression '" << toStr() << "'" << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
-                    cerr << "       (the types are '" << left_type->toStr() << "' and '" << right_type->toStr() << "')" << endl;
+                    cerr << "       (the types are ‘" << left_type->toStr() << "’ and ‘" << right_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 }
             }
@@ -737,7 +737,7 @@ template <typename Z>
                 } else if (cond_type != Type::intType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
-                    cerr << "       (evaluates to '" << cond_type->toStr() << "' instead)" << endl;
+                    cerr << "       (evaluates to ‘" << cond_type->toStr() << "’ instead)" << endl;
                     return Type::errorType;
                 } else if (then_type == Type::errorType || else_type == Type::errorType) {
                     /* error was somewhere below us, just pass it on */
@@ -745,7 +745,7 @@ template <typename Z>
                 } else if (then_type != else_type) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
-                    cerr << "       (types are '" << then_type->toStr() << "' and '" << else_type->toStr() << "')" << endl;
+                    cerr << "       (types are ‘" << then_type->toStr() << "’ and ‘" << else_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -826,6 +826,7 @@ template <typename Z>
                 if (scope->preexisting(var_name)) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
+
                     return Type::errorType;
                 }
 
@@ -1060,9 +1061,8 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
-                std::cout << "record not implemented yet!!" << std::endl;
-                return Type::notImplementedType;
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+                return right_->type_verify(scope);
             }
     };
 
@@ -1081,19 +1081,25 @@ class RecordTypeAST {
              using sets allows us to check the count on a given variable
              name, if there are more duplicates, return errorType */
             set<string> string_set;
+            RecordType *rec = new RecordType("");
+
             for (unsigned i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();
                 string t = s.substr(0,s.find(":"));
                 t.erase(remove(t.begin(), t.end(), ' '), t.end());
+
                 if (string_set.count(t) > 0) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       name '" << t << "' used multiple times in function or record declaration" << endl;
                     return Type::errorType;
                 }
+
+                string_set.insert(t);
+
+                rec->add_field(t, vec_[i]->type_verify(scope));
             }
 
-            std::cout << "record type not implemented yet!*" << std::endl;
-            return Type::notImplementedType;
+            return rec;
         }
 };
 
@@ -1160,7 +1166,7 @@ template <typename Z>
                 if (index_type != Type::intType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       index of the array must be an integer expression" << endl;
-                    cerr << "       (got '" << right_->toStr() << "', which is of type '" << index_type->toStr() << "')" << endl;
+                    cerr << "       (got ‘" << right_->toStr() << "’, which is of type ‘" << index_type->toStr() << "’)" << endl;
 
                     return Type::errorType;
                 } else {
@@ -1189,7 +1195,7 @@ template <typename Z>
                 if (length_type != Type::intType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       length of the array must be an integer expression" << endl;
-                    cerr << "       (got '" << middle_->toStr() << "', which is of type '" << length_type->toStr() << "'." << endl;
+                    cerr << "       (got ‘" << middle_->toStr() << "’, which is of type ‘" << length_type->toStr() << "’." << endl;
                     return Type::errorType;
                 }
 
