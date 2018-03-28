@@ -67,32 +67,32 @@ The class has three simple functionalities:
 ## Testing
 
    * Type mismatch in expression
-   ```
-      "asdfghjkl" + 1
-   ```
+     ```
+        "asdfghjkl" + 1
+     ```
    * Type mismatch in function return type
-   ```
-     let
-       function f () : int = "hi"
-     in
-       f()
-     end 
-   ```
+     ```
+      let
+        function f () : int = "hi"
+      in
+        f()
+      end 
+     ```
    * Type mismatch in variable assignment and decleration
-   ```
+     ```
       let
         var a : int := 4
       in
         a := "hi"
       end
-   ```
+     ```
    * Type mismatch in if-then-else and while statements
-   ```
+     ```
       if 1 then 10 else "else"
-   ```
+     ```
    * Same variable name in different scopes
-   ```
-      let
+     ```
+       let
          var x := 1
          function f(int: i) =
             let var x := 2
@@ -100,7 +100,7 @@ The class has three simple functionalities:
        in
          f(4)
        end
-   ```
+     ```
    * Recursive and mutually recursive functions
      ``` 
       let
