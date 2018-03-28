@@ -49,16 +49,67 @@ but not syntactic. Will fix soon.
 
    * Type mismatch in expression
    * Same variable name in different scopes
+      `let
+         var x := 1
+         function f(int: i) =
+            let var x := 2
+            in x + 1 end
+       in
+         f(4)
+       end`
    * Recursive and mutually recursive functions
+      `let
+         function f (a : string) : string = f(15)
+       in
+         f("abcdefg")
+       end`
+      `let
+         function f (i : int) = if i > 0 then g(i - 1) else 0
+         function g (i : string) = if i > 0 then f(i - 1) else 1
+      in
+         f(5)
+      end`
    * Higher-order and nested functions
    * Undefined identifiers
    * Repeatedly defined identifiers
+      `let
+         var portland_bridge_name := "Morrison Bridge"
+         var portland_bridge_name := "Tillikum Crossing"
+         var portland_bridge_name := "Burnside Bridge"
+       in
+         portland_bridge_name
+       end`
    * Misuse of reserved words (Syntactic Error)
-   * Incorrest nesting (Syntactic Error)
+   * Incorrect nesting (Syntactic Error)
    * Repition of variables in function arguments
+      `let 
+         function f(i:int, j:int, i:string) = 1
+       in
+         f(1,2,"hello")
+       end`
    * Declerations with invalid types
+      `let
+         type arrtype = array of dog
+         var arr := arrtype [10] of 0
+         var a : int := 0
+       in
+         a = arr[11]
+       end`
    * Bad record types
+      `let
+         type fruit = { color : string, size : int }
+         var banana : fruit := fruit { color="yellow", size=10 }
+       in
+         /* oh no this property doesn't exist */
+         banana.tastiness := 4
+       end`
    * Indexing out of range of array
+      `let 
+         type arrtype = array of int
+         var arr : arrtype := int[10] of 0
+       in
+         a = arr[11]
+       end`
       
 
 Tiger Parser
