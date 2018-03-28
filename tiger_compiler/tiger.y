@@ -280,6 +280,10 @@ void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
     cerr << error << " " << yylloc.first_line << endl;
 }
 
+void error_reporting() {
+  cerr << "ERROR: line " << yylloc.first_line - 1 << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
+}
+
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.
  * This is necessary because flex calls strdup() in order to make sure the pointer to the
  * string doesn't change, but this results in a memory leak if the newly duplicated string

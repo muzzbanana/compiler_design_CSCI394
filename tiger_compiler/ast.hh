@@ -1,14 +1,6 @@
 #ifndef _AST_HH_
 #define _AST_HH_
-/* Companion source code for "flex & bison", published by O'Reilly
- * Media, ISBN 978-0-596-15597-1
- * Copyright (c) 2009, Taughannock Networks. All rights reserved.
- * See the README file for license conditions and contact info.
- * $Header: /home/johnl/flnb/code/RCS/fb3-1.h,v 2.1 2009/11/08 02:53:18 johnl Exp $
- */
-/*
- * Declarations for a calculator fb3-1
- */
+
 
 #include <iostream>
 #include <sstream>
@@ -18,10 +10,14 @@
 #include "typeenum.hh"
 #include "scope.hh"
 
+// extern int yycolumn;
+// extern int yylineno;
+
+
 using namespace std;
 
 /* interface to the lexer */
-//void yyerror(tiger::ASTNode::ASTptr *out, char *s, ...);
+extern void error_reporting();
 
 namespace tiger {
 
@@ -284,6 +280,8 @@ class BinaryASTNode : public ASTNode {
               && right_->type_verify(scope) == tiger_type::INT) {
           return tiger_type::INT;
       } else {
+          error_reporting();
+          std::cout << "       Attempting to use binary operation on non-int value"  << std::endl;
           return tiger_type::ERROR;
       }
   }
@@ -681,6 +679,7 @@ class Assignment {
                 return value_type;
             } else if (name_type != tiger_type::ERROR && value_type != tiger_type::ERROR) {
                 cerr << "error: assignment of variable to wrong type" << endl;
+                error_reporting();
                 return tiger_type::ERROR;
             } else {
                 return tiger_type::ERROR;
@@ -839,7 +838,7 @@ class TypeDeclaration {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
+            std::cout << "not implemented yet!! "  << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 };
@@ -942,7 +941,7 @@ class FieldMember {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
+            std::cout << "not implemented yet!! "  << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 };
@@ -993,7 +992,7 @@ class TypeValue {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
-            std::cout << "not implemented yet!" << std::endl;
+            std::cout << "not implemented yet! "  << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 };
@@ -1044,7 +1043,7 @@ class ArrayTypeImplementation {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr child_) {
-            std::cout << "not implemented yet!" << std::endl;
+            std::cout << "not implemented yet<< yylineno! "  << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 };
@@ -1061,7 +1060,7 @@ class DotAccess {
         }
 
         tiger_type type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            std::cout << "not implemented yet!!" << std::endl;
+            std::cout << "not implemented yet!! "  << std::endl;
             return tiger_type::NOTIMPLEMENTED;
         }
 };

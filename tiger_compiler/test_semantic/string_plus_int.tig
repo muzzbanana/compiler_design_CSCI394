@@ -1,5 +1,5 @@
 /* Check whether string + int gives a correct error. */
 
-if 1
-    then "asdfghjkl" + 1
-    else 4
+
+
+"asdfghjkl" + 1
