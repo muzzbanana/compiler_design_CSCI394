@@ -42,9 +42,28 @@ The class has three simple functionalities:
                      to its parent scopes
                           
 ## Error Handling
-Not working propely. Columns and lines do not update correctly. Works well for semantic errors
-but not syntactic. Will fix soon.
-
+   * __Syntactic Errors__: syntactic errors are supposrted by Bison's `%define parse.error verbose`
+     and our yyerror function which makes use of yylloc(defined in .y).
+     Here is a sample error:  
+     ```
+      ERROR: line 1 column 5-7
+             syntax error, unexpected FOR, expecting NAME 1
+     ```
+   * __Semantic Errors__: semantic errors are handled using the built in `'@'` functionality. @<token>.<x>,
+                          where x can ask for first or last line or column and returns an integer. We pass
+                          this integer to our AST classes and use that value to print the line number. Will
+                          support column values in the near future.
+     Here is a couple sample errors:
+      ```
+        ERROR: line 5
+               in expression '("asdfghjkl" + 1)'
+               Attempting binary operation on between 1 or more non-integer values
+               (the types are ‘string’ and ‘int’)
+   
+        ERROR: line 1
+               true and false condition expressions in 'if' statement must have the same type
+               (types are ‘int’ and ‘string’)
+       ```
 ## Testing
 
    * Type mismatch in expression

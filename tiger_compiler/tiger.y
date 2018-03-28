@@ -13,6 +13,7 @@ using namespace std;
 
 extern "C" int yylex(void);
 extern "C" int yylineno;
+extern int current_line;
 void yyerror(tiger::ASTNode::ASTptr *out, const char *);
 tiger::ASTNode::ASTptr name(const char *str);
 %}
@@ -106,75 +107,75 @@ expr: STR {
   } | lvalue {
         $$ = $1;
   } | '-' expr {
-        $$ = new UnaryMinusASTNode("-", $2);
+        $$ = new UnaryMinusASTNode("-", $2, @$.first_line);
   } | expr '+' expr {
-        $$ = new PlusASTNode("+", $1, $3);
+        $$ = new PlusASTNode("+", $1, $3, @$.first_line);
   } | expr '-' expr {
-        $$ = new MinusASTNode("-", $1, $3);
+        $$ = new MinusASTNode("-", $1, $3, @$.first_line);
   } | expr '*' expr {
-        $$ = new MultASTNode("*", $1, $3);
+        $$ = new MultASTNode("*", $1, $3, @$.first_line);
   } | expr '/' expr {
-        $$ = new DivASTNode("/", $1, $3);
+        $$ = new DivASTNode("/", $1, $3, @$.first_line);
   } | expr '=' expr {
-        $$ = new EqualASTNode("=", $1, $3);
+        $$ = new EqualASTNode("=", $1, $3, @$.first_line);
   } | expr POINTIES expr {
-        $$ = new NotEqualASTNode("<>", $1, $3);
+        $$ = new NotEqualASTNode("<>", $1, $3, @$.first_line);
   } | expr '<' expr {
-        $$ = new LessASTNode("<", $1, $3);
+        $$ = new LessASTNode("<", $1, $3, @$.first_line);
   } | expr '>' expr {
-        $$ = new GreaterASTNode(">", $1, $3);
+        $$ = new GreaterASTNode(">", $1, $3, @$.first_line);
   } | expr LESS_EQUAL expr {
-        $$ = new LessEqualASTNode("<=", $1, $3);
+        $$ = new LessEqualASTNode("<=", $1, $3, @$.first_line);
   } | expr GREATER_EQUAL expr {
-        $$ = new GreaterEqualASTNode(">=", $1, $3);
+        $$ = new GreaterEqualASTNode(">=", $1, $3, @$.first_line);
   } | expr '&' expr {
-        $$ = new LogicalAndASTNode("&", $1, $3);
+        $$ = new LogicalAndASTNode("&", $1, $3, @$.first_line);
   } | expr '|' expr {
-        $$ = new LogicalOrASTNode("|", $1, $3);
+        $$ = new LogicalOrASTNode("|", $1, $3, @$.first_line);
   } | lvalue ASSIGN expr {
-        $$ = new AssignASTNode(":=", $1, $3);
+        $$ = new AssignASTNode(":=", $1, $3, @$.first_line);
   } | NAME '(' exprlist_opt ')' {
-        $$ = new FuncCallASTNode("(", "(", "))", name($1), $3, false);
+        $$ = new FuncCallASTNode("(", "(", "))", name($1), $3, @$.first_line, false);
   } | '(' exprseq_opt ')' {
         $$ = $2;
   } | NAME '{' fieldlist_opt '}' {
-        $$ = new TypeInstASTNode("", "{", "}", name($1), $3);
+        $$ = new TypeInstASTNode("", "{", "}", name($1), $3, @$.first_line);
   } | NAME '[' expr ']' OF expr {     /* array */
-        $$ = new ArrayASTNode("", " [", "] of ", name($1), $3, $6, false);
+        $$ = new ArrayASTNode("", " [", "] of ", name($1), $3, $6, @$.first_line, false);
   } | IF expr THEN expr {
-        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, new NilASTNode());
+        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, new NilASTNode(), @$.first_line);
   } | IF expr THEN expr ELSE expr {
-        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, $6);
+        $$ = new ConditionalASTNode("if", "then", "else", $2, $4, $6, @$.first_line);
   } | WHILE expr DO expr {
-        $$ = new WhileLoopASTNode("while", "do", $2, $4);
+        $$ = new WhileLoopASTNode("while", "do", $2, $4, @$.first_line);
   } | FOR NAME ASSIGN expr TO expr DO expr {
-        $$ = new ForLoopASTNode("for", ":=", "to", "do", name($2), $4, $6, $8);
+        $$ = new ForLoopASTNode("for", ":=", "to", "do", name($2), $4, $6, $8, @$.first_line);
   } | BREAK {
-        $$ = new BreakASTNode();
+        $$ = new BreakASTNode(@$.first_line);
   } | LET decllist IN exprseq_opt END {
-        $$ = new LetASTNode("let", "in", "end", $2, $4);
+        $$ = new LetASTNode("let", "in", "end", $2, $4, @$.first_line);
   }
 
 exprlist_opt: /* nothing */ {
-        $$ = new ExprSeqASTNode(", ");
+        $$ = new ExprSeqASTNode(", ", @$.first_line);
   } | exprlist {
         $$ = $1;
   }
 
 exprseq_opt: /* nothing */ {
-        $$ = new ExprSeqASTNode("; ");
+        $$ = new ExprSeqASTNode("; ", @$.first_line);
   } | exprseq {
         $$ = $1;
   }
 
 fieldlist_opt: /* nothing */ {
-        $$ = new FieldListASTNode(", ");
+        $$ = new FieldListASTNode(", ", @$.first_line);
   } | fieldlist {
         $$ = $1;
   }
 
 exprseq: expr {
-        $$ = new ExprSeqASTNode("; ");
+        $$ = new ExprSeqASTNode("; ", @$.first_line);
         $$->add_node($1);
   } | exprseq ';' expr {
         $$ = $1;
@@ -184,7 +185,7 @@ exprseq: expr {
   }
 
 exprlist: expr {
-        $$ = new ExprSeqASTNode(", ");
+        $$ = new ExprSeqASTNode(", ", @$.first_line);
         $$->add_node($1);
   } | exprlist ',' expr {
         $$ = $1;
@@ -192,7 +193,7 @@ exprlist: expr {
   }
 
 fieldlist: NAME '=' expr {
-        $$ = new FieldListASTNode(", ");
+        $$ = new FieldListASTNode(", ", @$.first_line);
         $$->add_node(new FieldMemberASTNode("=", name($1), $3, false));
   } | fieldlist ',' NAME '=' expr {
         $$ = $1;
@@ -206,15 +207,15 @@ lvalue: NAME {
   }
 
 lvalue_not_id: lvalue '.' NAME {
-        $$ = new DotASTNode("(", ".", ")", $1, name($3), false);
+        $$ = new DotASTNode("(", ".", ")", $1, name($3), @$.first_line, false);
   } | NAME '[' expr ']' {
-        $$ = new IndexASTNode("", "[", "]", name($1), $3, false);
+        $$ = new IndexASTNode("", "[", "]", name($1), $3, @$.first_line, false);
   } | lvalue_not_id '[' expr ']' {
-        $$ = new IndexASTNode("", "[", "]", $1, $3, false);
+        $$ = new IndexASTNode("", "[", "]", $1, $3, @$.first_line, false);
   }
 
 decllist: declaration {
-        $$ = new DeclListASTNode(" ");
+        $$ = new DeclListASTNode(" ", @$.first_line);
         $$->add_node($1);
   } | decllist declaration {
         $$ = $1;
@@ -224,33 +225,33 @@ decllist: declaration {
   }
 
 declaration: typedecl {
-        $$ = new DeclarationASTNode("", $1);
+        $$ = new DeclarationASTNode("", $1, @$.first_line);
   } | vardecl {
-        $$ = new DeclarationASTNode("", $1);
+        $$ = new DeclarationASTNode("", $1, @$.first_line);
   } | funcdecl {
-        $$ = new DeclarationASTNode("", $1);
+        $$ = new DeclarationASTNode("", $1, @$.first_line);
   }
 
 typedecl: TYPE NAME '=' type {
-        $$ = new TypeDeclASTNode("type", "=", name($2), $4);
+        $$ = new TypeDeclASTNode("type", "=", name($2), $4, @$.first_line);
   }
 
 type: NAME {
-        $$ = new TypeASTNode("", name($1));
+        $$ = new TypeASTNode("", name($1), @$.first_line);
   } | '{' typefields_opt '}' {
-        $$ = new TypeASTNode("{ ", " }", $2);
+        $$ = new TypeASTNode("{ ", " }", $2, @$.first_line);
   } | ARRAY OF NAME {
-        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of ", name($3)));
+        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of ", name($3), @3.first_line), @$.first_line);
   }
 
 typefields_opt: /* nothing */ {
-        $$ = new RecordTypeASTNode(", ");
+        $$ = new RecordTypeASTNode(", ", @$.first_line);
   } | typefields {
         $$ = $1;
   }
 
 typefields: typefield {
-        $$ = new RecordTypeASTNode(", ");
+        $$ = new RecordTypeASTNode(", ", @$.first_line);
         $$->add_node($1);
   } | typefields ',' typefield {
         $$ = $1;
@@ -258,19 +259,20 @@ typefields: typefield {
   }
 
 typefield: NAME ':' NAME {
-        $$ = new RecordFieldASTNode(":", name($1), name($3), false);
+        $$ = new RecordFieldASTNode(":", name($1), name($3), @$.first_line, false);
   }
 
 vardecl: VAR NAME ASSIGN expr {
-        $$ = new UntypedVarDeclASTNode("var", ":=", name($2), $4);
+        $$ = new UntypedVarDeclASTNode("var", ":=", name($2), $4, @$.first_line);
   } | VAR NAME ':' NAME ASSIGN expr {
-        $$ = new TypedVarDeclASTNode("var", ":", ":=", name($2), name($4), $6);
+        $$ = new TypedVarDeclASTNode("var", ":", ":=", name($2), name($4), $6, @$.first_line);
   }
 
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
-        $$ = new UnTypedFuncDeclASTNode("(function ", "(", ") = ", ")", name($2), $4, $7, false);
+        $$ = new UnTypedFuncDeclASTNode("(function ", "(", ") = ", ")", name($2), $4, $7, @$.first_line, false);
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
-        $$ = new TypedFuncDeclASTNode("(function ", "(", "):", "=", ")", name($2), $4, name($7), $9, false);
+        $$ = new TypedFuncDeclASTNode("(function ", "(", "):", "=", ")", name($2), $4, name($7), $9, @$.first_line, false);
+
   }
 
 %%
@@ -280,8 +282,8 @@ void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
     cerr << error << " " << yylloc.first_line << endl;
 }
 
-void error_reporting() {
-  cerr << "ERROR: line " << yylineno << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
+int send_line() {
+  return yylineno;
 }
 
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.
