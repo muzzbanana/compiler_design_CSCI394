@@ -1,0 +1,3 @@
+let
+    var x : string := 4
+in x end

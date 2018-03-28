@@ -22,10 +22,15 @@ class SymbolTable {
         // Add a new entry to this scope.
         void insert(const string name, const Type *type);
 
+        // Add a new type entry to this scope.
+        void insert_type(const string name, const Type *type);
+
         const Type *lookup(string name);
+        const Type *lookup_type(const string name);
 
     private:
         map<string, const Type*> symbols_;
+        map<string, const Type*> types_;
 };
 
 }//namespace

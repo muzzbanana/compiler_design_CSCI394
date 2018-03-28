@@ -5,7 +5,17 @@ We chose to implement our semantic checks using the **"functional style"**.
 This means we maintain a permanent environment and create temporary ones when
 needed.
 
-## Symbol Tables
+### Types (type.hh, type.cc)
+Types are defined using a class `Type`. This serves as the base for the for
+   - BaseType which is used for ints, strings, nil, error, things that not yet implemented
+     (in case we didn't complete the assignment), and as a hack a type to represent when
+     we didn't find a type.
+   - ArrayType for arrays
+   - RecordType for records
+   - FunctionType for functions
+   
+
+### Symbol Tables (semantic.hh, semantic.cc)
 Symbol Tables are created using a class `SymbolTable`.
 It uses a map to represent the symbol tables. The map is composed of pairs of
 type string and type tiger_type which is a self defined variable that indicates
@@ -17,16 +27,28 @@ This class has 2 simple functionalities beyond consturction and destruction.
     * **lookup** : takes a string and returns the type of the string
 
 
-## Scopes
+### Scopes (scope.hh, scope.cc)
 Scopes are handled through a class `Scope`.
 This is uses a vector of sybmol tables. We then mimic a stack using the vector.
 The class has three simple functionalities:
 
-    * **push_scope** : this adds a new scope
-    * **pop_scope**  : this removes the newest scope from the vector
+    * **push_scope**    : this adds a new scope
+    * **pop_scope**     : this removes the newest scope from the vector
+    * **preexisting**   : this checks if a variable exists in its larger scope
+    * **search**        : this takes a string and terates through the vector in reverse
+                          order to check if variable has already been declared, if found,
+                          it returns its type, if not returns error type
+    * **insert**        : this takes a string and its corresponding type and adds the binding
+                          to its parent scopes
+                          
+## Error Handling
 
 
+## Testing
 
+   * Misuse of types
+   * Indexing out of range of array
+      
 
 Tiger Parser
 ============

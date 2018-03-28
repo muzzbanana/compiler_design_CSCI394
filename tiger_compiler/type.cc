@@ -16,7 +16,7 @@ Type::Type(string name) {
     name_ = name;
 }
 
-ArrayType::ArrayType(string name, Type *what_of) : Type(name) {
+ArrayType::ArrayType(const Type *what_of) : Type("array") {
     type_of_ = what_of;
     type_ = tiger_type::ARRAY;
 }

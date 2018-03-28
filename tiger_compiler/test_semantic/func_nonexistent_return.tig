@@ -1,0 +1,5 @@
+let
+    function f() : banana = 2
+in
+    f()
+end
