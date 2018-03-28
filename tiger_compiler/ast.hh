@@ -718,6 +718,9 @@ template <typename Z>
                 const Type *else_type = right_->type_verify(scope);
                 if (cond_type == Type::intType && then_type == else_type && then_type != Type::errorType) {
                     return then_type;
+                } else if (cond_type == Type::errorType) {
+                    /* there was an error in the condition -- just propagate upward */
+                    return Type::errorType;
                 } else if (cond_type != Type::intType) {
                     error_reporting();
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
@@ -1073,11 +1076,11 @@ template <typename Z>
               if (string_set.size() != vec_.size()){
                 error_reporting();
                 cerr << "       repeated use of variable names" << endl;
-                return Type::ERROR;
+                return Type::errorType;
               }
 
                 std::cout << "record type not implemented yet!*" << std::endl;
-                return Type::NOTIMPLEMENTED;
+                return Type::notImplementedType;
             }
     };
 
@@ -1175,10 +1178,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-                // TODO make this actually declare something
                 string func_name = left_->toStr();
-                // TODO make this take a scope that has the parameters in it
-                const Type *return_type = right_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
@@ -1186,14 +1186,17 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                tiger_type arguments = middle_->type_verify(scope);
-                if (arguments == tiger_type::ERROR){
-                  return tiger_type::ERROR;
+                const Type *arguments = middle_->type_verify(scope);
+                if (arguments == Type::errorType){
+                  return Type::errorType;
                 }
                 // TODO make this take a scope that has the parameters in it
-                tiger_type return_type = right_->type_verify(scope);
+                const Type *return_type = right_->type_verify(scope);
 
-                scope->symbol_insert(func_name, return_type);
+                FunctionType *functype = new FunctionType(func_name, return_type);
+                // TODO add parameters here
+
+                scope->symbol_insert(func_name, functype);
 
                 return Type::nilType;
             }

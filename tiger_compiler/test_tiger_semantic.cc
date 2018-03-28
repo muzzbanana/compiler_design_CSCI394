@@ -306,9 +306,9 @@ TEST_CASE("fail on repetition of function arguments", "[semantic-check]") {
     yyparse(&output);
     std::cout<<"repetition"<<std::endl;
     Scope *s = new Scope();
-    tiger_type type = output->type_verify(s);
-    REQUIRE(type == tiger_type::ERROR);
-    
+    const Type *type = output->type_verify(s);
+    REQUIRE(type == Type::errorType);
+
     int check_result = semantic_checks(output);
 
     REQUIRE(check_result != 0);
