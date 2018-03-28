@@ -22,7 +22,7 @@ namespace tiger {
 // Base AST node class, to define the hierarchy.
 class ASTNode {
     public:
-        using value_t = double;  // All values will be floating-point
+        using value_t = int;  // All values will be floating-point
         using ASTptr = const ASTNode*; // Can't use smart ptr in union :(
 
         ASTNode() = default;
@@ -283,7 +283,7 @@ template <template <typename> class O>
                     return Type::errorType;
                 } else {
                     error_reporting();
-                    cerr << "       in expression ‘" << toStr() << "’" << endl;
+                    cerr << "       in expression " << toStr() << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     cerr << "       (the types are ‘" << left_type->toStr() << "’ and ‘" << right_type->toStr() << "’)" << endl;
                     return Type::errorType;
@@ -855,8 +855,8 @@ template <typename Z>
                     return Type::nilType;
                 } else {
                     error_reporting();
-                    cerr << "       cannot assign expression of type ‘" << value_type->toStr() << "’ to variable ‘"
-                        << var_name << "’, which is of type ‘" << var_type->toStr() << "’." << endl;
+                    cerr << "       variable ‘" << var_name << "’ declared as type ‘" << var_type->toStr()
+                         << "’, but given value ‘" << right_->toStr() << "’ is of type ‘" << value_type->toStr() << "’" << endl;
                     return Type::errorType;
                 }
             }
@@ -1075,13 +1075,15 @@ class RecordTypeAST {
                 string t = s.substr(0,s.find(":"));
                 t.erase(remove(t.begin(), t.end(), ' '), t.end());
 
-                rec->add_field(t, vec_[i]->type_verify(scope));
-
                 if (string_set.count(t) > 0) {
                     error_reporting();
                     cerr << "       name ‘" << t << "’ used multiple times in function or record declaration" << endl;
                     return Type::errorType;
                 }
+
+                string_set.insert(t);
+
+                rec->add_field(t, vec_[i]->type_verify(scope));
             }
 
             return rec;
