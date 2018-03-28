@@ -283,9 +283,9 @@ template <template <typename> class O>
                     return Type::errorType;
                 } else {
                     error_reporting();
-                    cerr << "       in expression '" << toStr() << "'" << endl;
+                    cerr << "       in expression ‘" << toStr() << "’" << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
-                    cerr << "       (the types are '" << left_type->toStr() << "' and '" << right_type->toStr() << "')" << endl;
+                    cerr << "       (the types are ‘" << left_type->toStr() << "’ and ‘" << right_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 }
             }
@@ -681,7 +681,7 @@ template <typename Z>
                 const Type *value_type = right_->type_verify(scope);
                 if (name_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       unknown variable '" << left_->toStr() << "'" << endl;
+                    cerr << "       unknown variable ‘" << left_->toStr() << "’" << endl;
                     return Type::errorType;
                 }
 
@@ -689,8 +689,8 @@ template <typename Z>
                     return value_type;
                 } else if (name_type != Type::errorType && value_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       variable type mismatch: '" << left_->toStr() << "' declared as type '" <<
-                            name_type->toStr() << "' but is being assigned type '" << value_type->toStr() << "'" << endl;
+                    cerr << "       variable type mismatch: ‘" << left_->toStr() << "’ declared as type ‘" <<
+                            name_type->toStr() << "’ but is being assigned type ‘" << value_type->toStr() << "’" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -725,7 +725,7 @@ template <typename Z>
                 } else if (cond_type != Type::intType) {
                     error_reporting();
                     cerr << "       condition in 'if' statement must evaluate to integer" << endl;
-                    cerr << "       (evaluates to '" << cond_type->toStr() << "' instead)" << endl;
+                    cerr << "       (evaluates to ‘" << cond_type->toStr() << "’ instead)" << endl;
                     return Type::errorType;
                 } else if (then_type == Type::errorType || else_type == Type::errorType) {
                     /* error was somewhere below us, just pass it on */
@@ -733,7 +733,7 @@ template <typename Z>
                 } else if (then_type != else_type) {
                     error_reporting();
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
-                    cerr << "       (types are '" << then_type->toStr() << "' and '" << else_type->toStr() << "')" << endl;
+                    cerr << "       (types are ‘" << then_type->toStr() << "’ and ‘" << else_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -812,7 +812,7 @@ template <typename Z>
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
+                    cerr << "       cannot redeclare variable ‘" << var_name << "’ in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -836,7 +836,7 @@ template <typename Z>
 
                 if (scope->preexisting(var_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare variable '" << var_name << "' in the same scope" << endl;
+                    cerr << "       cannot redeclare variable ‘" << var_name << "’ in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -845,7 +845,7 @@ template <typename Z>
                 const Type *var_type = scope->type_search(type_name);
                 if (var_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       variable '" << var_name << "' declared as unknown type '" << type_name << "'" << endl;
+                    cerr << "       variable ‘" << var_name << "’ declared as unknown type ‘" << type_name << "’" << endl;
                     return Type::errorType;
                 }
 
@@ -855,8 +855,8 @@ template <typename Z>
                     return Type::nilType;
                 } else {
                     error_reporting();
-                    cerr << "       cannot assign expression of type '" << value_type->toStr() << "' to variable '"
-                        << var_name << "', which is of type '" << var_type->toStr() << "'." << endl;
+                    cerr << "       cannot assign expression of type ‘" << value_type->toStr() << "’ to variable ‘"
+                        << var_name << "’, which is of type ‘" << var_type->toStr() << "’." << endl;
                     return Type::errorType;
                 }
             }
@@ -1048,8 +1048,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "record not implemented yet!!" << std::endl;
-                return Type::notImplementedType;
+                return right_->type_verify(scope);
             }
     };
 
@@ -1068,19 +1067,24 @@ class RecordTypeAST {
              using sets allows us to check the count on a given variable
              name, if there are more duplicates, return errorType */
             set<string> string_set;
+
+            RecordType *rec = new RecordType("");
+
             for (unsigned int i = 0; i < vec_.size(); i++){
                 string s = vec_[i]->toStr();
                 string t = s.substr(0,s.find(":"));
                 t.erase(remove(t.begin(), t.end(), ' '), t.end());
+
+                rec->add_field(t, vec_[i]->type_verify(scope));
+
                 if (string_set.count(t) > 0) {
                     error_reporting();
-                    cerr << "       name '" << t << "' used multiple times in function or record declaration" << endl;
+                    cerr << "       name ‘" << t << "’ used multiple times in function or record declaration" << endl;
                     return Type::errorType;
                 }
             }
 
-            std::cout << "record type not implemented yet!*" << std::endl;
-            return Type::notImplementedType;
+            return rec;
         }
 };
 
@@ -1100,7 +1104,7 @@ template <typename Z>
 
                 if (arrayof == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       cannot create array of nonexistent type '" << type_name << "'" << endl;
+                    cerr << "       cannot create array of nonexistent type ‘" << type_name << "’" << endl;
                     return Type::errorType;
                 }
 
@@ -1138,8 +1142,8 @@ template <typename Z>
                 const Type *left_type = left_->type_verify(scope);
                 if (left_type->getKind() != tiger_type::ARRAY) {
                     error_reporting();
-                    cerr << "       attempt to index into '" << left_->toStr() << "', which is not an array" << endl;
-                    cerr << "       (it is of type '" << left_type->toStr() << "'.)" << endl;
+                    cerr << "       attempt to index into ‘" << left_->toStr() << "’, which is not an array" << endl;
+                    cerr << "       (it is of type ‘" << left_type->toStr() << "’.)" << endl;
                     return Type::errorType;
                 }
 
@@ -1147,7 +1151,7 @@ template <typename Z>
                 if (index_type != Type::intType) {
                     error_reporting();
                     cerr << "       index of the array must be an integer expression" << endl;
-                    cerr << "       (got '" << right_->toStr() << "', which is of type '" << index_type->toStr() << "')" << endl;
+                    cerr << "       (got ‘" << right_->toStr() << "’, which is of type ‘" << index_type->toStr() << "’)" << endl;
 
                     return Type::errorType;
                 } else {
@@ -1176,7 +1180,7 @@ template <typename Z>
                 if (length_type != Type::intType) {
                     error_reporting();
                     cerr << "       length of the array must be an integer expression" << endl;
-                    cerr << "       (got '" << middle_->toStr() << "', which is of type '" << length_type->toStr() << "'." << endl;
+                    cerr << "       (got ‘" << middle_->toStr() << "’, which is of type ‘" << length_type->toStr() << "’." << endl;
                     return Type::errorType;
                 }
 
@@ -1186,8 +1190,8 @@ template <typename Z>
 
                 if (!arr_type->equivalent(value_type)) {
                     error_reporting();
-                    cerr << "       declaring an array of values of type '" << type_name << "', but default value given is '" <<
-                            right_->toStr() << "', which is of type '" << value_type->toStr() << "'" << endl;
+                    cerr << "       declaring an array of values of type ‘" << type_name << "’, but default value given is ‘" <<
+                            right_->toStr() << "’, which is of type ‘" << value_type->toStr() << "’" << endl;
                     return Type::errorType;
                 }
 
@@ -1210,7 +1214,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
+                    cerr << "       cannot redeclare function ‘" << func_name << "’ in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -1254,8 +1258,8 @@ template <typename Z>
 
                 if (declared_func_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       function '" << func_name << "' declared as returning nonexistent type '" <<
-                            three_->toStr() << "'" << endl;
+                    cerr << "       function ‘" << func_name << "’ declared as returning nonexistent type ‘" <<
+                            three_->toStr() << "’" << endl;
                     return Type::errorType;
                 }
 
@@ -1264,7 +1268,7 @@ template <typename Z>
 
                 if (scope->preexisting(func_name)) {
                     error_reporting();
-                    cerr << "       cannot redeclare function '" << func_name << "' in the same scope" << endl;
+                    cerr << "       cannot redeclare function ‘" << func_name << "’ in the same scope" << endl;
 
                     return Type::errorType;
                 }
@@ -1273,8 +1277,8 @@ template <typename Z>
                     // we're good!
                 } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
                     error_reporting();
-                    cerr << "       function '" << func_name << "' declared as returning '" << declared_func_type->toStr()
-                         << "', but evaluates to '" << return_type->toStr() << "'" << endl;
+                    cerr << "       function ‘" << func_name << "’ declared as returning ‘" << declared_func_type->toStr()
+                         << "’, but evaluates to ‘" << return_type->toStr() << "’" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -1307,7 +1311,7 @@ template <typename Z>
 
                 if (return_type == Type::notFoundType) {
                     error_reporting();
-                    cerr << "       unknown function '" << func_name << "'" << endl;
+                    cerr << "       unknown function ‘" << func_name << "’" << endl;
 
                     return Type::errorType;
                 }
