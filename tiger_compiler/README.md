@@ -3,7 +3,8 @@ Tiger Semantics
 
 We chose to implement our semantic checks using the **"functional style"**.
 This means we maintain a permanent environment and create temporary ones when
-needed.
+needed. (Sort of. But we are still mutating a vector, so it's not a totally
+functional system with immutable scope objects in a tree structure.)
 
 ### Types (type.hh, type.cc)
 Types are defined using a class `Type`. This serves as the base for the for
@@ -13,7 +14,7 @@ Types are defined using a class `Type`. This serves as the base for the for
    - ArrayType for arrays
    - RecordType for records
    - FunctionType for functions
-   
+
 
 ### Symbol Tables (semantic.hh, semantic.cc)
 Symbol Tables are created using a class `SymbolTable`.
@@ -34,13 +35,15 @@ The class has three simple functionalities:
 
     * **push_scope**    : this adds a new scope
     * **pop_scope**     : this removes the newest scope from the vector
-    * **preexisting**   : this checks if a variable exists in its larger scope
+    * **preexisting**   : this checks if a variable exists in the most recent scope, to
+                          make sure two variables with the same name can't be declared
+                          at the same time.
     * **search**        : this takes a string and terates through the vector in reverse
                           order to check if variable has already been declared, if found,
                           it returns its type, if not returns error type
     * **insert**        : this takes a string and its corresponding type and adds the binding
                           to its parent scopes
-                          
+
 ## Error Handling
 
 
