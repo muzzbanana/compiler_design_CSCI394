@@ -23,8 +23,8 @@ the type of a tiger variable.
 
 This class has 2 simple functionalities beyond consturction and destruction.
 
-    * **insert** : adds a string, type-tiger pair to the symbol table
-    * **lookup** : takes a string and returns the type of the string
+    * insert : adds a string, type-tiger pair to the symbol table
+    * lookup : takes a string and returns the type of the string
 
 
 ### Scopes (scope.hh, scope.cc)
@@ -32,14 +32,14 @@ Scopes are handled through a class `Scope`.
 This is uses a vector of sybmol tables. We then mimic a stack using the vector.
 The class has three simple functionalities:
 
-    * **push_scope**    : this adds a new scope
-    * **pop_scope**     : this removes the newest scope from the vector
-    * **preexisting**   : this checks if a variable exists in its larger scope
-    * **search**        : this takes a string and terates through the vector in reverse
-                          order to check if variable has already been declared, if found,
-                          it returns its type, if not returns error type
-    * **insert**        : this takes a string and its corresponding type and adds the binding
-                          to its parent scopes
+    * push_scope   : this adds a new scope
+    * pop_scope    : this removes the newest scope from the vector
+    * preexisting  : this checks if a variable exists in its larger scope
+    * search       : this takes a string and terates through the vector in reverse
+                     order to check if variable has already been declared, if found,
+                     it returns its type, if not returns error type
+    * insert       : this takes a string and its corresponding type and adds the binding
+                     to its parent scopes
                           
 ## Error Handling
 Not working propely. Columns and lines do not update correctly. Works well for semantic errors
