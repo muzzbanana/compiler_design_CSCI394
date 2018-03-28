@@ -10,10 +10,6 @@
 #include "type.hh"
 #include "scope.hh"
 
-// extern int yycolumn;
-// extern int yylineno;
-
-
 using namespace std;
 
 /* interface to the lexer */
@@ -280,6 +276,8 @@ template <template <typename> class O>
                         && right_->type_verify(scope) == Type::intType) {
                     return Type::intType;
                 } else {
+                    error_reporting();
+                    cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     return Type::errorType;
                 }
             }
@@ -676,7 +674,8 @@ template <typename Z>
                 if (name_type == value_type) {
                     return value_type;
                 } else if (name_type != Type::errorType && value_type != Type::errorType) {
-                    cerr << "error: assignment of variable to wrong type" << endl;
+                    error_reporting();
+                    cerr << "       assignment of variable to wrong type" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -706,10 +705,12 @@ template <typename Z>
                 if (cond_type == Type::intType && then_type == else_type && then_type != Type::errorType) {
                     return then_type;
                 } else if (cond_type != Type::intType) {
-                    cerr << "error: condition in 'if' statement must evaluate to integer" << endl;
+                    error_reporting();
+                    cerr << "       condition in 'if' statement must evaluate to integer" << endl;
                     return Type::errorType;
                 } else if (then_type != else_type) {
-                    cerr << "error: true and false condition expressions in 'if' statement must have the same type" << endl;
+                    error_reporting();
+                    cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -737,7 +738,8 @@ template <typename Z>
                 if (cond_type == Type::intType && do_type != Type::errorType) {
                     return Type::nilType;
                 } else if (cond_type != Type::intType) {
-                    cerr << "error: condition of 'while' loop must evaluate to integer" << endl;
+                    error_reporting();
+                    cerr << "       condition of 'while' loop must evaluate to integer" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -763,7 +765,8 @@ template <typename Z>
                         && body_type != Type::errorType) {
                     return Type::nilType;
                 } else if (first_type != Type::intType || last_type != Type::intType) {
-                    cerr << "error: 'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
+                    error_reporting();
+                    cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -785,7 +788,8 @@ template <typename Z>
                 const Type *expr_type = right_->type_verify(scope);
 
                 if (scope->preexisting(var_name)) {
-                    cerr << "error: cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    error_reporting();
+                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -808,7 +812,8 @@ template <typename Z>
                 std::string type_name = middle_->toStr();
 
                 if (scope->preexisting(var_name)) {
-                    cerr << "error: cannot redeclare variable " << var_name << " in the same scope" << endl;
+                    error_reporting();
+                    cerr << "       cannot redeclare variable " << var_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
 
@@ -820,13 +825,15 @@ template <typename Z>
                 } else if (type_name == "string") {
                     var_type = Type::stringType;
                 } else {
-                    cerr << "unknown type " << type_name << endl;
+                    error_reporting();
+                    cerr << "       unknown type " << type_name << endl;
                     return Type::errorType;
                 }
 
                 if (value_type == var_type) {
                     return Type::nilType;
                 } else {
+                    error_reporting();
                     cerr << "cannot assign expression of type <1%#!$?!?!> to variable "
                         << var_name << ", which is of type <!@#@#!@#>." << endl; // TODO replace this later
                     return Type::errorType;
@@ -844,7 +851,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "type declaration not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -862,10 +869,10 @@ template <typename Z>
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
                 // Create a new scope for the duration of the declaration section and body
                 // section.
-                scope->push_onto_scope();
+                scope->push_scope();
                 const Type *declaration_type = left_->type_verify(scope);
                 const Type *body_type = right_->type_verify(scope);
-                scope->pop_off_scope();
+                scope->pop_scope();
 
                 if (declaration_type != Type::errorType && body_type != Type::errorType) {
                     return body_type;
@@ -944,7 +951,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "field member not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -960,7 +967,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_) {
-                std::cout << "not implemented yet!*" << std::endl;
+                std::cout << "fieldlsit not implemented yet!*" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -976,7 +983,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "type instantiation not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -990,8 +997,10 @@ template <typename Z>
             Z operator() (ASTNode::ASTptr child_) {
                 return -1;
             }
+
             const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
                 std::cout << "not implemented yet!" << std::endl;
+                std::cout << "typevalue not implemented yet!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -1007,7 +1016,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                std::cout << "record not implemented yet!!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -1039,7 +1048,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr child_) {
-                std::cout << "not implemented yet!" << std::endl;
+                std::cout << "array not implemented yet!" << std::endl;
                 return Type::notImplementedType;
             }
     };
@@ -1075,6 +1084,7 @@ template <typename Z>
                 //const Type *left_type = left_->type_verify(scope);
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
+                    error_reporting();
                     cerr << "error: index of the array must be an integer expression" << endl;
                     return Type::errorType;
                 } else {
@@ -1099,6 +1109,7 @@ template <typename Z>
                 //const Type *left_type = left_->type_verify(scope);
                 const Type *index_type = right_->type_verify(scope);
                 if (index_type != Type::intType) {
+                    error_reporting();
                     cerr << "error: index of the array must be an integer expression" << endl;
                     return Type::errorType;
                 } else {
@@ -1125,6 +1136,7 @@ template <typename Z>
                 const Type *return_type = right_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
+                    error_reporting();
                     cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
@@ -1154,6 +1166,7 @@ template <typename Z>
                 const Type *return_type = four_->type_verify(scope);
 
                 if (scope->preexisting(func_name)) {
+                    error_reporting();
                     cerr << "error: cannot redeclare function " << func_name << " in the same scope" << endl;
                     return Type::errorType;
                 }
@@ -1195,6 +1208,7 @@ template <typename Z>
                 const Type *return_type = scope->search(func_name);
 
                 if (return_type == Type::errorType) {
+                    error_reporting();
                     cerr << "error: unknown function " << func_name << endl;
                     return Type::errorType;
                 }
