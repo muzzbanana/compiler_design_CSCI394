@@ -48,6 +48,29 @@ but not syntactic. Will fix soon.
 ## Testing
 
    * Type mismatch in expression
+   ```
+      "asdfghjkl" + 1
+   ```
+   * Type mismatch in function return type
+   ```
+     let
+       function f () : int = "hi"
+     in
+       f()
+     end 
+   ```
+   * Type mismatch in variable assignment and decleration
+   ```
+      let
+        var a : int := 4
+      in
+        a := "hi"
+      end
+   ```
+   * Type mismatch in if-then-else and while statements
+   ```
+      if 1 then 10 else "else"
+   ```
    * Same variable name in different scopes
    ```
       let
@@ -60,59 +83,72 @@ but not syntactic. Will fix soon.
        end
    ```
    * Recursive and mutually recursive functions
-      `let
+     ``` 
+      let
          function f (a : string) : string = f(15)
        in
          f("abcdefg")
-       end`
-      `let
+       end
+     ```
+     ```
+      let
          function f (i : int) = if i > 0 then g(i - 1) else 0
          function g (i : string) = if i > 0 then f(i - 1) else 1
       in
          f(5)
-      end`
+      end
+     ```
    * Higher-order and nested functions
    * Undefined identifiers
    * Repeatedly defined identifiers
-      `let
+     ```
+      let
          var portland_bridge_name := "Morrison Bridge"
          var portland_bridge_name := "Tillikum Crossing"
          var portland_bridge_name := "Burnside Bridge"
        in
          portland_bridge_name
-       end`
+       end
+      ```
    * Misuse of reserved words (Syntactic Error)
    * Incorrect nesting (Syntactic Error)
    * Repition of variables in function arguments
-      `let 
+     ```
+      let 
          function f(i:int, j:int, i:string) = 1
        in
          f(1,2,"hello")
-       end`
+       end
+      ```
    * Declerations with invalid types
-      `let
+     ```
+      let
          type arrtype = array of dog
          var arr := arrtype [10] of 0
          var a : int := 0
        in
          a = arr[11]
-       end`
+       end
+      ```
    * Bad record types
-      `let
+     ```
+      let
          type fruit = { color : string, size : int }
          var banana : fruit := fruit { color="yellow", size=10 }
        in
          /* oh no this property doesn't exist */
          banana.tastiness := 4
-       end`
+       end
+      ```
    * Indexing out of range of array
-      `let 
+     ```
+      let 
          type arrtype = array of int
          var arr : arrtype := int[10] of 0
        in
          a = arr[11]
-       end`
-      
+       end
+      ```
 
 Tiger Parser
 ============
