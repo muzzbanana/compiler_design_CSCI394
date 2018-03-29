@@ -574,6 +574,20 @@ TEST_CASE("DON'T fail on correct record usage", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on recursive function with no declared return", "[semantic-check]") {
+    cout << "== UNTYPED RECURSIVE FUNCTION ==" << endl;
+    FILE *myfile = fopen("test_semantic/untyped_recursion.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("DON'T fail on proper recursive function", "[semantic-check]") {
     cout << "== PROPER RECURSIVE USAGE ==" << endl;
     cout << "(should succeed)" << endl;

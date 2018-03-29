@@ -1395,6 +1395,10 @@ template <typename Z>
 
                 scope->push_scope();
 
+                /* We will just disallow calling functions recursively with no declared return type. */
+
+                scope->symbol_insert(func_name, Type::incompleteRecursiveType);
+
                 for (auto a : arguments->fields_) {
                     scope->symbol_insert(a.first, a.second);
                 }
@@ -1511,6 +1515,11 @@ template <typename Z>
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       unknown function ‘" << func_name << "’" << endl;
 
+                    return Type::errorType;
+                } else if (var_type == Type::incompleteRecursiveType) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       cannot recursively call function ‘" << func_name
+                         << "’, which has no declared return type" << endl;
                     return Type::errorType;
                 } else if (var_type->getKind() != tiger_type::FUNCTION) {
                     cerr << "ERROR: line " << location_ << endl;

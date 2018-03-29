@@ -31,6 +31,7 @@ class Type {
         static BaseType *errorType;
         static BaseType *notImplementedType;
         static BaseType *notFoundType;
+        static BaseType *incompleteRecursiveType;
 
         Type(string name, tiger_type type);
 

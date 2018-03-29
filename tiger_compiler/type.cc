@@ -11,6 +11,7 @@ BaseType *Type::nilType = new BaseType("nil");
 BaseType *Type::errorType = new BaseType("<error>");
 BaseType *Type::notImplementedType = new BaseType("<not implemented>");
 BaseType *Type::notFoundType = new BaseType("<not found>");
+BaseType *Type::incompleteRecursiveType = new BaseType("<untyped recursive function>");
 
 Type::Type(string name, tiger_type type) {
     name_ = name;
