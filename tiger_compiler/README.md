@@ -133,7 +133,7 @@ The class has three simple functionalities:
       ```
    * Misuse of reserved words (Syntactic Error)
    * Incorrect nesting (Syntactic Error)
-   * Repition of variables in function arguments
+   * Repition of variables in function arguments or fields in records
      ```
       let 
          function f(i:int, j:int, i:string) = 1
@@ -151,7 +151,7 @@ The class has three simple functionalities:
          a = arr[11]
        end
       ```
-   * Bad record types
+   * Use of undeclared record fields
      ```
       let
          type fruit = { color : string, size : int }
@@ -170,6 +170,11 @@ The class has three simple functionalities:
          a = arr[11]
        end
       ```
+   * Function call on non-function type
+   * Mismatch of array type and array elements
+   * Function call with wrong return type or argument(s) type
+   * Array indexing with non-integer
+   * Instantiation of undeclared variables
 
 Tiger Parser
 ============
