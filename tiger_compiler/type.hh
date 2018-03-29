@@ -84,7 +84,6 @@ class FunctionType : public Type {
 
         string toStr() const;
 
-    protected:
         const Type* rettype_;
 
         const RecordType *args_;

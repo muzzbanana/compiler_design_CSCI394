@@ -1428,8 +1428,6 @@ template <typename Z>
                 // four: func body
                 string func_name = one_->toStr();
 
-                // TODO handle arguments
-
                 const Type *declared_func_type = scope->type_search(three_->toStr());
 
                 if (declared_func_type == Type::notFoundType) {
@@ -1439,24 +1437,10 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                // TODO make this take a scope that has the parameters in it
-                const Type *return_type = four_->type_verify(scope);
-
                 if (scope->preexisting(func_name)) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       cannot redeclare function ‘" << func_name << "’ in the same scope" << endl;
 
-                    return Type::errorType;
-                }
-
-                if (return_type == declared_func_type) {
-                    // we're good!
-                } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
-                    cerr << "ERROR: line " << location_ << endl;
-                    cerr << "       function ‘" << func_name << "’ declared as returning ‘" << declared_func_type->toStr()
-                         << "’, but evaluates to ‘" << return_type->toStr() << "’" << endl;
-                    return Type::errorType;
-                } else {
                     return Type::errorType;
                 }
 
@@ -1477,7 +1461,7 @@ template <typename Z>
                 // also add the function type itself before we check the body, so that we can
                 // account for recursive function calls
 
-                FunctionType *functype = new FunctionType(func_name, arguments, return_type);
+                FunctionType *functype = new FunctionType(func_name, arguments, declared_func_type);
 
                 scope->symbol_insert(func_name, functype);
 
@@ -1485,6 +1469,19 @@ template <typename Z>
 
                 for (auto a : arguments->fields_) {
                     scope->symbol_insert(a.first, a.second);
+                }
+
+                const Type *return_type = four_->type_verify(scope);
+
+                if (return_type == declared_func_type) {
+                    // we're good!
+                } else if (return_type != Type::errorType && declared_func_type != Type::errorType) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       function ‘" << func_name << "’ declared as returning ‘" << declared_func_type->toStr()
+                         << "’, but evaluates to ‘" << return_type->toStr() << "’" << endl;
+                    return Type::errorType;
+                } else {
+                    return Type::errorType;
                 }
 
                 scope->pop_scope();
@@ -1508,14 +1505,23 @@ template <typename Z>
                 // verify argument types correct
                 string func_name = left_->toStr();
 
-                const Type *return_type = scope->search(func_name);
+                const Type *var_type = scope->search(func_name);
 
-                if (return_type == Type::notFoundType) {
+                if (var_type == Type::notFoundType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       unknown function ‘" << func_name << "’" << endl;
 
                     return Type::errorType;
+                } else if (var_type->getKind() != tiger_type::FUNCTION) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       in expression ‘" << left_->toStr() << "(" << right_->toStr() << ")’" << endl;
+                    cerr << "       variable ‘" << left_->toStr() << "’ is not a function" << endl;
+                    return Type::errorType;
                 }
+
+                const FunctionType *func_type = static_cast<const FunctionType*>(var_type);
+
+                const Type *return_type = func_type->rettype_;
 
                 return return_type;
             }

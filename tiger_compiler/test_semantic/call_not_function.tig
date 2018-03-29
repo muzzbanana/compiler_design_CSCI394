@@ -1,0 +1,6 @@
+let
+    function f(i:int) : int = i + 1
+    var x : int := 4
+in
+    x(f)
+end

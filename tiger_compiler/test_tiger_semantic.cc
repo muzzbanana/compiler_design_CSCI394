@@ -545,10 +545,39 @@ TEST_CASE("fail on assigning value of wrong type to record field", "[semantic-ch
     fclose(myfile);
 }
 
+TEST_CASE("fail on calling a non-function", "[semantic-check]") {
+    cout << "== CALLING A NON-FUNCTION ==" << endl;
+    FILE *myfile = fopen("test_semantic/call_not_function.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("DON'T fail on correct record usage", "[semantic-check]") {
     cout << "== CORRECT RECORD USAGE ==" << endl;
     cout << "(should succeed)" << endl;
     FILE *myfile = fopen("test_semantic/correct_record_usage.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("DON'T fail on proper recursive function", "[semantic-check]") {
+    cout << "== PROPER RECURSIVE USAGE ==" << endl;
+    cout << "(should succeed)" << endl;
+    FILE *myfile = fopen("test_semantic/proper_recursive_usage.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
