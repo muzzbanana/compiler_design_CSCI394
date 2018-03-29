@@ -70,21 +70,20 @@ std::string RecordType::toStr() const {
     return name_;
 }
 
-FunctionType::FunctionType(string name, const Type* rettype) : Type(name, tiger_type::FUNCTION) {
+FunctionType::FunctionType(string name, const RecordType* args, const Type* rettype) : Type(name, tiger_type::FUNCTION) {
     rettype_ = rettype;
     type_ = tiger_type::FUNCTION;
-}
-
-void FunctionType::add_arg(const Type* type) {
-    arguments_.push_back(type);
+    args_ = args;
 }
 
 string FunctionType::toStr() const {
     std::stringstream ss;
     ss << name_;
     ss << " (";
-    for (auto a : arguments_) {
-        ss << a->toStr();
+    for (auto a : args_->fields_) {
+        ss << a.first;
+        ss << ": ";
+        ss << a.second->toStr();
     }
     ss << ") : ";
     ss << rettype_->toStr();

@@ -1378,16 +1378,32 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                const Type *arguments = middle_->type_verify(scope);
-                if (arguments == Type::errorType){
-                  return Type::errorType;
+                const Type *argtype = middle_->type_verify(scope);
+                if (argtype == Type::errorType){
+                    return Type::errorType;
                 }
-                // TODO make this take a scope that has the parameters in it
+
+                if (argtype->getKind() != tiger_type::RECORD) {
+                    /* this should have been a syntax error */
+                    cerr << "how did you get here" << endl;
+                    return Type::errorType;
+                }
+
+                const RecordType *arguments = static_cast<const RecordType*>(argtype);
+
+                // add the parameters into the scope, so we can check them in function body
+
+                scope->push_scope();
+
+                for (auto a : arguments->fields_) {
+                    scope->symbol_insert(a.first, a.second);
+                }
 
                 const Type *return_type = right_->type_verify(scope);
 
-                FunctionType *functype = new FunctionType(func_name, return_type);
-                // TODO add parameters here
+                scope->pop_scope();
+
+                FunctionType *functype = new FunctionType(func_name, arguments, return_type);
 
                 scope->symbol_insert(func_name, functype);
 
@@ -1444,9 +1460,34 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                FunctionType *functype = new FunctionType(func_name, return_type);
+                const Type *argtype = two_->type_verify(scope);
+                if (argtype == Type::errorType){
+                    return Type::errorType;
+                }
+
+                if (argtype->getKind() != tiger_type::RECORD) {
+                    /* this should have been a syntax error */
+                    cerr << "how did you get here" << endl;
+                    return Type::errorType;
+                }
+
+                const RecordType *arguments = static_cast<const RecordType*>(argtype);
+
+                // add the parameters into the scope, so we can check them in function body
+                // also add the function type itself before we check the body, so that we can
+                // account for recursive function calls
+
+                FunctionType *functype = new FunctionType(func_name, arguments, return_type);
 
                 scope->symbol_insert(func_name, functype);
+
+                scope->push_scope();
+
+                for (auto a : arguments->fields_) {
+                    scope->symbol_insert(a.first, a.second);
+                }
+
+                scope->pop_scope();
 
                 return Type::nilType;
             }

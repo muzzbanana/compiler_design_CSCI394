@@ -78,7 +78,7 @@ class RecordType : public Type {
 
 class FunctionType : public Type {
     public:
-        FunctionType(string name, const Type* rettype);
+        FunctionType(string name, const RecordType* args, const Type* rettype);
 
         void add_arg(const Type* type);
 
@@ -87,7 +87,7 @@ class FunctionType : public Type {
     protected:
         const Type* rettype_;
 
-        std::vector<const Type*> arguments_;
+        const RecordType *args_;
 };
 
 class BaseType : public Type {
