@@ -44,11 +44,26 @@ bool ArrayType::equivalent(const Type *other) const {
     return o->type_of_ == type_of_;
 }
 
-RecordType::RecordType(string name) : Type(name, tiger_type::RECORD) {
+RecordType::RecordType() : Type("", tiger_type::RECORD) {
+}
+
+RecordType::RecordType(string name, const RecordType *other) : Type(name, tiger_type::RECORD) {
+    for (auto a : other->fields_) {
+        add_field(a.first, a.second);
+    }
 }
 
 void RecordType::add_field(string name, const Type* type) {
-    this->fields_.push_back(std::make_pair(name, type));
+    fields_.push_back(std::make_pair(name, type));
+}
+
+const Type *RecordType::field_type(string name) const {
+    for (auto a : fields_) {
+        if (a.first == name) {
+            return a.second;
+        }
+    }
+    return Type::notFoundType;
 }
 
 std::string RecordType::toStr() const {

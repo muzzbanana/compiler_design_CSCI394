@@ -14,7 +14,7 @@ using namespace std;
 extern "C" int yylex(void);
 extern "C" int yylineno;
 void yyerror(tiger::ASTNode::ASTptr *out, const char *);
-tiger::ASTNode::ASTptr name(const char *str);
+tiger::ASTNode::ASTptr name(const char *str, int location_);
 %}
 
 
@@ -135,13 +135,13 @@ expr: STR {
   } | lvalue ASSIGN expr {
         $$ = new AssignASTNode(":=", $1, $3, @$.first_line);
   } | NAME '(' exprlist_opt ')' {
-        $$ = new FuncCallASTNode("(", "(", "))", name($1), $3, @$.first_line, false);
+        $$ = new FuncCallASTNode("(", "(", "))", name($1, @1.first_line), $3, @$.first_line, false);
   } | '(' exprseq_opt ')' {
         $$ = $2;
   } | NAME '{' fieldlist_opt '}' {
-        $$ = new TypeInstASTNode("", "{", "}", name($1), $3, @$.first_line);
+        $$ = new TypeInstASTNode("", "{", "}", name($1, @1.first_line), $3, @$.first_line);
   } | NAME '[' expr ']' OF expr {     /* array */
-        $$ = new ArrayASTNode("", " [", "] of ", name($1), $3, $6, @$.first_line, false);
+        $$ = new ArrayASTNode("", " [", "] of ", name($1, @1.first_line), $3, $6, @$.first_line, false);
   } | IF expr THEN expr {
         $$ = new ConditionalASTNode("if", "then", "else", $2, $4, new NilASTNode(), @$.first_line);
   } | IF expr THEN expr ELSE expr {
@@ -149,7 +149,7 @@ expr: STR {
   } | WHILE expr DO expr {
         $$ = new WhileLoopASTNode("while", "do", $2, $4, @$.first_line);
   } | FOR NAME ASSIGN expr TO expr DO expr {
-        $$ = new ForLoopASTNode("for", ":=", "to", "do", name($2), $4, $6, $8, @$.first_line);
+        $$ = new ForLoopASTNode("for", ":=", "to", "do", name($2, @2.first_line), $4, $6, $8, @$.first_line);
   } | BREAK {
         $$ = new BreakASTNode(@$.first_line);
   } | LET decllist IN exprseq_opt END {
@@ -194,22 +194,22 @@ exprlist: expr {
 
 fieldlist: NAME '=' expr {
         $$ = new FieldListASTNode(", ", @$.first_line);
-        $$->add_node(new FieldMemberASTNode("=", name($1), $3, false));
+        $$->add_node(new FieldMemberASTNode("=", name($1, @1.first_line), $3, false));
   } | fieldlist ',' NAME '=' expr {
         $$ = $1;
-        $$->add_node(new FieldMemberASTNode("=", name($3), $5, false));
+        $$->add_node(new FieldMemberASTNode("=", name($3, @3.first_line), $5, false));
   }
 
 lvalue: NAME {
-        $$ = name($1);
+        $$ = name($1, @1.first_line);
   } | lvalue_not_id {
         $$ = $1;
   }
 
 lvalue_not_id: lvalue '.' NAME {
-        $$ = new DotASTNode("(", ".", ")", $1, name($3), @$.first_line, false);
+        $$ = new DotASTNode("(", ".", ")", $1, name($3, @3.first_line), @$.first_line, false);
   } | NAME '[' expr ']' {
-        $$ = new IndexASTNode("", "[", "]", name($1), $3, @$.first_line, false);
+        $$ = new IndexASTNode("", "[", "]", name($1, @1.first_line), $3, @$.first_line, false);
   } | lvalue_not_id '[' expr ']' {
         $$ = new IndexASTNode("", "[", "]", $1, $3, @$.first_line, false);
   }
@@ -233,15 +233,15 @@ declaration: typedecl {
   }
 
 typedecl: TYPE NAME '=' type {
-        $$ = new TypeDeclASTNode("type", "=", name($2), $4, @$.first_line);
+        $$ = new TypeDeclASTNode("type", "=", name($2, @2.first_line), $4, @$.first_line);
   }
 
 type: NAME {
-        $$ = new TypeASTNode("", name($1), @$.first_line);
+        $$ = new TypeASTNode("", name($1, @1.first_line), @$.first_line);
   } | '{' typefields_opt '}' {
         $$ = new TypeASTNode("{ ", " }", $2, @$.first_line);
   } | ARRAY OF NAME {
-        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of ", name($3), @3.first_line), @$.first_line);
+        $$ = new TypeASTNode("", new ArrayTypeASTNode("array of ", name($3, @3.first_line), @3.first_line), @$.first_line);
   }
 
 typefields_opt: /* nothing */ {
@@ -259,19 +259,19 @@ typefields: typefield {
   }
 
 typefield: NAME ':' NAME {
-        $$ = new RecordFieldASTNode(":", name($1), name($3), @$.first_line, false);
+        $$ = new RecordFieldASTNode(":", name($1, @1.first_line), name($3, @3.first_line), @$.first_line, false);
   }
 
 vardecl: VAR NAME ASSIGN expr {
-        $$ = new UntypedVarDeclASTNode("var", ":=", name($2), $4, @$.first_line);
+        $$ = new UntypedVarDeclASTNode("var", ":=", name($2, @2.first_line), $4, @$.first_line);
   } | VAR NAME ':' NAME ASSIGN expr {
-        $$ = new TypedVarDeclASTNode("var", ":", ":=", name($2), name($4), $6, @$.first_line);
+        $$ = new TypedVarDeclASTNode("var", ":", ":=", name($2, @2.first_line), name($4, @4.first_line), $6, @$.first_line);
   }
 
 funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
-        $$ = new UnTypedFuncDeclASTNode("(function ", "(", ") = ", ")", name($2), $4, $7, @$.first_line, false);
+        $$ = new UnTypedFuncDeclASTNode("(function ", "(", ") = ", ")", name($2, @2.first_line), $4, $7, @$.first_line, false);
   } | FUNCTION NAME '(' typefields_opt ')' ':' NAME '=' expr {
-        $$ = new TypedFuncDeclASTNode("(function ", "(", "):", "=", ")", name($2), $4, name($7), $9, @$.first_line, false);
+        $$ = new TypedFuncDeclASTNode("(function ", "(", "):", "=", ")", name($2, @2.first_line), $4, name($7, @7.first_line), $9, @$.first_line, false);
 
   }
 
@@ -287,8 +287,8 @@ void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
  * This is necessary because flex calls strdup() in order to make sure the pointer to the
  * string doesn't change, but this results in a memory leak if the newly duplicated string
  * is not freed properly. */
-tiger::ASTNode::ASTptr name(const char *str) {
-    tiger::ASTNode::ASTptr new_node = new NameASTNode(str);
+tiger::ASTNode::ASTptr name(const char *str, int location) {
+    tiger::ASTNode::ASTptr new_node = new NameASTNode(str, location);
     free((char*)str); // free the duplicated string after it's safely stored in a std::string
     return new_node;
 }

@@ -7,10 +7,11 @@ namespace tiger {
 int semantic_checks(ASTNode::ASTptr ast) {
     Scope *scope = new Scope();
     const Type *t = ast->type_verify(scope);
-    if (t != Type::errorType) {
-        return 0;
-    } else {
+
+    if (t == Type::errorType) {
         return 1;
+    } else {
+        return 0;
     }
 }
 

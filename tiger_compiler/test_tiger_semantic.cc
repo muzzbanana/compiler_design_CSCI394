@@ -382,7 +382,7 @@ TEST_CASE("DON'T fail on using the same name in different scope", "[semantic-che
     yyparse(&output);
 
     int check_result = semantic_checks(output);
-    REQUIRE(check_result != 0);
+    REQUIRE(check_result == 0);
 
     delete output;
     fclose(myfile);
@@ -412,6 +412,147 @@ TEST_CASE("fail on assigning a variable the wrong type", "[semantic-check]") {
 
     int check_result = semantic_checks(output);
     REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on instantiating nonexistent record type", "[semantic-check]") {
+    cout << "== INSTANTIATE FAKE RECORD TYPE ==" << endl;
+    FILE *myfile = fopen("test_semantic/nonexistent_record_type.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on instantiating record type with same field twice", "[semantic-check]") {
+    cout << "== INSTANTIATE SAME FIELD TWICE IN RECORD ==" << endl;
+    FILE *myfile = fopen("test_semantic/multi_record_instantiation.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on instantiating non-record type as record", "[semantic-check]") {
+    cout << "== INSTANTIATE NON-RECORD TYPE ==" << endl;
+    FILE *myfile = fopen("test_semantic/instantiate_non_record.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on instantiating record type with nonexistent field", "[semantic-check]") {
+    cout << "== INSTANTIATE RECORD BAD FIELD ==" << endl;
+    FILE *myfile = fopen("test_semantic/fake_record_field.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on one undeclared record field", "[semantic-check]") {
+    cout << "== ONE UNDECLARED RECORD FIELD ==" << endl;
+    FILE *myfile = fopen("test_semantic/1_undeclared_field.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on two undeclared record fields", "[semantic-check]") {
+    cout << "== TWO UNDECLARED RECORD FIELDS ==" << endl;
+    FILE *myfile = fopen("test_semantic/2_undeclared_fields.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on three undeclared record fields", "[semantic-check]") {
+    cout << "== THREE UNDECLARED RECORD FIELDS ==" << endl;
+    FILE *myfile = fopen("test_semantic/3_undeclared_fields.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on accessing field of something not a record", "[semantic-check]") {
+    cout << "== FIELD ACCESS OF NON RECORD TYPE ==" << endl;
+    FILE *myfile = fopen("test_semantic/field_of_non_record.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on assigning value of wrong type to record field", "[semantic-check]") {
+    cout << "== WRONG TYPE ASSIGNED TO RECORD FIELD ==" << endl;
+    FILE *myfile = fopen("test_semantic/wrong_field_type.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("DON'T fail on correct record usage", "[semantic-check]") {
+    cout << "== CORRECT RECORD USAGE ==" << endl;
+    cout << "(should succeed)" << endl;
+    FILE *myfile = fopen("test_semantic/correct_record_usage.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
 
     delete output;
     fclose(myfile);
