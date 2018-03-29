@@ -63,8 +63,7 @@ class BreakASTNode : public ASTNode {
         virtual ~BreakASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
-            std::cout << "break not implemented yet!" << std::endl;
-            return Type::notImplementedType;
+            return Type::nilType;
         }
 
         virtual value_t eval() const
@@ -192,8 +191,14 @@ template <template <typename> class O>
             }
 
             virtual const Type *type_verify(Scope* scope) const {
-                std::cout << "unary not implemented yet!" << std::endl;
-                return Type::notImplementedType;
+                const Type *child_type = child_->type_verify(scope);
+                if (child_type == Type::intType) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       unary operation ‘" << rep_ << "’ applied to non-integer value ‘"
+                         << child_->toStr() << "’" << endl;
+                    return Type::errorType;
+                }
+                return Type::intType;
             }
 
             value_t eval() const
@@ -1010,8 +1015,7 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
-                std::cout << "field member not implemented yet!!" << std::endl;
-                return Type::notImplementedType;
+                return right_->type_verify(scope);
             }
     };
 
@@ -1049,10 +1053,9 @@ template <typename Z>
 
                 const RecordType *rectype = static_cast<const RecordType*>(insttype);
 
-                set<string> undeclared;
-
                 /* Keep track of which fields have yet to be declared, so we can report when
                  * they are absent. */
+                set<string> undeclared;
                 for (unsigned int i = 0; i < rectype->fields_.size(); i++) {
                     undeclared.insert(rectype->fields_[i].first);
                 }
@@ -1075,6 +1078,16 @@ template <typename Z>
                         cerr << "ERROR: line " << location_ << endl;
                         cerr << "       field ‘" << t << "’ initialized multiple times in instantiation of record type ‘"
                              << rectype->toStr() << "’" << endl;
+                        return Type::errorType;
+                    }
+
+                    const Type *value_type = vec_[i]->type_verify(scope);
+                    if (value_type != field_type) {
+                        cerr << "ERROR: line " << location_ << endl;
+                        cerr << "       in expression ‘" << vec_[i]->toStr() << "’" << endl;
+                        cerr << "       field ‘" << t << "’ of record type ‘" << rectype->toStr() << "’ declared as type ‘"
+                             << field_type->toStr() << "’, but is being assigned a value of type ‘"
+                             << value_type->toStr() << "’" << endl;
                         return Type::errorType;
                     }
 

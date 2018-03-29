@@ -513,6 +513,20 @@ TEST_CASE("fail on accessing field of something not a record", "[semantic-check]
     fclose(myfile);
 }
 
+TEST_CASE("fail on assigning value of wrong type to record field", "[semantic-check]") {
+    cout << "== WRONG TYPE ASSIGNED TO RECORD FIELD ==" << endl;
+    FILE *myfile = fopen("test_semantic/wrong_field_type.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 
 // this one is just a syntax error, not a semantic error.
