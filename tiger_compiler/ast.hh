@@ -431,19 +431,19 @@ template <template <typename> class O>
         public:
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
                     ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left), 
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left),
                 middle_(middle), right_(right), parens_(parens), location_(loc)
             {}
 
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
                     ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left), 
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left),
                 middle_(middle), right_(right), parens_(parens), location_(loc)
             {}
 
-            TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right, 
+            TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right,
                     int loc, bool parens=true)
-                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle), 
+                : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle),
                 right_(right), parens_(parens), location_(loc)
             {}
 
@@ -800,7 +800,7 @@ template <typename Z>
                 return -1;
             }
 
-            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_, 
+            const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
               ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_) {
                 const Type *first_type = two_->type_verify(scope);
                 const Type *last_type = three_->type_verify(scope);
@@ -1276,7 +1276,7 @@ template <typename Z>
 
                 const RecordType *rectype = static_cast<const RecordType*>(accessed_type);
 
-                if (rectype->field_type(right_->toStr())) {
+                if (rectype->field_type(right_->toStr()) == Type::notFoundType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       in expression ‘" << left_->toStr() << "." << right_->toStr() << "’" << endl;
                     cerr << "       ‘" << left_->toStr() << "’ is of type ‘" << rectype->toStr() <<
@@ -1284,7 +1284,7 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                return Type::notImplementedType;
+                return rectype->field_type(right_->toStr());
             }
     };
 
