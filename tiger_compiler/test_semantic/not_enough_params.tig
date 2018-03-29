@@ -1,0 +1,4 @@
+let
+    function add(i:int, j:int) : int = i + j
+in add(2) end
+

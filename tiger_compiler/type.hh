@@ -11,13 +11,13 @@ using namespace std;
 namespace tiger {
 
 enum class tiger_type {
-    NOTIMPLEMENTED,
-    NOTFOUND,
-    ERROR,
-    BASE,
-    ARRAY,
-    RECORD,
-    FUNCTION,
+    NOTIMPLEMENTED = 2,
+    NOTFOUND = 4,
+    ERROR = 6,
+    BASE = 10,
+    ARRAY = 11,
+    RECORD = 12,
+    FUNCTION = 13,
 };
 
 class BaseType;
@@ -65,12 +65,19 @@ class RecordType : public Type {
         /* create blank record type */
         RecordType();
 
+        /* create record type that is blank with a name */
+        /* (for passing dummy string arguments to child nodes) */
+        RecordType(string name);
+
         /* create record type that is the same but with a new name */
         RecordType(string name, const RecordType *other);
 
         void add_field(string name, const Type* type);
 
         string toStr() const;
+
+        // FOR DEBUGGING
+        string detailed_str() const;
 
         const Type *field_type(string name) const;
 

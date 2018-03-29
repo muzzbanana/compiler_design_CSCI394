@@ -48,6 +48,9 @@ bool ArrayType::equivalent(const Type *other) const {
 RecordType::RecordType() : Type("", tiger_type::RECORD) {
 }
 
+RecordType::RecordType(string name) : Type(name, tiger_type::RECORD) {
+}
+
 RecordType::RecordType(string name, const RecordType *other) : Type(name, tiger_type::RECORD) {
     for (auto a : other->fields_) {
         add_field(a.first, a.second);
@@ -65,6 +68,19 @@ const Type *RecordType::field_type(string name) const {
         }
     }
     return Type::notFoundType;
+}
+
+std::string RecordType::detailed_str() const {
+    std::stringstream ss;
+    ss << name_;
+    ss << " { ";
+    for (auto a : fields_) {
+        ss << a.first;
+        ss << ": ";
+        ss << a.second->toStr();
+    }
+    ss << " }";
+    return ss.str();
 }
 
 std::string RecordType::toStr() const {

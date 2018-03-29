@@ -243,6 +243,21 @@ TEST_CASE("fail on mutually recursive function type mismatch", "[semantic-check]
     fclose(myfile);
 }
 
+TEST_CASE("DON'T fail on correct mutual recursion", "[semantic-check]") {
+    cout << "== CORRECT MUTUAL RECURSION ==" << endl;
+    cout << "(should succeed, but doesn't)" << endl;
+    FILE *myfile = fopen("test_semantic/correct_mutual_recursion.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result == 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("fail on recursive argument type mismatch", "[semantic-check]") {
     cout << "== RECURSIVE ARGUMENT TYPE MISMATCH ==" << endl;
     FILE *myfile = fopen("test_semantic/recursive_arg_mismatch.tig", "r");
@@ -602,6 +617,49 @@ TEST_CASE("DON'T fail on proper recursive function", "[semantic-check]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("fail on too many parameters to function", "[semantic-check]") {
+    cout << "== TOO MANY PARAMETERS ==" << endl;
+    FILE *myfile = fopen("test_semantic/too_many_params.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on not enough parameters to function", "[semantic-check]") {
+    cout << "== NOT ENOUGH PARAMETERS ==" << endl;
+    FILE *myfile = fopen("test_semantic/not_enough_params.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("fail on incorrect function parameter type", "[semantic-check]") {
+    cout << "== WRONG TYPE PARAMETERS ==" << endl;
+    FILE *myfile = fopen("test_semantic/wrong_param_type.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 
 

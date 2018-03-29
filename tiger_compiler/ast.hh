@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <cstdio>
 #include <sstream>
 #include <functional>
 #include <string>
@@ -984,7 +985,7 @@ template <typename Z>
 
 using DeclListASTNode = VectorASTNode<DeclList, DeclarationASTNode>;
 
-// e.g. a; b; c; d;
+// e.g. a; b; c; d; OR a, b, c, d
 template <typename Z>
     class ExprSeq {
         public:
@@ -993,14 +994,81 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, std::vector<const ASTNode*> vec_, int location_) {
-                const Type *return_type = Type::nilType;
-                for (auto node : vec_) {
-                    return_type = node->type_verify(scope);
-                    if (return_type == Type::errorType) {
+                /* Find out whether we're checking if these match function parameters,
+                 * or if we're just evaluating them. */
+                /* (We used the same AST node type for both.) */
+                const Type *check_type = scope->search("_checked_params");
+
+                if (check_type == Type::notFoundType) {
+                    /* It's just a sequence of expressions to evaluate
+                     * (semicolons) */
+                    const Type *return_type = Type::nilType;
+                    for (auto node : vec_) {
+                        return_type = node->type_verify(scope);
+                        if (return_type == Type::errorType) {
+                            return Type::errorType;
+                        }
+                    }
+                    return return_type;
+                } else {
+                    /* It's a set of function parameters (commas) */
+                    if (check_type->getKind() != tiger_type::RECORD) {
+                        // this should only be passed in by the function call checker
+                        cerr << "how did you get here!" << endl;
                         return Type::errorType;
                     }
+
+                    const RecordType *params = static_cast<const RecordType*>(check_type);
+
+                    const Type *func_name = scope->search("_checked_funcname");
+
+                    if (func_name->getKind() != tiger_type::RECORD) {
+                        // again we should only end up here from the function call checker
+                        cerr << "how did you get here!!" << endl;
+                        return Type::errorType;
+                    }
+
+                    if (vec_.size() > params->fields_.size()) {
+                        cerr << "ERROR: line " << location_ << endl;
+                        cerr << "       too many parameters to function ‘" << func_name->toStr()
+                             << "’ (expected " << params->fields_.size() << ", got " << vec_.size() << ")" << endl;
+                        return Type::errorType;
+                    } else if (vec_.size() < params->fields_.size()) {
+                        cerr << "ERROR: line " << location_ << endl;
+                        cerr << "       not enough parameters to function ‘" << func_name->toStr()
+                             << "’ (expected " << params->fields_.size() << ", got " << vec_.size() << ")" << endl;
+                        return Type::errorType;
+                    }
+
+                    /* Now check that the types of the parameters match. */
+                    scope->push_scope();
+
+                    /* Hide _checked_params when we check types for the parameters */
+                    //scope->symbol_insert("_checked_params", Type::notFoundType);
+
+                    for (unsigned i = 0; i < vec_.size(); i++) {
+                        const Type *arg_type = vec_[i]->type_verify(scope);
+
+                        if (arg_type == Type::errorType) {
+                            return Type::errorType;
+                        }
+
+                        const Type *expected_type = params->fields_[i].second;
+
+                        if (arg_type != expected_type) {
+                            cerr << "ERROR: line " << location_ << endl;
+                            cerr << "       parameter ‘" << params->fields_[i].first << "’ to function ‘"
+                                 << func_name->toStr() << "’ declared as type ‘" << expected_type->toStr()
+                                 << "’ but received expression ‘" << vec_[i]->toStr() << "’, which is of type ‘"
+                                 << arg_type->toStr() << "’." << endl;
+                            return Type::errorType;
+                        }
+                    }
+
+                    scope->pop_scope();
+
+                    return Type::nilType;
                 }
-                return return_type;
             }
     };
 
@@ -1219,12 +1287,23 @@ class RecordTypeAST {
                 if (string_set.count(t) > 0) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       name ‘" << t << "’ used multiple times in function or record declaration" << endl;
+                    delete rec;
                     return Type::errorType;
                 }
 
                 string_set.insert(t);
 
-                rec->add_field(t, vec_[i]->type_verify(scope));
+                const Type *field_type = vec_[i]->type_verify(scope);
+
+                if (field_type == Type::notFoundType) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       record field or function parameter ‘" << t << "’ declared as nonexistent type ‘"
+                         << vec_[i]->toStr() << "’" << endl;
+                    delete rec;
+                    return Type::errorType;
+                }
+
+                rec->add_field(t, field_type);
             }
 
             return rec;
@@ -1505,8 +1584,6 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
-                // TODO when we have function types, look up the function by return type and
-                // verify argument types correct
                 string func_name = left_->toStr();
 
                 const Type *var_type = scope->search(func_name);
@@ -1514,7 +1591,6 @@ template <typename Z>
                 if (var_type == Type::notFoundType) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       unknown function ‘" << func_name << "’" << endl;
-
                     return Type::errorType;
                 } else if (var_type == Type::incompleteRecursiveType) {
                     cerr << "ERROR: line " << location_ << endl;
@@ -1529,6 +1605,30 @@ template <typename Z>
                 }
 
                 const FunctionType *func_type = static_cast<const FunctionType*>(var_type);
+
+                const RecordType *arg_type = func_type->args_;
+
+                const RecordType *dummy_func_name = new RecordType(func_name);
+
+                scope->push_scope();
+
+                /* Pass the checked parameters to the expression-sequence node. */
+                scope->symbol_insert("_checked_params", arg_type);
+                /* Pass the name of the current function to the expr-seq node, for better
+                 * error messages. */
+                scope->symbol_insert("_checked_funcname", dummy_func_name);
+
+                const Type *param_check_result = right_->type_verify(scope);
+
+                if (param_check_result == Type::errorType) {
+                    delete dummy_func_name;
+                    scope->pop_scope();
+                    return Type::errorType;
+                }
+
+                scope->pop_scope();
+
+                delete dummy_func_name;
 
                 const Type *return_type = func_type->rettype_;
 

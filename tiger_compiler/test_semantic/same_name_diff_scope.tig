@@ -2,7 +2,7 @@
 
 let
     var x := 1
-    function f(int: i) =
+    function f(i: int) =
         let var x := 2
         in x + 1 end
 in

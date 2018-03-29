@@ -1,8 +1,8 @@
 /* Argument type mismatch in mutually recursive functions */
 
 let
-    function f (i : int) = if i > 0 then g(i - 1) else 0
-    function g (i : string) = if i > 0 then f(i - 1) else 1
+    function f (i : int) = if i > 0 then g("hi") else 0
+    function g (i : int) = if i > 0 then f(i - 1) else 1
 in
     f(5)
 end
