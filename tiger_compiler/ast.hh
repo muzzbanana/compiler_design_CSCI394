@@ -142,8 +142,8 @@ class StrASTNode : public ASTNode {
 // A node type that represents a name
 class NameASTNode : public ASTNode {
     public:
-        NameASTNode(std::string value)
-            : ASTNode(), value_(value)
+        NameASTNode(std::string value, int location)
+            : ASTNode(), value_(value), location_(location)
         {}
         virtual ~NameASTNode() = default;
 
@@ -152,7 +152,13 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const Type *type_verify(Scope* scope) const {
-            return scope->search(value_);
+            const Type *var_type = scope->search(value_);
+            if (var_type == Type::notFoundType) {
+                cerr << "ERROR: line " << location_ << endl;
+                cerr << "       unknown variable ‘" << value_ << "’" << endl;
+                return Type::errorType;
+            }
+            return var_type;
         }
 
         virtual std::string toStr() const {
@@ -286,7 +292,8 @@ template <template <typename> class O>
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       in expression " << toStr() << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
-                    cerr << "       (the types are ‘" << left_type->toStr() << "’ and ‘" << right_type->toStr() << "’)" << endl;
+                    cerr << "       (‘" << left_->toStr() << "’ is of type ‘" << left_type->toStr() << "’ and ‘"
+                         << right_->toStr() << "’ is of type ‘"<< right_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 }
             }
@@ -740,7 +747,8 @@ template <typename Z>
                 } else if (then_type != else_type) {
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       true and false condition expressions in 'if' statement must have the same type" << endl;
-                    cerr << "       (types are ‘" << then_type->toStr() << "’ and ‘" << else_type->toStr() << "’)" << endl;
+                    cerr << "       (‘" << middle_->toStr() << "’ is of type ‘" << then_type->toStr() << "’ and ‘"
+                         << right_->toStr() << "’ is of type ‘"<< else_type->toStr() << "’)" << endl;
                     return Type::errorType;
                 } else {
                     return Type::errorType;
@@ -1101,7 +1109,7 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                return Type::notImplementedType;
+                return rectype;
             }
     };
 
@@ -1138,7 +1146,7 @@ template <typename Z>
                     return Type::errorType;
                 }
 
-                return Type::notImplementedType;
+                return instantiated_type;
             }
     };
 
@@ -1250,6 +1258,17 @@ template <typename Z>
                     cerr << "ERROR: line " << location_ << endl;
                     cerr << "       attempt to access field ‘" << right_->toStr() << "’ of expression ‘"
                          << left_->toStr() << "’, which is of non-record type ‘" << accessed_type->toStr() << "’" << endl;
+                    return Type::errorType;
+                }
+
+                const RecordType *rectype = static_cast<const RecordType*>(accessed_type);
+
+                if (rectype->field_type(right_->toStr())) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       in expression ‘" << left_->toStr() << "." << right_->toStr() << "’" << endl;
+                    cerr << "       ‘" << left_->toStr() << "’ is of type ‘" << rectype->toStr() <<
+                            "’, which has no field ‘" << right_->toStr() << "’" << endl;
+                    return Type::errorType;
                 }
 
                 return Type::notImplementedType;
