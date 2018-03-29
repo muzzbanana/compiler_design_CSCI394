@@ -1,6 +1,8 @@
 Tiger Semantics
 ===============
 
+Note: Mutual recursion is not working. We will fix by next assignment.
+
 We chose to implement our semantic checks using the **"functional style"**.
 This means we maintain a permanent environment and create temporary ones when
 needed.
