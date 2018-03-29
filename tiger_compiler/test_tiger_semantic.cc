@@ -499,6 +499,20 @@ TEST_CASE("fail on three undeclared record fields", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on accessing field of something not a record", "[semantic-check]") {
+    cout << "== FIELD ACCESS OF NON RECORD TYPE ==" << endl;
+    FILE *myfile = fopen("test_semantic/field_of_non_record.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 
 // this one is just a syntax error, not a semantic error.

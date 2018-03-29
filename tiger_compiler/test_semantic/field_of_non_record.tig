@@ -1,0 +1,4 @@
+let
+    var c : int := 5
+    var a := c.hello
+in a end

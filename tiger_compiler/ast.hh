@@ -284,7 +284,7 @@ template <template <typename> class O>
                     return Type::errorType;
                 } else {
                     cerr << "ERROR: line " << location_ << endl;
-                    cerr << "       in expression ‘" << toStr() << "’" << endl;
+                    cerr << "       in expression " << toStr() << endl;
                     cerr << "       Attempting binary operation on between 1 or more non-integer values" << endl;
                     cerr << "       (the types are ‘" << left_type->toStr() << "’ and ‘" << right_type->toStr() << "’)" << endl;
                     return Type::errorType;
@@ -1245,7 +1245,13 @@ template <typename Z>
             }
 
             const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
-                std::cout << "not implemented yet!!" << std::endl;
+                const Type *accessed_type = left_->type_verify(scope);
+                if (accessed_type->getKind() != tiger_type::RECORD) {
+                    cerr << "ERROR: line " << location_ << endl;
+                    cerr << "       attempt to access field ‘" << right_->toStr() << "’ of expression ‘"
+                         << left_->toStr() << "’, which is of non-record type ‘" << accessed_type->toStr() << "’" << endl;
+                }
+
                 return Type::notImplementedType;
             }
     };
