@@ -7,16 +7,16 @@
 #include <string>
 #include "ast.hh"
 #include "semantic_checks.hh"
-//#define YY_DECL extern "C" int yylex()
+
 
 using namespace std;
 
 extern "C" int yylex(void);
 extern "C" int yylineno;
-extern int current_line;
 void yyerror(tiger::ASTNode::ASTptr *out, const char *);
 tiger::ASTNode::ASTptr name(const char *str);
 %}
+
 
 %union {
     double              d;
@@ -42,7 +42,7 @@ tiger::ASTNode::ASTptr name(const char *str);
     tiger::RecordTypeASTNode*  rectype_ast;
 }
 
-%define parse.error verbose
+/*%define parse.error verbose*/
 %locations
 
 %parse-param {tiger::ASTNode::ASTptr *out}
@@ -279,12 +279,9 @@ funcdecl: FUNCTION NAME '(' typefields_opt ')' '=' expr {
 
 void yyerror(tiger::ASTNode::ASTptr *out, const char *error) {
     cerr << "ERROR: line " << yylineno << " column " << yylloc.first_column << "-" << yylloc.last_column << endl;
-    cerr << error << " " << yylloc.first_line << endl;
+    cerr << "       " << error << " " << endl;
 }
 
-int send_line() {
-  return yylineno;
-}
 
 /* Create a new NameASTNode from a duplicated const char* without causing a memory leak.
  * This is necessary because flex calls strdup() in order to make sure the pointer to the

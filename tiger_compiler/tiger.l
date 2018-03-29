@@ -22,7 +22,6 @@ void set_yycolumn(int val) {
 }
 
 extern void yyerror(ASTNode::ASTptr *, const char *);
-extern void error_reporting();
 extern int yylineno;
 std::string parse_string(const char *text);
 
@@ -98,6 +97,7 @@ new            { return NEW; }
         yylval.str = strdup(result.c_str());
     } catch (std::runtime_error e) {
         yyerror(NULL, "error use of illegal escape character in string at line");
+        return 1;
     }
     return STR;
 }
@@ -106,6 +106,7 @@ new            { return NEW; }
        so it must be an error resulting from an unterminated string
        literal */
     yyerror(NULL, "error: unterminated string literal starting at line");
+    return 1;
 }
 [0-9]+ {
     yylval.d = atof(yytext);
@@ -116,7 +117,7 @@ new            { return NEW; }
     return NAME;
 }
 \/\*          { BEGIN(COMMENT); comment_depth = 1; comment_start_line = current_line; yycolumn = 1;}
-\*\/          { yyerror(NULL, "error: invalid comment syntax at line"); }
+\*\/          { yyerror(NULL, "error: invalid comment syntax at line"); return 1;}
 <COMMENT>\/\* { comment_depth ++; }
 <COMMENT>\*\/ {
     comment_depth --;
@@ -132,6 +133,7 @@ new            { return NEW; }
        keeps returning ERROR_COMMENT over and over. */
     BEGIN(INITIAL);
     yyerror(NULL, "error: unterminated comment at line");
+    return 1;
 }
 <<EOF>> {
     /* also, reset the line number to 1 at the end of the file,
@@ -145,7 +147,7 @@ new            { return NEW; }
 }
 <COMMENT>.     ;
 <COMMENT>\n    ;
-.              { yyerror(NULL, "error: unknown character at line"); }
+.              { yyerror(NULL, "error: unknown character at line"); return 1;}
 
 %%
 

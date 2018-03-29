@@ -1,0 +1,6 @@
+let
+    type place = { population : int, location : int }
+    var portland : place := place { population: 100, location: 10 }
+in
+    x = portland.population
+end

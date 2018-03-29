@@ -63,8 +63,7 @@ class BreakASTNode : public ASTNode {
         virtual ~BreakASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
-            std::cout << "break not implemented yet!" << std::endl;
-            return Type::notImplementedType;
+            return Type::nilType;
         }
 
         virtual value_t eval() const

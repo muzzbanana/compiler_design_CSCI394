@@ -141,6 +141,7 @@ TEST_CASE("fail on body of while loop error", "[semantic-check]") {
     fclose(myfile);
 }
 
+
 TEST_CASE("fail on bad record type", "[semantic-check]") {
     cout << "== ERROR ON RECORD TYPE ==" << endl;
     FILE *myfile = fopen("test_semantic/bad_record_type.tig", "r");
@@ -154,6 +155,21 @@ TEST_CASE("fail on bad record type", "[semantic-check]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check the use of dot for record types", "[semantic-check]") {
+    cout << "== TESTING DOT ==" << endl;
+    FILE *myfile = fopen("test_semantic/dot_for_records.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 TEST_CASE("fail on expression type mismatch", "[semantic-check]") {
     cout << "== EXPR TYPE MISMATCH ==" << endl;
