@@ -660,6 +660,20 @@ TEST_CASE("fail on incorrect function parameter type", "[semantic-check]") {
     fclose(myfile);
 }
 
+TEST_CASE("fail on record type mismatch", "[semantic-check]") {
+    cout << "== RECORD TYPE MISMATCH ==" << endl;
+    FILE *myfile = fopen("test_semantic/record_type_mismatch.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    int check_result = semantic_checks(output);
+    REQUIRE(check_result != 0);
+
+    delete output;
+    fclose(myfile);
+}
+
 
 
 

@@ -1,0 +1,7 @@
+let
+    type fruit = { color: string, size: int, weight: int }
+    type cat = { pattern: string, weight: int, color: string }
+    var orange := fruit { color="orange", size=10, weight=3 }
+in
+    orange := cat { color="orange", weight=2, pattern="tabby" }
+end
