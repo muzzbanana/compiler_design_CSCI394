@@ -92,7 +92,7 @@ The class has three simple functionalities:
      ```
       if 1 then 10 else "else"
      ```
-   * Same variable name in different scopes
+   * Same variable name in different scopes (Should pass)
      ```
        let
          var x := 1
