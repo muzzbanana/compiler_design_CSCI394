@@ -42,7 +42,7 @@ tiger::ASTNode::ASTptr name(const char *str, int location_);
     tiger::RecordTypeASTNode*  rectype_ast;
 }
 
-/*%define parse.error verbose*/
+%define parse.error verbose
 %locations
 
 %parse-param {tiger::ASTNode::ASTptr *out}
