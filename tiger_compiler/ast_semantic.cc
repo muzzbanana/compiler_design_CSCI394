@@ -610,7 +610,7 @@ const Type *TypedFuncDecl::type_verify(Scope* scope, ASTNode::ASTptr name_node, 
     return Type::nilType;
 }
 
-const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
+const Type *FuncCall::type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
     string func_name = left_->toStr();
 
     const Type *var_type = scope->search(func_name);
