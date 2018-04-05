@@ -1,7 +1,6 @@
 #ifndef _AST_HH_
 #define _AST_HH_
 
-
 #include <iostream>
 #include <cstdio>
 #include <sstream>
@@ -12,6 +11,8 @@
 #include <algorithm>
 #include "type.hh"
 #include "scope.hh"
+#include "irtree.hh"
+#include "fragment.hh"
 
 using namespace std;
 

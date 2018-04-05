@@ -12,7 +12,7 @@ class Temp {
         std::string toStr() { return "<temp>"; }
 
         int index = 0;
-}
+};
 
 class Label {
     public:
@@ -21,6 +21,6 @@ class Label {
         ~Label() { }
 
         std::string toStr() { return "<label>"; }
-}
+};
 
 #endif
