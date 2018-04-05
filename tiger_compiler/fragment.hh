@@ -5,6 +5,8 @@
 #include <vector>
 #include "irtree.hh"
 
+using namespace std;
+
 namespace tiger {
 
 class StmtTree;
@@ -44,7 +46,7 @@ class ProcFragment : public Fragment {
     public:
         ProcFragment(StmtTree *stm, Frame *frame);
 
-        virtual std::string toStr();
+        virtual string toStr();
 
         StmtTree *getStm();
 
@@ -57,11 +59,11 @@ class ProcFragment : public Fragment {
 
 class DataFragment : public Fragment {
     public:
-        DataFragment(const std::string &s);
-        virtual std::string toString();
+        DataFragment(const string &s);
+        virtual string toString();
 
     private:
-        std::string data;
+        string data;
 };
 
 }//namespace

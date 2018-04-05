@@ -1,13 +1,16 @@
 #ifndef _IRTREE_HH_
 #define _IRTREE_HH_
 
+#include <sstream>
 #include "fragment.hh"
 #include "temp.hh"
+
+using namespace std;
 
 namespace tiger {
 
 class ExprTree;
-typedef std::vector<ExprTree*> ExprList;
+typedef vector<ExprTree*> ExprList;
 
 class IRTree {
     public:
@@ -32,6 +35,8 @@ class IRTree {
         virtual ~IRTree() =default;
 
         TreeType getType() { return type_; }
+
+        virtual string toStr();
 
     protected:
         TreeType type_;
@@ -61,6 +66,8 @@ class BinOpTree : public ExprTree {
         Operator op_;
         ExprTree *left_;
         ExprTree *right_;
+
+        string toStr();
 };
 
 class NameTree;
@@ -72,6 +79,8 @@ class CallTree : public ExprTree {
 
         NameTree *name_;
         ExprList args_;
+
+        string toStr();
 };
 
 class ConstTree : public ExprTree {
@@ -80,6 +89,8 @@ class ConstTree : public ExprTree {
         ~ConstTree() = default;
 
         int value_;
+
+        string toStr();
 };
 
 class ExprSeqTree : public ExprTree {
@@ -89,6 +100,8 @@ class ExprSeqTree : public ExprTree {
 
         StmtTree *stmt_;
         ExprTree *expr_;
+
+        string toStr();
 };
 
 class MemTree : public ExprTree {
@@ -97,6 +110,8 @@ class MemTree : public ExprTree {
         ~MemTree() = default;
 
         ExprTree *expr_;
+
+        string toStr();
 };
 
 class NameTree : public ExprTree {
@@ -105,6 +120,8 @@ class NameTree : public ExprTree {
         ~NameTree() = default;
 
         Label *label_;
+
+        string toStr();
 };
 
 class TempTree : public ExprTree {
@@ -113,6 +130,8 @@ class TempTree : public ExprTree {
         ~TempTree() = default;
 
         Temp *temp_;
+
+        string toStr();
 };
 
 /* ===== STATEMENT TREES ===== */
@@ -123,6 +142,8 @@ class ExprStmtTree : public StmtTree {
         ~ExprStmtTree() = default;
 
         ExprTree *expr_;
+
+        string toStr();
 };
 
 class CJumpTree : public StmtTree {
@@ -139,6 +160,8 @@ class CJumpTree : public StmtTree {
         ExprTree *right_;
         Label *t_;
         Label *f_;
+
+        string toStr();
 };
 
 class UJumpTree : public StmtTree {
@@ -147,6 +170,8 @@ class UJumpTree : public StmtTree {
         ~UJumpTree() = default;
 
         Label *label_;
+
+        string toStr();
 };
 
 class ReturnTree : public StmtTree {
@@ -155,6 +180,8 @@ class ReturnTree : public StmtTree {
         ~ReturnTree() = default;
 
         ExprTree *expr_;
+
+        string toStr();
 };
 
 class LabelTree : public StmtTree {
@@ -163,6 +190,8 @@ class LabelTree : public StmtTree {
         ~LabelTree() = default;
 
         Label *l_;
+
+        string toStr();
 };
 
 class MoveTree : public StmtTree {
@@ -172,6 +201,8 @@ class MoveTree : public StmtTree {
 
         ExprTree *dest_;
         ExprTree *src_;
+
+        string toStr();
 };
 
 class SeqTree : public StmtTree {
@@ -182,6 +213,8 @@ class SeqTree : public StmtTree {
 
         StmtTree *left_;
         StmtTree *right_;
+
+        string toStr();
 };
 
 }//namespace
