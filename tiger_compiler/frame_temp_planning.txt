@@ -1,0 +1,19 @@
+class frame:
+	stack int temp1addr -> temp1addr first temp address
+	int fp -> frame pointer of current stack
+	int sp -> easy to keep track of this this way
+	map tempmap -> stack of temp class(: maps temp names to offsets from temp1addr (or fp?))
+	map localsmap -> stack mapping (same template as tempmap) for locals
+	map argsmap -> u get the drift, may not be needed?
+	stack stack -> the actual stack :0 (of ints or ??)
+	init() -> returns frame with self.stack empty, self.temp1addr empty, self.fp=0, self.*map empty
+	pushframe(vector argument_passed,vector local_variables)
+		-> push current fp as a value 
+		-> push new *map, add locals in order to stack and localsmap
+		-> push return address (???)
+		-> self.temp1addr = self.sp
+	popframe() -> takes fp and pops everything before on the stack, pop *map, pop temp1addr, fp = mem[fp -1], sp = fp
+
+class temp
+	addtemp(name) ->adds a new temporary to the tempmap with the next offset_from_first_temp [0 initialized] 
+	lookup(name) ->return offset_from_first_temp
