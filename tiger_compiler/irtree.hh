@@ -32,11 +32,11 @@ class IRTree {
         };
 
         IRTree(TreeType type);
-        virtual ~IRTree() =default;
+        virtual ~IRTree() = default;
 
         TreeType getType() { return type_; }
 
-        virtual string toStr();
+        virtual string toStr() = 0;
 
     protected:
         TreeType type_;
@@ -45,11 +45,13 @@ class IRTree {
 class ExprTree : public IRTree {
     public:
         ExprTree(IRTree::TreeType type);
+        virtual string toStr() = 0;
 };
 
 class StmtTree : public IRTree {
     public:
         StmtTree(IRTree::TreeType type);
+        virtual string toStr() = 0;
 };
 
 /* ===== EXPRESSION TREES ===== */

@@ -74,7 +74,7 @@ string CallTree::toStr() {
     ss << "CALL ";
     ss << name_->toStr();
     ss << " ( ";
-    for (int i = 0; i < args_.size(); i++) {
+    for (unsigned i = 0; i < args_.size(); i++) {
         if (i != 0) ss << ", ";
         ss << args_[i]->toStr();
     }
@@ -82,4 +82,105 @@ string CallTree::toStr() {
     return ss.str();
 }
 
-}//namespace
+string ConstTree::toStr() {
+    stringstream ss;
+    ss << "CONST ";
+    ss << to_string(value_);
+    return ss.str();
+}
+
+string ExprSeqTree::toStr() {
+    return "ExprSeqTree";
+}
+
+string MemTree::toStr() {
+    stringstream ss;
+    ss << "MEM";
+    return ss.str();
+}
+
+string NameTree::toStr() {
+    stringstream ss;
+    ss << label_->toStr();
+    return ss.str();
+}
+
+string TempTree::toStr() {
+    stringstream ss;
+    ss << temp_->toStr();
+    return ss.str();
+}
+
+string ExprStmtTree::toStr() {
+    stringstream ss;
+    ss << "ExprStmtTree";
+    return ss.str();
+}
+
+string CJumpTree::toStr() {
+    stringstream ss;
+    ss << left_->toStr();
+    switch (comp_) {
+        case Comparison::EQ:
+            ss << " = ";
+            break;
+        case Comparison::NE:
+            ss << " != ";
+            break;
+        case Comparison::LT:
+            ss << " < ";
+            break;
+        case Comparison::GT:
+            ss << " > ";
+            break;
+        case Comparison::LE:
+            ss << " <= ";
+            break;
+        case Comparison::GE:
+            ss << " >= ";
+            break;
+    }
+    ss << right_->toStr();
+    ss << " if true go to ";
+    ss << t_->toStr();
+    ss << " else go to ";
+    ss << f_->toStr();
+
+    return ss.str();
+}
+
+string UJumpTree::toStr() {
+    stringstream ss;
+    ss << "JUMP to ";
+    ss << label_->toStr();
+    return ss.str();
+}
+
+string ReturnTree::toStr() {
+    stringstream ss;
+    ss << "RETURN ";
+    return ss.str();
+}
+
+string MoveTree::toStr() {
+    stringstream ss;
+    ss << "MOVE ";
+    ss << src_->toStr();
+    ss << " to ";
+    ss << dest_->toStr();
+    return ss.str();
+}
+
+string SeqTree::toStr() {
+    stringstream ss;
+    ss << "SEQ: ";
+    ss << left_->toStr();
+    ss << " ";
+    ss << right_->toStr();
+    return ss.str();
+}
+
+} //NAMESPACE
+
+
+
