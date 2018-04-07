@@ -29,6 +29,7 @@ class IRTree {
             LABEL,
             MOVE,
             SEQ,
+            NOTIMPL,
         };
 
         IRTree(TreeType type);
@@ -44,17 +45,28 @@ class IRTree {
 
 class ExprTree : public IRTree {
     public:
+        static ExprTree *notImpl;
+
         ExprTree(IRTree::TreeType type);
         virtual string toStr() = 0;
 };
 
 class StmtTree : public IRTree {
     public:
+        static StmtTree *notImpl;
+
         StmtTree(IRTree::TreeType type);
         virtual string toStr() = 0;
 };
 
 /* ===== EXPRESSION TREES ===== */
+
+class NotImplExprTree : public ExprTree {
+    public:
+        NotImplExprTree() : ExprTree(IRTree::TreeType::NOTIMPL) {}
+        ~NotImplExprTree() = default;
+        string toStr() { return "<not implemented Expr>"; };
+};
 
 class BinOpTree : public ExprTree {
     public:
@@ -137,6 +149,13 @@ class TempTree : public ExprTree {
 };
 
 /* ===== STATEMENT TREES ===== */
+
+class NotImplStmtTree : public StmtTree {
+    public:
+        NotImplStmtTree() : StmtTree(IRTree::TreeType::NOTIMPL) {}
+        ~NotImplStmtTree() = default;
+        string toStr() { return "<not implemented Stmt>"; };
+};
 
 class ExprStmtTree : public StmtTree {
     public:

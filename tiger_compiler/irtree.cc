@@ -4,6 +4,9 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
+ExprTree *ExprTree::notImpl = new NotImplExprTree();
+StmtTree *StmtTree::notImpl = new NotImplStmtTree();
+
 IRTree::IRTree(tt type) : type_(type) { }
 
 ExprTree::ExprTree(tt type) : IRTree(type) { }
