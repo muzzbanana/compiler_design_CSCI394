@@ -48,6 +48,7 @@ SeqTree::SeqTree(StmtTree *left, StmtTree *right) : StmtTree(tt::SEQ), left_(lef
 
 /* tostr functions */
 
+
 string BinOpTree::toStr() {
     stringstream ss;
     ss << left_->toStr();
@@ -90,17 +91,24 @@ string ConstTree::toStr() {
 }
 
 string ExprSeqTree::toStr() {
-    return "ExprSeqTree";
+    stringstream ss;
+    ss << "ExprSeqTree: statement ";
+    ss << stmt_->toStr();
+    ss << ", expression ";
+    ss << expr_->toStr();
+    return ss.str();
 }
 
 string MemTree::toStr() {
     stringstream ss;
-    ss << "MEM";
+    ss << "MEM: ";
+    ss << expr_->toStr();
     return ss.str();
 }
 
 string NameTree::toStr() {
     stringstream ss;
+    ss << "NAME: ";
     ss << label_->toStr();
     return ss.str();
 }
@@ -113,7 +121,8 @@ string TempTree::toStr() {
 
 string ExprStmtTree::toStr() {
     stringstream ss;
-    ss << "ExprStmtTree";
+    ss << "ExprStmtTree: ";
+    ss << expr_->toStr();
     return ss.str();
 }
 
@@ -159,6 +168,7 @@ string UJumpTree::toStr() {
 string ReturnTree::toStr() {
     stringstream ss;
     ss << "RETURN ";
+    ss << expr_->toStr();
     return ss.str();
 }
 
