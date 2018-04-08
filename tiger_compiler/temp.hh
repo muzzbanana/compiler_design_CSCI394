@@ -1,5 +1,10 @@
+#include <string>
 #ifndef _TEMP_HH_
 #define _TEMP_HH_
+
+class Temp;
+
+typedef std::vector<Temp*> TempList;
 
 class Temp {
     public:
@@ -11,7 +16,12 @@ class Temp {
 
         std::string toStr() { return "<temp>"; }
 
-        int index = 0;
+        int index = -1;
+
+    private:
+        int offset;
+        std::string specialname;
+        Temp& other;
 };
 
 class Label {
@@ -21,6 +31,17 @@ class Label {
         ~Label() { }
 
         std::string toStr() { return "<label>"; }
+
+        int index = -1
+
+    private:
+        std::string name;
+
 };
+
+
+
+
+
 
 #endif
