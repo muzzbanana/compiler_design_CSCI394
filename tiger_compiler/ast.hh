@@ -185,7 +185,7 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return ExprTree::notImpl;
+            return new MoveTree(new TempTree(new Temp()), new NameTree(new Label(value_)));
         }
 
 

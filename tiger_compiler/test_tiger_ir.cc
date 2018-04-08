@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <cstdlib>
 #include <ctime>
+#include <typeinfo>
 
 using namespace tiger;
 
@@ -25,6 +26,24 @@ TEST_CASE("check simple int", "[ir-conversion]") {
     Scope *s = new Scope();
     const Type *type = output->type_verify(s);
     REQUIRE(type == Type::intType);
+
+    const IRTree *ir = output->convert_to_ir(NULL);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check simple name", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/name.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    // Scope *s = new Scope();
+    // const Type *type = output->type_verify(s);
+    // REQUIRE(type == Type::intType);
 
     const IRTree *ir = output->convert_to_ir(NULL);
     std::cout << output->toStr() << std::endl;

@@ -111,7 +111,7 @@ string MemTree::toStr() const {
 
 string NameTree::toStr() const {
     stringstream ss;
-    ss << "NAME: ";
+    ss << "name ";
     ss << label_->toStr();
     return ss.str();
 }
