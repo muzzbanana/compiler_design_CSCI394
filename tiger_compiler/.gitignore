@@ -3,3 +3,4 @@ tiger
 *.o
 test_tiger
 test_tiger_semantic
+test_tiger_ir

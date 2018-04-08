@@ -28,7 +28,7 @@ class ASTNode {
         ASTNode() = default;
         virtual ~ASTNode() = default;
         virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
-        virtual const IRTree *convert_to_ir(Frame *frame) const = 0;
+        virtual const IRTree *convert_to_ir(Frame *frame) const = 0; // Convert to IR representation
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
 };
