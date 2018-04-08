@@ -21,7 +21,7 @@ class Temp {
     private:
         int offset;
         std::string specialname;
-        Temp& other;
+        //Temp& other;
 };
 
 class Label {
@@ -32,7 +32,7 @@ class Label {
 
         std::string toStr() { return "<label>"; }
 
-        int index = -1
+        int index = -1;
 
     private:
         std::string name;

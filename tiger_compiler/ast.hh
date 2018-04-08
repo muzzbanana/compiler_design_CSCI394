@@ -453,7 +453,8 @@ template <class O>
             }
 
             virtual const IRTree *convert_to_ir(Frame *frame) const {
-                return ExprTree::notImpl;
+                auto op = O();
+                return op.convert_to_ir(frame, left_, right_);
             }
 
         private:
@@ -769,6 +770,10 @@ class Assignment {
                 return Type::errorType;
             }
         }
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using AssignASTNode = NoEvalBinaryASTNode<Assignment>;
@@ -803,6 +808,10 @@ class WhileDo {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using WhileLoopASTNode = NoEvalBinaryASTNode<WhileDo>;
@@ -828,6 +837,10 @@ class UntypedVarDeclaration {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using UntypedVarDeclASTNode = NoEvalBinaryASTNode<UntypedVarDeclaration>;
@@ -852,6 +865,10 @@ class TypeDeclaration {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using TypeDeclASTNode = NoEvalBinaryASTNode<TypeDeclaration>;
@@ -865,6 +882,10 @@ class LetBlock {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
@@ -917,6 +938,10 @@ class FieldMember {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using FieldMemberASTNode = NoEvalBinaryASTNode<FieldMember>;
@@ -943,6 +968,10 @@ class TypeInstantiation {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using TypeInstASTNode = NoEvalBinaryASTNode<TypeInstantiation>;
@@ -969,6 +998,10 @@ class RecordField {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using RecordFieldASTNode = NoEvalBinaryASTNode<RecordField>;
@@ -1008,6 +1041,10 @@ class DotAccess {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using DotASTNode = NoEvalBinaryASTNode<DotAccess>;
@@ -1021,6 +1058,10 @@ class IndexAccess {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using IndexASTNode = NoEvalBinaryASTNode<IndexAccess>;
@@ -1073,6 +1114,10 @@ class FuncCall {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
+
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            return ExprTree::notImpl;
+        }
 };
 
 using FuncCallASTNode = NoEvalBinaryASTNode<FuncCall>;
