@@ -52,7 +52,7 @@ SeqTree::SeqTree(StmtTree *left, StmtTree *right) : StmtTree(tt::SEQ), left_(lef
 /* tostr functions */
 
 
-string BinOpTree::toStr() {
+string BinOpTree::toStr() const {
     stringstream ss;
     ss << left_->toStr();
     switch (op_) {
@@ -73,7 +73,7 @@ string BinOpTree::toStr() {
     return ss.str();
 }
 
-string CallTree::toStr() {
+string CallTree::toStr() const {
     stringstream ss;
     ss << "CALL ";
     ss << name_->toStr();
@@ -86,14 +86,14 @@ string CallTree::toStr() {
     return ss.str();
 }
 
-string ConstTree::toStr() {
+string ConstTree::toStr() const {
     stringstream ss;
     ss << "CONST ";
     ss << to_string(value_);
     return ss.str();
 }
 
-string ExprSeqTree::toStr() {
+string ExprSeqTree::toStr() const {
     stringstream ss;
     ss << "ExprSeqTree: statement ";
     ss << stmt_->toStr();
@@ -102,34 +102,34 @@ string ExprSeqTree::toStr() {
     return ss.str();
 }
 
-string MemTree::toStr() {
+string MemTree::toStr() const {
     stringstream ss;
     ss << "MEM: ";
     ss << expr_->toStr();
     return ss.str();
 }
 
-string NameTree::toStr() {
+string NameTree::toStr() const {
     stringstream ss;
     ss << "NAME: ";
     ss << label_->toStr();
     return ss.str();
 }
 
-string TempTree::toStr() {
+string TempTree::toStr() const {
     stringstream ss;
     ss << temp_->toStr();
     return ss.str();
 }
 
-string ExprStmtTree::toStr() {
+string ExprStmtTree::toStr() const {
     stringstream ss;
     ss << "ExprStmtTree: ";
     ss << expr_->toStr();
     return ss.str();
 }
 
-string CJumpTree::toStr() {
+string CJumpTree::toStr() const {
     stringstream ss;
     ss << left_->toStr();
     switch (comp_) {
@@ -161,21 +161,21 @@ string CJumpTree::toStr() {
     return ss.str();
 }
 
-string UJumpTree::toStr() {
+string UJumpTree::toStr() const {
     stringstream ss;
     ss << "JUMP to ";
     ss << label_->toStr();
     return ss.str();
 }
 
-string ReturnTree::toStr() {
+string ReturnTree::toStr() const {
     stringstream ss;
     ss << "RETURN ";
     ss << expr_->toStr();
     return ss.str();
 }
 
-string MoveTree::toStr() {
+string MoveTree::toStr() const {
     stringstream ss;
     ss << "MOVE ";
     ss << src_->toStr();
@@ -184,7 +184,7 @@ string MoveTree::toStr() {
     return ss.str();
 }
 
-string SeqTree::toStr() {
+string SeqTree::toStr() const {
     stringstream ss;
     ss << "SEQ: ";
     ss << left_->toStr();

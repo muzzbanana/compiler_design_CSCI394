@@ -28,7 +28,7 @@ class ASTNode {
         ASTNode() = default;
         virtual ~ASTNode() = default;
         virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
-        virtual const IRTree *convert_to_ir(Frame *frame) = 0;
+        virtual const IRTree *convert_to_ir(Frame *frame) const = 0;
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -51,7 +51,7 @@ class NilASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) {
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
             return ExprTree::notImpl;
         }
 
@@ -79,7 +79,7 @@ class BreakASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) {
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
             return StmtTree::notImpl;
         }
 
@@ -115,10 +115,9 @@ class NumASTNode : public ASTNode {
             return std::to_string(value_);
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) {
-            return ExprTree::notImpl;
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return new MoveTree(new TempTree(new Temp()), new ConstTree(value_));
         }
-
 
     private:
         const value_t value_;
@@ -148,7 +147,7 @@ class StrASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) {
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
             return ExprTree::notImpl;
         }
 
@@ -185,7 +184,7 @@ class NameASTNode : public ASTNode {
             return value_;
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) {
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
             return ExprTree::notImpl;
         }
 
@@ -237,7 +236,7 @@ template <template <typename> class O>
                 return rep_ + child_->toStr();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -285,7 +284,7 @@ template <class O>
                 return rep1_ + child_->toStr() + rep2_;
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -353,7 +352,7 @@ template <template <typename> class O>
                 }
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -453,7 +452,7 @@ template <class O>
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -551,7 +550,7 @@ template <class O>
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -664,7 +663,7 @@ template <class O>
                     " " + four_->toStr() + ")";
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
@@ -732,7 +731,7 @@ template <class O, class E> // E is the elements of the vector (?)
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) {
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
             }
 
