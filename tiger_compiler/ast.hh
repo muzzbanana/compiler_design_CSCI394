@@ -28,6 +28,7 @@ class ASTNode {
         ASTNode() = default;
         virtual ~ASTNode() = default;
         virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
+        virtual const IRTree *convert_to_ir(Frame *frame) const = 0; // Convert to IR representation
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -48,6 +49,10 @@ class NilASTNode : public ASTNode {
         virtual value_t eval() const
         {
             return -1; /// FIX ME
+        }
+
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return ExprTree::notImpl;
         }
 
         virtual std::string toStr() const
@@ -72,6 +77,10 @@ class BreakASTNode : public ASTNode {
         virtual value_t eval() const
         {
             return -1; /// FIX ME
+        }
+
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return StmtTree::notImpl;
         }
 
         virtual std::string toStr() const
@@ -106,6 +115,9 @@ class NumASTNode : public ASTNode {
             return std::to_string(value_);
         }
 
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return new MoveTree(new TempTree(new Temp()), new ConstTree(value_));
+        }
 
     private:
         const value_t value_;
@@ -134,6 +146,11 @@ class StrASTNode : public ASTNode {
         {
             return -1; /// FIX ME
         }
+
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return ExprTree::notImpl;
+        }
+
 
     private:
         const std::string value_;
@@ -165,6 +182,10 @@ class NameASTNode : public ASTNode {
 
         virtual std::string toStr() const {
             return value_;
+        }
+
+        virtual const IRTree *convert_to_ir(Frame *frame) const {
+            return new MoveTree(new TempTree(new Temp()), new NameTree(new Label(value_)));
         }
 
 
@@ -215,6 +236,10 @@ template <template <typename> class O>
                 return rep_ + child_->toStr();
             }
 
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
+            }
+
         private:
             const std::string rep_;  // String representation of node
             const ASTptr child_;
@@ -257,6 +282,10 @@ template <class O>
             virtual std::string toStr() const
             {
                 return rep1_ + child_->toStr() + rep2_;
+            }
+
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
             }
 
         private:
@@ -321,6 +350,10 @@ template <template <typename> class O>
                         " " + rep2_ + " " +
                         right_->toStr() + ")";
                 }
+            }
+
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
             }
 
         private:
@@ -419,6 +452,10 @@ template <class O>
                 return ss.str();
             }
 
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
+            }
+
         private:
             const std::string rep1_, rep2_, rep3_;  // String representation of node (rep3 goes at end)
             const ASTptr left_, right_;
@@ -512,6 +549,11 @@ template <class O>
                 }
                 return ss.str();
             }
+
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
+            }
+
 
         private:
             const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
@@ -621,6 +663,11 @@ template <class O>
                     " " + four_->toStr() + ")";
             }
 
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
+            }
+
+
         private:
             const std::string rep1_, rep2_, rep3_, rep4_, rep5_;  // String representation of node
             const ASTptr one_, two_, three_, four_;
@@ -682,6 +729,10 @@ template <class O, class E> // E is the elements of the vector (?)
                     ss << last_;
                 }
                 return ss.str();
+            }
+
+            virtual const IRTree *convert_to_ir(Frame *frame) const {
+                return ExprTree::notImpl;
             }
 
         private:

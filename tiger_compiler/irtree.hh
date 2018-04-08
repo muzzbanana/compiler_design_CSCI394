@@ -29,6 +29,7 @@ class IRTree {
             LABEL,
             MOVE,
             SEQ,
+            NOTIMPL,
         };
 
         IRTree(TreeType type);
@@ -36,7 +37,7 @@ class IRTree {
 
         TreeType getType() { return type_; }
 
-        virtual string toStr() = 0;
+        virtual string toStr() const = 0;
 
     protected:
         TreeType type_;
@@ -44,17 +45,28 @@ class IRTree {
 
 class ExprTree : public IRTree {
     public:
+        static ExprTree *notImpl;
+
         ExprTree(IRTree::TreeType type);
-        virtual string toStr() = 0;
+        virtual string toStr() const = 0;
 };
 
 class StmtTree : public IRTree {
     public:
+        static StmtTree *notImpl;
+
         StmtTree(IRTree::TreeType type);
-        virtual string toStr() = 0;
+        virtual string toStr() const = 0;
 };
 
 /* ===== EXPRESSION TREES ===== */
+
+class NotImplExprTree : public ExprTree {
+    public:
+        NotImplExprTree() : ExprTree(IRTree::TreeType::NOTIMPL) {}
+        ~NotImplExprTree() = default;
+        string toStr() const { return "<not implemented Expr>"; };
+};
 
 class BinOpTree : public ExprTree {
     public:
@@ -69,7 +81,7 @@ class BinOpTree : public ExprTree {
         ExprTree *left_;
         ExprTree *right_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class NameTree;
@@ -82,7 +94,7 @@ class CallTree : public ExprTree {
         NameTree *name_;
         ExprList args_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class ConstTree : public ExprTree {
@@ -92,7 +104,7 @@ class ConstTree : public ExprTree {
 
         int value_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class ExprSeqTree : public ExprTree {
@@ -103,7 +115,7 @@ class ExprSeqTree : public ExprTree {
         StmtTree *stmt_;
         ExprTree *expr_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class MemTree : public ExprTree {
@@ -113,7 +125,7 @@ class MemTree : public ExprTree {
 
         ExprTree *expr_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class NameTree : public ExprTree {
@@ -123,7 +135,7 @@ class NameTree : public ExprTree {
 
         Label *label_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class TempTree : public ExprTree {
@@ -133,10 +145,17 @@ class TempTree : public ExprTree {
 
         Temp *temp_;
 
-        string toStr();
+        string toStr() const;
 };
 
 /* ===== STATEMENT TREES ===== */
+
+class NotImplStmtTree : public StmtTree {
+    public:
+        NotImplStmtTree() : StmtTree(IRTree::TreeType::NOTIMPL) {}
+        ~NotImplStmtTree() = default;
+        string toStr() const { return "<not implemented Stmt>"; };
+};
 
 class ExprStmtTree : public StmtTree {
     public:
@@ -145,7 +164,7 @@ class ExprStmtTree : public StmtTree {
 
         ExprTree *expr_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class CJumpTree : public StmtTree {
@@ -163,7 +182,7 @@ class CJumpTree : public StmtTree {
         Label *t_;
         Label *f_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class UJumpTree : public StmtTree {
@@ -173,7 +192,7 @@ class UJumpTree : public StmtTree {
 
         Label *label_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class ReturnTree : public StmtTree {
@@ -183,7 +202,7 @@ class ReturnTree : public StmtTree {
 
         ExprTree *expr_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class LabelTree : public StmtTree {
@@ -193,7 +212,7 @@ class LabelTree : public StmtTree {
 
         Label *l_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class MoveTree : public StmtTree {
@@ -204,7 +223,7 @@ class MoveTree : public StmtTree {
         ExprTree *dest_;
         ExprTree *src_;
 
-        string toStr();
+        string toStr() const;
 };
 
 class SeqTree : public StmtTree {
@@ -216,7 +235,7 @@ class SeqTree : public StmtTree {
         StmtTree *left_;
         StmtTree *right_;
 
-        string toStr();
+        string toStr() const;
 };
 
 }//namespace
