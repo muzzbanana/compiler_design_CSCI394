@@ -6,7 +6,7 @@
 #pragma <once>
 
 frame::frame()
-	:fp(0),sp(0),tempmap(),argsmap(),localsmap(),stack(),temp1addr()
+	:fp(0),sp(0),tempmap(),labelmap(),argsmap(),localsmap(),stack(),current(),temp1addr()
 	{
 	}
 
@@ -55,14 +55,30 @@ void frame::popframe(){
 	//	-> fp = return address (temp1addr-1), 
 	//	-> sp = fp
 
+
 }
 
 void frame::addtemp(std::string name,int value){
-
+	auto templist = current[0];
+	std::pair<std::string,int> newpair (name,value);
+	templist.push_back(newpair);
 }
 
+void frame::addlabel(std::string name,int value){
+	auto labellist = current[1];
+	labellist.push_back(name);
+}
+
+
+
 int frame::lookuptemp(std::string name){
-	return 0;
+	auto templist = current[0];
+	for (auto iter = templist.begin(); iter != templist.end(); ++i){
+		if (*iter.first() == name){
+			return *iter.second();
+		};
+	};
+	return (-1) // no such name in temp
 }
 
 int frame::lookupvar(std::string name){
