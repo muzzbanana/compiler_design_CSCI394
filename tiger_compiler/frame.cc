@@ -25,9 +25,9 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	map current [4]; //reinitialize current
 	int i = 0-arguments_passed.size();
 	for (int j = 0;  j< arguments_passed.size(); j++) {
-		std::pair<std::string,int> arg = argsmap[j];
+		std::pair<std::string,int> arg = arguments_passed[j];
 		std::pair<std::string,int> argum = std::make_pair(std::get<0>(arg),i);//name and i
-		current[2].insert(argum);
+		current[2].push_back(argum);
 		stack.push_back(std::get<1>(arg)); //value
 		sp += 1;
 		i+=1;
@@ -37,10 +37,10 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	sp += 1;
 	fp = sp;
 	//	-> add locals in order to stack and localsmap
-	for (int h = 0; h < local_variables.size(); h++) {
+	for (uint h = 0; h < local_variables.size(); h++) {
 		std::pair<std::string,int> local = local_variables[h]; 
 		auto loc = std::make_pair(std::get<0>(local),h);//name and i
-		current[1].insert(loc);
+		current[1].push_back(loc);
 		stack.push_back(std::get<1>(local)); //value
 		sp += 1;
 	}
@@ -88,8 +88,8 @@ int frame::addlabel(std::string name){
 int frame::lookuptemp(std::string name){
 	auto templist = current[0];
 	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
-		if (*iter.first() == name){
-			return *iter.second();
+		if (*iter->first() == name){
+			return *iter->second();
 		};
 	};
 	return (-1); // no such name in temp ---> should also look up previous temps 
@@ -99,13 +99,13 @@ int frame::lookupvar(std::string name){
 	auto localslist = current[1];
 	auto argslist = current[2];
 	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
-		if (*iter.first() == name){
-			return *iter.second();
+		if (*iter->first() == name){
+			return *iter->second();
 		};
 	};
 	for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
-		if (*iter.first() == name){
-			return *iter.second();
+		if (*iter->first() == name){
+			return *iter->second();
 		};
 	};
 	return (-1); //should iterate through the stacks of previous scopes too
@@ -120,8 +120,8 @@ int main() {
 	std::string stg = "var2";
 	auto b = make_pair(stg,18);
 	map vect;
-	vect.insert(a);
-	vect.insert(b);
+	vect.push_back(a);
+	vect.push_back(b);
 	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n";
 	f.pushframe(vect,vect);
 	std::cout << f.argsmap << "<f.argsmap \n" <<f.localsmap << "<f.localsmap\n";
