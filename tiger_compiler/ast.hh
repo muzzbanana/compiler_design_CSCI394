@@ -1,6 +1,7 @@
 #ifndef _AST_HH_
 #define _AST_HH_
 
+#include <cassert>
 #include <iostream>
 #include <cstdio>
 #include <sstream>
@@ -796,8 +797,48 @@ class IfThenElse {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-            return ExprTree::notImpl;
+        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+            /* We evaluate the conditional expression and then just create
+             * a CJumpnode that checks whether it's equal to 0. */
+            Label *trueLabel = new Label();
+            Label *falseLabel = new Label();
+            /* Convert to something like:
+             *      MOVE tmp1, <left>
+             *      JEQ  tmp1, 0, t, f
+             * .t:  <middle>
+             * .f:  <right> */
+            const IRTree *condTree = left_->convert_to_ir(frame);
+            /* Need to pass an expression to CJumpTree -- we know it has to be an expression
+             * because of our position in the AST (can't put a statement inside the condition
+             * of an if...) but need to convert it */
+            assert(condTree->isExpr());
+            const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
+
+            /* Then the true and false things need to be examined -- if they're exprs,
+             * they need to be wrapped in an ExprStmtTree; otherwise they can just be passed
+             * along as stmts. */
+            const IRTree *trueTree = middle_->convert_to_ir(frame);
+            const StmtTree *trueStmt;
+            if (trueTree->isExpr()) {
+                trueStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(trueTree));
+            } else {
+                trueStmt = dynamic_cast<const StmtTree*>(trueTree);
+            }
+
+            const IRTree *falseTree = right_->convert_to_ir(frame);
+            const StmtTree *falseStmt;
+            if (falseTree->isExpr()) {
+                falseStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(falseTree));
+            } else {
+                falseStmt = dynamic_cast<const StmtTree*>(falseTree);
+            }
+            return new SeqTree(new CJumpTree(CJumpTree::Comparison::EQ,
+                        conditional, new ConstTree(0), trueLabel, falseLabel),
+                   new SeqTree(new LabelTree(trueLabel),
+                   new SeqTree(trueStmt,
+                   new SeqTree(new LabelTree(falseLabel),
+                   new SeqTree(falseStmt,
+                           NULL)))));
         }
 };
 

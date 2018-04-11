@@ -1,7 +1,7 @@
 
 CXX=g++-7   # Can switch to g++ if desired
 # # CXX=g++-6
-CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra -Wno-unused-parameter
+CXXFLAGS=-g -Og -J8 -std=c++17 -Wall -pedantic -Wextra -Wno-unused-parameter
 #CXXFLAGS=-g -Og -std=c++17 -Wall -pedantic -Wextra -Werror
 #CXXFLAGS=-O3 -std=c++17 -Wall -pedantic -Wextra -Werror
 LDFLAGS=$(CXXFLAGS) -lfl

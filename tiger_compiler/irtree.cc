@@ -4,14 +4,14 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
-ExprTree *ExprTree::notImpl = new NotImplExprTree();
-StmtTree *StmtTree::notImpl = new NotImplStmtTree();
+const ExprTree *ExprTree::notImpl = new NotImplExprTree();
+const StmtTree *StmtTree::notImpl = new NotImplStmtTree();
 
 IRTree::IRTree(tt type) : type_(type) { }
 
-ExprTree::ExprTree(tt type) : IRTree(type) { }
+ExprTree::ExprTree(tt type) : IRTree(type) { is_expr_ = true; }
 
-StmtTree::StmtTree(tt type) : IRTree(type) { }
+StmtTree::StmtTree(tt type) : IRTree(type) { is_expr_ = false; }
 
 /* expr trees */
 
@@ -23,10 +23,10 @@ CallTree::CallTree(NameTree *name, const ExprList args)
 
 ConstTree::ConstTree(int value) : ExprTree(tt::CONST), value_(value) { }
 
-ExprSeqTree::ExprSeqTree(StmtTree *stmt, ExprTree *expr)
+ExprSeqTree::ExprSeqTree(const StmtTree *stmt, const ExprTree *expr)
     : ExprTree(tt::ESEQ), stmt_(stmt), expr_(expr) { }
 
-MemTree::MemTree(ExprTree *expr) : ExprTree(tt::MEM), expr_(expr) { }
+MemTree::MemTree(const ExprTree *expr) : ExprTree(tt::MEM), expr_(expr) { }
 
 NameTree::NameTree(Label *label) : ExprTree(tt::NAME), label_(label) { }
 
@@ -34,23 +34,24 @@ TempTree::TempTree(Temp *temp) : ExprTree(tt::TEMP), temp_(temp) { }
 
 /* statement trees */
 
-ExprStmtTree::ExprStmtTree(ExprTree *expr) : StmtTree(tt::EXPR), expr_(expr) { }
+ExprStmtTree::ExprStmtTree(const ExprTree *expr) : StmtTree(tt::EXPR), expr_(expr) { }
 
-CJumpTree::CJumpTree(CJumpTree::Comparison comp, ExprTree *left, ExprTree *right, Label *t, Label *f)
+CJumpTree::CJumpTree(CJumpTree::Comparison comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f)
     : StmtTree(tt::CJUMP), comp_(comp), left_(left), right_(right), t_(t), f_(f) { }
 
 UJumpTree::UJumpTree(Label *label) : StmtTree(tt::UJUMP), label_(label) { }
 
-ReturnTree::ReturnTree(ExprTree *expr) : StmtTree(tt::RETURN), expr_(expr) { }
+ReturnTree::ReturnTree(const ExprTree *expr) : StmtTree(tt::RETURN), expr_(expr) { }
 
-MoveTree::MoveTree(ExprTree *dest, ExprTree *src) : StmtTree(tt::MOVE), dest_(dest), src_(src) { }
+LabelTree::LabelTree(Label *l) : StmtTree(tt::LABEL), l_(l) { }
+
+MoveTree::MoveTree(const ExprTree *dest, const ExprTree *src) : StmtTree(tt::MOVE), dest_(dest), src_(src) { }
 
 SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
-SeqTree::SeqTree(StmtTree *left, StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
+SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
 
 /* tostr functions */
-
 
 string BinOpTree::toStr() const {
     stringstream ss;
@@ -131,6 +132,7 @@ string ExprStmtTree::toStr() const {
 
 string CJumpTree::toStr() const {
     stringstream ss;
+    ss << "if ";
     ss << left_->toStr();
     switch (comp_) {
         case Comparison::EQ:
@@ -153,7 +155,7 @@ string CJumpTree::toStr() const {
             break;
     }
     ss << right_->toStr();
-    ss << " if true go to ";
+    ss << " go to ";
     ss << t_->toStr();
     ss << " else go to ";
     ss << f_->toStr();
@@ -175,6 +177,14 @@ string ReturnTree::toStr() const {
     return ss.str();
 }
 
+string LabelTree::toStr() const {
+    stringstream ss;
+    ss << ".";
+    ss << l_->toStr();
+    ss << ": ";
+    return ss.str();
+}
+
 string MoveTree::toStr() const {
     stringstream ss;
     ss << "MOVE ";
@@ -186,10 +196,15 @@ string MoveTree::toStr() const {
 
 string SeqTree::toStr() const {
     stringstream ss;
-    ss << "SEQ: ";
-    ss << left_->toStr();
-    ss << " ";
-    ss << right_->toStr();
+    if (left_) {
+        ss << left_->toStr();
+    }
+    if (left_ || right_) {
+        ss << "; ";
+    }
+    if (right_) {
+        ss << right_->toStr();
+    }
     return ss.str();
 }
 
