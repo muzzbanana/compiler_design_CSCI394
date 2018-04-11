@@ -352,8 +352,21 @@ template <template <typename> class O>
                 }
             }
 
+            // converts ast node types into ir node types
             virtual const IRTree *convert_to_ir(Frame *frame) const {
-                return ExprTree::notImpl;
+                BinOpTree::Operator o;
+                string op = rep1_ + rep2_;
+                if (op.compare("+") == 0) {
+                    o = BinOpTree::Operator::PLUS;
+                } if (op.compare("-") == 0) {
+                    o = BinOpTree::Operator::MINUS;
+                } if (op.compare("*") == 0) {
+                    o = BinOpTree::Operator::MUL;
+                } if (op.compare("/") == 0) {
+                    o = BinOpTree::Operator::DIV;
+                }
+                return new MoveTree(new TempTree(new Temp()),
+                    new BinOpTree(o, left_->convert_to_ir(frame), right_->convert_to_ir(frame)));
             }
 
         private:

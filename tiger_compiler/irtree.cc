@@ -15,7 +15,7 @@ StmtTree::StmtTree(tt type) : IRTree(type) { }
 
 /* expr trees */
 
-BinOpTree::BinOpTree(Operator op, BinOpTree *left, BinOpTree *right)
+BinOpTree::BinOpTree(Operator op, const IRTree *left, const IRTree *right)
     : ExprTree(tt::BINOP), op_(op), left_(left), right_(right) { }
 
 CallTree::CallTree(NameTree *name, const ExprList args)
@@ -177,10 +177,11 @@ string ReturnTree::toStr() const {
 
 string MoveTree::toStr() const {
     stringstream ss;
-    ss << "MOVE ";
+    ss << "(MOVE ";
     ss << src_->toStr();
     ss << " to ";
     ss << dest_->toStr();
+    ss << ")";
     return ss.str();
 }
 
