@@ -878,7 +878,7 @@ class IfThenElse {
             } else {
                 falseStmt = dynamic_cast<const StmtTree*>(falseTree);
             }
-            return new SeqTree(new CJumpTree(IRTree::Operator::EQ,
+            return new SeqTree(new CJumpTree(IRTree::Operator::NE,
                         conditional, new ConstTree(0), trueLabel, falseLabel),
                    new SeqTree(new LabelTree(trueLabel),
                    new SeqTree(trueStmt,
@@ -906,8 +906,9 @@ class WhileDo {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
         const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            Label *bodyLabel = new Label();
-            Label *doneLabel = new Label();
+            Label *testLabel = new Label("test");
+            Label *bodyLabel = new Label("body");
+            Label *doneLabel = new Label("done");
             const IRTree *condTree = left_->convert_to_ir(frame);
             const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
             const IRTree *bodyTree = right_->convert_to_ir(frame);
@@ -918,11 +919,13 @@ class WhileDo {
                 bodyStmt = dynamic_cast<const StmtTree*>(bodyTree);
             }
 
-            return new SeqTree(new CJumpTree(IRTree::Operator::EQ,
+            return new SeqTree(new LabelTree(testLabel),
+                   new SeqTree(new CJumpTree(IRTree::Operator::NE,
                         conditional, new ConstTree(0), bodyLabel, doneLabel),
                    new SeqTree(new LabelTree(bodyLabel),
                    new SeqTree(bodyStmt,
-                   new SeqTree(new LabelTree(doneLabel), NULL))));
+                   new SeqTree(new UJumpTree(testLabel),
+                   new SeqTree(new LabelTree(doneLabel), NULL))))));
         }
 };
 
