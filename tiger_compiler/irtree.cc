@@ -15,6 +15,8 @@ StmtTree::StmtTree(tt type) : IRTree(type) { is_expr_ = false; }
 
 /* expr trees */
 
+StmtExprTree::StmtExprTree(const StmtTree *stmt) : ExprTree(tt::STMT), stmt_(stmt) { }
+
 BinOpTree::BinOpTree(IRTree::Operator op, const ExprTree *left, const ExprTree *right)
     : ExprTree(tt::BINOP), op_(op), left_(left), right_(right) { }
 
@@ -53,10 +55,17 @@ SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ
 
 /* tostr functions */
 
+string StmtExprTree::toStr() const {
+    stringstream ss;
+    ss << "[";
+    ss << stmt_->toStr();
+    ss << "]";
+    return ss.str();
+}
+
 string BinOpTree::toStr() const {
     stringstream ss;
-    ss << "(lhs";
-    // ss << left_->toStr();
+    ss << left_->toStr();
     switch (op_) {
         case IRTree::Operator::PLUS:
             ss << " + ";
@@ -89,8 +98,7 @@ string BinOpTree::toStr() const {
             ss << " >= ";
             break;
     }
-    ss << "rhs)";
-    // ss << right_->toStr();
+    ss << right_->toStr();
     return ss.str();
 }
 
@@ -98,12 +106,10 @@ string CallTree::toStr() const {
     stringstream ss;
     ss << "CALL ";
     ss << name_->toStr();
-    ss << " ( ";
     for (unsigned i = 0; i < args_.size(); i++) {
         if (i != 0) ss << ", ";
         ss << args_[i]->toStr();
     }
-    ss << " ) ";
     return ss.str();
 }
 
@@ -220,11 +226,10 @@ string LabelTree::toStr() const {
 
 string MoveTree::toStr() const {
     stringstream ss;
-    ss << "(MOVE ";
+    ss << "MOVE ";
     ss << src_->toStr();
     ss << " to ";
     ss << dest_->toStr();
-    ss << ")";
     return ss.str();
 }
 

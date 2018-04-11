@@ -15,6 +15,7 @@ typedef vector<ExprTree*> ExprList;
 class IRTree {
     public:
         enum class TreeType {
+            STMT,
             BINOP,
             CALL,
             CONST,
@@ -73,6 +74,17 @@ class NotImplExprTree : public ExprTree {
         NotImplExprTree() : ExprTree(IRTree::TreeType::NOTIMPL) {}
         ~NotImplExprTree() = default;
         string toStr() const { return "<not implemented Expr>"; };
+};
+
+class StmtExprTree : public ExprTree {
+    /* Wrap a statement as an expr, so we can use MOVE and whatnot
+     * as part of expressions. */
+    public:
+        StmtExprTree(const StmtTree *stmt);
+
+        const StmtTree *stmt_;
+
+        string toStr() const;
 };
 
 class BinOpTree : public ExprTree {

@@ -379,10 +379,24 @@ template <template <typename> class O>
                 } if (op.compare("!=") == 0) {
                     o = IRTree::Operator::NE;
                 }
-                const IRTree *left = left_->convert_to_ir(frame);
-                const IRTree *right = right_->convert_to_ir(frame);
-                return new BinOpTree(o, dynamic_cast<const ExprTree*>(left), 
-                    dynamic_cast<const ExprTree*>(right));
+                const IRTree *leftTree = left_->convert_to_ir(frame);
+                const IRTree *rightTree = right_->convert_to_ir(frame);
+                assert(leftTree != NULL);
+                assert(rightTree != NULL);
+                const ExprTree *leftExpr;
+                const ExprTree *rightExpr;
+                /* If they are not already exprs, wrap them in an expr node */
+                if (leftTree->isExpr()) {
+                    leftExpr = dynamic_cast<const ExprTree*>(leftTree);
+                } else {
+                    leftExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(leftTree));
+                }
+                if (rightTree->isExpr()) {
+                    rightExpr = dynamic_cast<const ExprTree*>(rightTree);
+                } else {
+                    rightExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(rightTree));
+                }
+                return new BinOpTree(o, leftExpr, rightExpr);
             }
 
         private:
@@ -830,16 +844,19 @@ class IfThenElse {
              * a CJumpnode that checks whether it's equal to 0. */
             Label *trueLabel = new Label();
             Label *falseLabel = new Label();
+            Label *afterLabel = new Label();
             /* Convert to something like:
              *      MOVE tmp1, <left>
-             *      JEQ  tmp1, 0, t, f
+             *      JNE  tmp1, 0, t, f
              * .t:  <middle>
-             * .f:  <right> */
+             *      JMP  after
+             * .f:  <right>
+             * .after:
+             * */
             const IRTree *condTree = left_->convert_to_ir(frame);
             /* Need to pass an expression to CJumpTree -- we know it has to be an expression
              * because of our position in the AST (can't put a statement inside the condition
              * of an if...) but need to convert it */
-            std::cout << "CONDTREE:" <<  condTree->toStr() << std::endl;
             assert(condTree->isExpr());
             const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
 
@@ -865,9 +882,11 @@ class IfThenElse {
                         conditional, new ConstTree(0), trueLabel, falseLabel),
                    new SeqTree(new LabelTree(trueLabel),
                    new SeqTree(trueStmt,
+                   new SeqTree(new UJumpTree(afterLabel),
                    new SeqTree(new LabelTree(falseLabel),
                    new SeqTree(falseStmt,
-                           NULL)))));
+                   new SeqTree(new LabelTree(afterLabel),
+                           NULL)))))));
         }
 };
 
