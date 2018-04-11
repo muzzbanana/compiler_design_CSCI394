@@ -186,7 +186,7 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return new MoveTree(new TempTree(new Temp()), 
+            return new MoveTree(new TempTree(new Temp()),
                 new NameTree(new Label(value_)));
         }
 
@@ -842,9 +842,9 @@ class IfThenElse {
         const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             /* We evaluate the conditional expression and then just create
              * a CJumpnode that checks whether it's equal to 0. */
-            Label *trueLabel = new Label();
-            Label *falseLabel = new Label();
-            Label *afterLabel = new Label();
+            Label *trueLabel = new Label("true");
+            Label *falseLabel = new Label("false");
+            Label *afterLabel = new Label("after");
             /* Convert to something like:
              *      MOVE tmp1, <left>
              *      JNE  tmp1, 0, t, f

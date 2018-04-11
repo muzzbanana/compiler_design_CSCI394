@@ -65,6 +65,7 @@ string StmtExprTree::toStr() const {
 
 string BinOpTree::toStr() const {
     stringstream ss;
+    ss << "(";
     ss << left_->toStr();
     switch (op_) {
         case IRTree::Operator::PLUS:
@@ -99,6 +100,7 @@ string BinOpTree::toStr() const {
             break;
     }
     ss << right_->toStr();
+    ss << ")";
     return ss.str();
 }
 
@@ -193,11 +195,10 @@ string CJumpTree::toStr() const {
             break;
     }
     ss << right_->toStr();
-    ss << " go to (";
+    ss << " go to ";
     ss << t_->toStr();
-    ss << ") else go to (";
+    ss << " else go to ";
     ss << f_->toStr();
-    ss << ")";
 
     return ss.str();
 }
@@ -239,7 +240,7 @@ string SeqTree::toStr() const {
         ss << left_->toStr();
     }
     if (left_ || right_) {
-        ss << "; ";
+        ss << "\n";
     }
     if (right_) {
         ss << right_->toStr();
