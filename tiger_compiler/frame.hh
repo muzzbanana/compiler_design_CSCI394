@@ -2,23 +2,25 @@
 #include <vector>
 #include <utility>
 #include <string>
-using map = std::vector<std::pair<std::string,int> >;
+#pragma once
+using map = std::vector<std::pair<std::string,int> >; //maps names to fp offsets
 
 
 class frame {
 public:
 	frame();
 	~frame()=default;
-	std::deque<int> temp1addr;
 	int fp;
 	int sp;
-	std::deque<map> tempmap;
-	std::deque<std::vector<std::string> > labelmap;
+	std::deque<map> tempmap; //stores previous frame's temps
+	std::deque<std::vector<std::string> > labelmap; 
 	std::deque<map> localsmap;
-	std::deque<map> argsmap;
+	std::deque<map> argsmap; 
 	std::deque<int> stack;
-	map current [4];
-
+	map current [3];
+	std::vector<std::string> currentlabel;
+	std::deque<int> temp1addr;
+	
 	int pushframe(map arguments_passed, map local_variables);
 	int popframe();
 	int addtemp(std::string name,int value);
