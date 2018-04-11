@@ -186,7 +186,8 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return new MoveTree(new TempTree(new Temp()), new NameTree(new Label(value_)));
+            return new MoveTree(new TempTree(new Temp()), 
+                new NameTree(new Label(value_)));
         }
 
 
@@ -355,19 +356,33 @@ template <template <typename> class O>
 
             // converts ast node types into ir node types
             virtual const IRTree *convert_to_ir(Frame *frame) const {
-                BinOpTree::Operator o;
+                IRTree::Operator o;
                 string op = rep1_ + rep2_;
                 if (op.compare("+") == 0) {
-                    o = BinOpTree::Operator::PLUS;
+                    o = IRTree::Operator::PLUS;
                 } if (op.compare("-") == 0) {
-                    o = BinOpTree::Operator::MINUS;
+                    o = IRTree::Operator::MINUS;
                 } if (op.compare("*") == 0) {
-                    o = BinOpTree::Operator::MUL;
+                    o = IRTree::Operator::MUL;
                 } if (op.compare("/") == 0) {
-                    o = BinOpTree::Operator::DIV;
+                    o = IRTree::Operator::DIV;
+                } if (op.compare("<") == 0) {
+                    o = IRTree::Operator::LT;
+                } if (op.compare("<=") == 0) {
+                    o = IRTree::Operator::LE;
+                } if (op.compare(">") == 0) {
+                    o = IRTree::Operator::GT;
+                } if (op.compare(">=") == 0) {
+                    o = IRTree::Operator::GE;
+                } if (op.compare("=") == 0) {
+                    o = IRTree::Operator::EQ;;
+                } if (op.compare("!=") == 0) {
+                    o = IRTree::Operator::NE;
                 }
-                return new MoveTree(new TempTree(new Temp()),
-                    new BinOpTree(o, left_->convert_to_ir(frame), right_->convert_to_ir(frame)));
+                const IRTree *left = left_->convert_to_ir(frame);
+                const IRTree *right = right_->convert_to_ir(frame);
+                return new BinOpTree(o, dynamic_cast<const ExprTree*>(left), 
+                    dynamic_cast<const ExprTree*>(right));
             }
 
         private:
@@ -846,7 +861,7 @@ class IfThenElse {
             } else {
                 falseStmt = dynamic_cast<const StmtTree*>(falseTree);
             }
-            return new SeqTree(new CJumpTree(CJumpTree::Comparison::EQ,
+            return new SeqTree(new CJumpTree(IRTree::Operator::EQ,
                         conditional, new ConstTree(0), trueLabel, falseLabel),
                    new SeqTree(new LabelTree(trueLabel),
                    new SeqTree(trueStmt,
@@ -871,8 +886,24 @@ class WhileDo {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            return ExprTree::notImpl;
+        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            Label *bodyLabel = new Label();
+            Label *doneLabel = new Label();
+            const IRTree *condTree = left_->convert_to_ir(frame);
+            const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
+            const IRTree *bodyTree = right_->convert_to_ir(frame);
+            const StmtTree *bodyStmt;
+            if (bodyTree->isExpr()) {
+                bodyStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(bodyTree));
+            } else {
+                bodyStmt = dynamic_cast<const StmtTree*>(bodyTree);
+            }
+
+            return new SeqTree(new CJumpTree(IRTree::Operator::EQ,
+                        conditional, new ConstTree(0), bodyLabel, doneLabel),
+                   new SeqTree(new LabelTree(bodyLabel),
+                   new SeqTree(bodyStmt,
+                   new SeqTree(new LabelTree(doneLabel), NULL))));
         }
 };
 

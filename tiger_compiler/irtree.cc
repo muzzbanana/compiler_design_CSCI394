@@ -15,7 +15,7 @@ StmtTree::StmtTree(tt type) : IRTree(type) { is_expr_ = false; }
 
 /* expr trees */
 
-BinOpTree::BinOpTree(Operator op, const IRTree *left, const IRTree *right)
+BinOpTree::BinOpTree(IRTree::Operator op, const ExprTree *left, const ExprTree *right)
     : ExprTree(tt::BINOP), op_(op), left_(left), right_(right) { }
 
 CallTree::CallTree(NameTree *name, const ExprList args)
@@ -36,7 +36,7 @@ TempTree::TempTree(Temp *temp) : ExprTree(tt::TEMP), temp_(temp) { }
 
 ExprStmtTree::ExprStmtTree(const ExprTree *expr) : StmtTree(tt::EXPR), expr_(expr) { }
 
-CJumpTree::CJumpTree(CJumpTree::Comparison comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f)
+CJumpTree::CJumpTree(IRTree::Operator comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f)
     : StmtTree(tt::CJUMP), comp_(comp), left_(left), right_(right), t_(t), f_(f) { }
 
 UJumpTree::UJumpTree(Label *label) : StmtTree(tt::UJUMP), label_(label) { }
@@ -55,22 +55,42 @@ SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ
 
 string BinOpTree::toStr() const {
     stringstream ss;
-    ss << left_->toStr();
+    ss << "(lhs";
+    // ss << left_->toStr();
     switch (op_) {
-        case Operator::PLUS:
+        case IRTree::Operator::PLUS:
             ss << " + ";
             break;
-        case Operator::MINUS:
+        case IRTree::Operator::MINUS:
             ss << " - ";
             break;
-        case Operator::MUL:
+        case IRTree::Operator::MUL:
             ss << " * ";
             break;
-        case Operator::DIV:
+        case IRTree::Operator::DIV:
             ss << " / ";
             break;
+        case IRTree::Operator::EQ:
+            ss << " = ";
+            break;
+        case IRTree::Operator::NE:
+            ss << " != ";
+            break;
+        case IRTree::Operator::LT:
+            ss << " < ";
+            break;
+        case IRTree::Operator::GT:
+            ss << " > ";
+            break;
+        case IRTree::Operator::LE:
+            ss << " <= ";
+            break;
+        case IRTree::Operator::GE:
+            ss << " >= ";
+            break;
     }
-    ss << right_->toStr();
+    ss << "rhs)";
+    // ss << right_->toStr();
     return ss.str();
 }
 
@@ -135,30 +155,43 @@ string CJumpTree::toStr() const {
     ss << "if ";
     ss << left_->toStr();
     switch (comp_) {
-        case Comparison::EQ:
+        case IRTree::Operator::EQ:
             ss << " = ";
             break;
-        case Comparison::NE:
+        case IRTree::Operator::NE:
             ss << " != ";
             break;
-        case Comparison::LT:
+        case IRTree::Operator::LT:
             ss << " < ";
             break;
-        case Comparison::GT:
+        case IRTree::Operator::GT:
             ss << " > ";
             break;
-        case Comparison::LE:
+        case IRTree::Operator::LE:
             ss << " <= ";
             break;
-        case Comparison::GE:
+        case IRTree::Operator::GE:
             ss << " >= ";
+            break;
+        case IRTree::Operator::PLUS:
+            ss << " + ";
+            break;
+        case IRTree::Operator::MINUS:
+            ss << " - ";
+            break;
+        case IRTree::Operator::MUL:
+            ss << " * ";
+            break;
+        case IRTree::Operator::DIV:
+            ss << " / ";
             break;
     }
     ss << right_->toStr();
-    ss << " go to ";
+    ss << " go to (";
     ss << t_->toStr();
-    ss << " else go to ";
+    ss << ") else go to (";
     ss << f_->toStr();
+    ss << ")";
 
     return ss.str();
 }

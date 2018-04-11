@@ -32,6 +32,10 @@ class IRTree {
             NOTIMPL,
         };
 
+        enum class Operator {
+            EQ, NE, LT, GT, LE, GE, PLUS, MINUS, MUL, DIV
+        };
+
         IRTree(TreeType type);
         virtual ~IRTree() = default;
 
@@ -73,16 +77,16 @@ class NotImplExprTree : public ExprTree {
 
 class BinOpTree : public ExprTree {
     public:
-        enum class Operator {
-            PLUS, MINUS, MUL, DIV
-        };
+        // enum class Operator {
+        //     PLUS, MINUS, MUL, DIV
+        // };
 
-        BinOpTree(Operator op, const IRTree *left, const IRTree *right);
+        BinOpTree(IRTree::Operator op, const ExprTree *left, const ExprTree *right);
         ~BinOpTree() = default;
 
-        Operator op_;
-        const IRTree *left_;
-        const IRTree *right_;
+        IRTree::Operator op_;
+        const ExprTree *left_;
+        const ExprTree *right_;
 
         string toStr() const;
 };
@@ -172,14 +176,14 @@ class ExprStmtTree : public StmtTree {
 
 class CJumpTree : public StmtTree {
     public:
-        enum class Comparison {
-            EQ, NE, LT, GT, LE, GE,
-        };
+        // enum class Comparison {
+        //     EQ, NE, LT, GT, LE, GE,
+        // };
 
-        CJumpTree(Comparison comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f);
+        CJumpTree(IRTree::Operator comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f);
         ~CJumpTree() = default;
 
-        Comparison comp_;
+        IRTree::Operator comp_;
         const ExprTree *left_;
         const ExprTree *right_;
         Label *t_;

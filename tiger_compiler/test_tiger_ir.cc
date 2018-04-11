@@ -53,6 +53,24 @@ TEST_CASE("check simple name", "[ir-conversion]") {
     fclose(myfile);
 }
 
+TEST_CASE("check binop plus", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/plus.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    // Scope *s = new Scope();
+    // const Type *type = output->type_verify(s);
+    // REQUIRE(type == Type::intType);
+
+    const IRTree *ir = output->convert_to_ir(NULL);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    delete output;
+    fclose(myfile);
+}
+
 TEST_CASE("check simple if/then/else", "[ir-conversion]") {
     FILE *myfile = fopen("test_ir/ifthenelse.tig", "r");
     yyin = myfile;
@@ -71,8 +89,8 @@ TEST_CASE("check simple if/then/else", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check binop plus", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/plus.tig", "r");
+TEST_CASE("check simple while", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/while.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
