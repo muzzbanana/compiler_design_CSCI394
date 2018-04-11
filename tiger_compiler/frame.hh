@@ -2,6 +2,8 @@
 #include <vector>
 #include <utility>
 #include <string>
+using map = std::vector<std::pair<std::string,int> >;
+
 
 class frame {
 public:
@@ -10,17 +12,17 @@ public:
 	std::deque<int> temp1addr;
 	int fp;
 	int sp;
-	std::deque<std::vector<std::pair<std::string,int> > > tempmap;
+	std::deque<map> tempmap;
 	std::deque<std::vector<std::string> > labelmap;
-	std::deque<std::vector<std::pair<std::string,int> > > localsmap;
-	std::deque<std::vector<std::pair<std::string,int> > > argsmap;
+	std::deque<map> localsmap;
+	std::deque<map> argsmap;
 	std::deque<int> stack;
-	std::vector<std::pair<std::string,int>> current [4]
+	map current [4];
 
-	void pushframe(std::vector<std::pair<std::string,int>> arguments_passed, std::vector<std::pair<std::string,int>> local_variables);
-	void popframe();
-	void addtemp(std::string name,int value);
-	void addlabel(std::string);
+	int pushframe(map arguments_passed, map local_variables);
+	int popframe();
+	int addtemp(std::string name,int value);
+	int addlabel(std::string);
 	int lookuptemp(std::string name);
 	int lookupvar(std::string name);
 
