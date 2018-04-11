@@ -74,15 +74,15 @@ class NotImplExprTree : public ExprTree {
 class BinOpTree : public ExprTree {
     public:
         enum class Operator {
-            PLUS, MINUS, MUL, DIV,
+            PLUS, MINUS, MUL, DIV
         };
 
-        BinOpTree(Operator op, BinOpTree *left, BinOpTree *right);
+        BinOpTree(Operator op, const IRTree *left, const IRTree *right);
         ~BinOpTree() = default;
 
         Operator op_;
-        const ExprTree *left_;
-        const ExprTree *right_;
+        const IRTree *left_;
+        const IRTree *right_;
 
         string toStr() const;
 };

@@ -353,8 +353,21 @@ template <template <typename> class O>
                 }
             }
 
+            // converts ast node types into ir node types
             virtual const IRTree *convert_to_ir(Frame *frame) const {
-                return ExprTree::notImpl;
+                BinOpTree::Operator o;
+                string op = rep1_ + rep2_;
+                if (op.compare("+") == 0) {
+                    o = BinOpTree::Operator::PLUS;
+                } if (op.compare("-") == 0) {
+                    o = BinOpTree::Operator::MINUS;
+                } if (op.compare("*") == 0) {
+                    o = BinOpTree::Operator::MUL;
+                } if (op.compare("/") == 0) {
+                    o = BinOpTree::Operator::DIV;
+                }
+                return new MoveTree(new TempTree(new Temp()),
+                    new BinOpTree(o, left_->convert_to_ir(frame), right_->convert_to_ir(frame)));
             }
 
         private:
@@ -811,6 +824,7 @@ class IfThenElse {
             /* Need to pass an expression to CJumpTree -- we know it has to be an expression
              * because of our position in the AST (can't put a statement inside the condition
              * of an if...) but need to convert it */
+            std::cout << "CONDTREE:" <<  condTree->toStr() << std::endl;
             assert(condTree->isExpr());
             const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
 

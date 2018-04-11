@@ -4,10 +4,10 @@
 #include <utility>
 #include <string>
 #include <iostream>
-#pragma <once>
+
 
 frame::frame()
-	:fp(0),sp(0),tempmap(),labelmap(),argsmap(),localsmap(),stack(),current(),temp1addr()
+	:fp(0),sp(0),tempmap(),labelmap(),localsmap(),argsmap(),stack(),current(),currentlabel(),temp1addr()
 	{
 	}
 
@@ -18,16 +18,16 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	//	-> lastsp=self.sp
 	int lastsp = sp;
 	//	-> push new *map, push arguments in order, adding them to argsmap
-	argsmap.push_back(current[3]);
-	localsmap.push_back(current[2]);
+	argsmap.push_back(current[2]);
+	localsmap.push_back(current[1]);
 	tempmap.push_back(current[0]);
-	labelmap.push_back(current[1]);
+	labelmap.push_back(currentlabel);
 	map current [4]; //reinitialize current
 	int i = 0-arguments_passed.size();
-	for (int j = 0: arguments_passed.size()) {
+	for (int j = 0;  j< arguments_passed.size(); j++) {
 		std::pair<std::string,int> arg = argsmap[j];
-		auto argum = std::make_pair(std::get<0>(arg),i);//name and i
-		current[3].insert(argum);
+		std::pair<std::string,int> argum = std::make_pair(std::get<0>(arg),i);//name and i
+		current[2].insert(argum);
 		stack.push_back(std::get<1>(arg)); //value
 		sp += 1;
 		i+=1;
@@ -37,10 +37,10 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	sp += 1;
 	fp = sp;
 	//	-> add locals in order to stack and localsmap
-	for (int h = 0: local_variables.size()) {
+	for (int h = 0; h < local_variables.size(); h++) {
 		std::pair<std::string,int> local = local_variables[h]; 
 		auto loc = std::make_pair(std::get<0>(local),h);//name and i
-		current[2].insert(loc);
+		current[1].insert(loc);
 		stack.push_back(std::get<1>(local)); //value
 		sp += 1;
 	}
@@ -58,9 +58,9 @@ int frame::popframe(){
 	while (stack.size()>fp) {stack.pop_back();}
 	//	-> pop *map, pop temp1addr, 
 	current[0] = tempmap.pop_back();
-	current[1] = labelmap.pop_back();
-	current[2] = localsmap.pop_back();
-	current[3] = argsmap.pop_back();
+	currentlabel = labelmap.pop_back();
+	current[1] = localsmap.pop_back();
+	current[2] = argsmap.pop_back();
 	temp1addr.pop_back();
 	//	-> fp = return address (temp1addr-1), 
 	fp = stack[fp-1];
@@ -78,7 +78,7 @@ int frame::addtemp(std::string name,int value){
 }
 
 int frame::addlabel(std::string name){
-	auto labellist = current[1];
+	auto labellist = currentlabel;
 	labellist.push_back(name);
 	return 0;
 }
@@ -87,7 +87,7 @@ int frame::addlabel(std::string name){
 
 int frame::lookuptemp(std::string name){
 	auto templist = current[0];
-	for (auto iter = templist.begin(); iter != templist.end(); ++i){
+	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
 		if (*iter.first() == name){
 			return *iter.second();
 		};
@@ -96,14 +96,14 @@ int frame::lookuptemp(std::string name){
 }
 
 int frame::lookupvar(std::string name){
-	auto localslist = current[2];
-	auto argslist = current[3];
-	for (auto iter = localslist.begin(); iter != localslist.end(); ++i){
+	auto localslist = current[1];
+	auto argslist = current[2];
+	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 		if (*iter.first() == name){
 			return *iter.second();
 		};
 	};
-	for (auto iter = argslist.begin(); iter != argslist.end(); ++i){
+	for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
 		if (*iter.first() == name){
 			return *iter.second();
 		};
