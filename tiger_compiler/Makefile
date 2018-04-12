@@ -34,7 +34,7 @@ test_tiger_parse: tiger.tab.o lex.yy.o test_tiger_parse.o tiger.o ast.hh
 test_tiger_semantic: tiger.o tiger.tab.o lex.yy.o type.o semantic.o ast_semantic.o scope.o semantic_checks.o test_tiger_semantic.o ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
-test_tiger_ir: tiger.o tiger.tab.o lex.yy.o type.o semantic.o ast_semantic.o scope.o semantic_checks.o test_tiger_ir.o irtree.o fragment.hh ast.hh label.o
+test_tiger_ir: tiger.o tiger.tab.o lex.yy.o type.o semantic.o ast_semantic.o scope.o semantic_checks.o test_tiger_ir.o irtree.o temp.hh fragment.hh ast.hh
 	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 tiger.tab.c tiger.tab.h: tiger.y
