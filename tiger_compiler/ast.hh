@@ -817,8 +817,23 @@ class Assignment {
             }
         }
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            return ExprTree::notImpl;
+        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            const IRTree *left = left_->convert_to_ir(frame);
+            const IRTree *right = right_->convert_to_ir(frame);
+            const ExprTree *leftExpr;
+            const ExprTree *rightExpr;
+            if (left->isExpr()) {
+                leftExpr = dynamic_cast<const ExprTree*>(left);
+            } else {
+                leftExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(left));
+            }
+            if (right->isExpr()) {
+                rightExpr = dynamic_cast<const ExprTree*>(right);
+            } else {
+                rightExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(right));
+            }
+
+            return new MoveTree(leftExpr, rightExpr);
         }
 };
 
