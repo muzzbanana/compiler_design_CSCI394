@@ -1042,8 +1042,8 @@ class ForTo {
             Label *bodyLabel = new Label("body");
             Label *doneLabel = new Label("done");
 
-            const IRTree *varExpr = one_->convert_to_ir(frame);
-            const IRTree *startExpr = two_->convert_to_ir(frame);
+            const IRTree *variable = one_->convert_to_ir(frame);
+            const IRTree *start_int = two_->convert_to_ir(frame);
 
             const ExprTree *varExpr;
             const ExprTree *limitExpr;
