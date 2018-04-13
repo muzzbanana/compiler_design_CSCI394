@@ -3,7 +3,7 @@
 #include <utility>
 #include <string>
 #pragma once
-using map = std::vector<std::pair<std::string,int> >; //maps names to fp offsets
+using map = std::vector<std::pair<std::string,int> >; //maps names to sp (was originally fp offsets)
 
 
 class frame {
@@ -17,7 +17,7 @@ public:
 	std::deque<map> localsmap;
 	std::deque<map> argsmap; 
 	std::deque<int> stack;
-	map current [3];
+	map current [3]; //current[0] = current tempmap, current[1] = current localsmap, current[2] = current argsmap
 	std::vector<std::string> currentlabel;
 	std::deque<int> temp1addr;
 	
