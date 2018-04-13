@@ -19,6 +19,18 @@ using namespace std;
 
 namespace tiger {
 
+vector<string> vector_concat(vector<string> a, vector<string> b) {
+    // death
+    vector<string> c = vector<string>();
+    for (auto x : a) {
+        c.push_back(x);
+    }
+    for (auto y : b) {
+        c.push_back(y);
+    }
+    return c;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Base AST node class, to define the hierarchy.
 class ASTNode {
@@ -963,7 +975,8 @@ class IfThenElse {
         }
 
         virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+            // life is meaningless
+            return vector_concat(left_->get_var_names(), vector_concat(middle_->get_var_names(), right_->get_var_names()));
         }
 };
 
@@ -1006,7 +1019,8 @@ class WhileDo {
         }
 
         virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+            /// . / / hj
+            return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
 
@@ -1087,7 +1101,8 @@ class ForTo {
         }
 
         virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+            /// . / / hj
+            return vector_concat(one_->get_var_names(), vector_concat(two_->get_var_names(), vector_concat(three_->get_var_names(), four_->get_var_names())));
         }
 };
 
