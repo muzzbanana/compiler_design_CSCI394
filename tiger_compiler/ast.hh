@@ -1486,7 +1486,13 @@ class UnTypedFuncDecl {
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
-            return vector_concat(middle_->get_var_names(), right_->get_var_names());
+            // NOTE: We *don't* return the vars explicitly here, because the arguments + local vars
+            // within two_, three_, etc. belong to an inner function, so they should be placed
+            // into a new frame, not whatever recursively called us to figure out how
+            // many variables to reserve.
+            // So we return an empty list since our function doesn't declare any more new variables
+            // in the scope of whatever contains it.
+            return vector<string>();
         }
 };
 
@@ -1508,7 +1514,13 @@ class TypedFuncDecl {
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
-            return vector_concat(three_->get_var_names(), four_->get_var_names());
+            // NOTE: We *don't* return the vars explicitly here, because the arguments + local vars
+            // within two_, three_, etc. belong to an inner function, so they should be placed
+            // into a new frame, not whatever recursively called us to figure out how
+            // many variables to reserve.
+            // So we return an empty list since our function doesn't declare any more new variables
+            // in the scope of whatever contains it.
+            return vector<string>();
         }
 };
 
