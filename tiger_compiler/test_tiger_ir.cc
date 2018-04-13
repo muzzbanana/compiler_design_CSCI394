@@ -155,10 +155,15 @@ TEST_CASE("check var-name-listing", "[var-names]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
+    /* Should NOT print out r or q */
+    std::stringstream ss;
     const std::vector<std::string> vars = output->get_var_names();
     for (auto a : vars) {
-        std::cout << a << std::endl;
+        ss << a << ", ";
     }
+    std::cout << ss.str() << std::endl;
+
+    REQUIRE(ss.str() == "i, j, k, c, ");
 
     delete output;
     fclose(myfile);

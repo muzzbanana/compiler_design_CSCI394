@@ -1,7 +1,8 @@
 let
     var i : int := 44
     var j : int := 3
-    var jdsaifo := "ajdsifo"
+    var k := "ajdsifo"
+    function r (q: int) : int = q + 1
 in
     for c := i to (i + j) do (i + j)
 end
