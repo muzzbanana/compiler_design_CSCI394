@@ -61,6 +61,10 @@ class NilASTNode : public ASTNode {
         {
             return "nil";
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -416,8 +420,6 @@ template <template <typename> class O>
                 const IRTree *rightTree = right_->convert_to_ir(frame);
                 assert(leftTree != NULL);
                 assert(rightTree != NULL);
-                const ExprTree *leftExpr;
-                const ExprTree *rightExpr;
                 /* If they are not already exprs, wrap them in an expr node */
                 assert(leftTree->isExpr());
                 assert(rightTree->isExpr());
@@ -427,8 +429,7 @@ template <template <typename> class O>
             }
 
             virtual const vector<string> get_var_names() const {
-                auto op = O();
-                return op.get_var_names();
+                return vector<string>();
             }
 
         private:
@@ -636,6 +637,10 @@ template <class O>
                 return op.convert_to_ir(frame, left_, middle_, right_);
             }
 
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
+            }
 
         private:
             const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
@@ -884,8 +889,7 @@ class Assignment {
         }
 
         virtual const vector<string> get_var_names() const {
-            auto op = O();
-            return op.get_var_names();
+            return vector<string>();
         }
 };
 
@@ -1008,6 +1012,7 @@ class WhileDo {
 
 using WhileLoopASTNode = NoEvalBinaryASTNode<WhileDo>;
 
+// working but is weird until we are able to get temps
 
 class ForTo {
     public:
@@ -1019,10 +1024,66 @@ class ForTo {
                                 ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_);
 
         const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
-                                      ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-            Label *loopLabel = new Label("loop");
-            frame->addtemp(one_->toStr());
-            return StmtTree::notImpl;
+                ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            Label *testLabel = new Label("test");
+            Label *bodyLabel = new Label("body");
+            Label *doneLabel = new Label("done");
+
+            const IRTree *variable = one_->convert_to_ir(frame);
+            const IRTree *start_int = two_->convert_to_ir(frame);
+
+            const ExprTree *varExpr;
+            const ExprTree *limitExpr;
+            const ExprTree *startExpr;
+            const ExprTree *countExpr;
+
+            if (variable->isExpr()) {
+                varExpr = dynamic_cast<const ExprTree*>(variable);
+            } else {
+                varExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(variable));
+            }
+
+            if (start_int->isExpr()) {
+                startExpr = dynamic_cast<const ExprTree*>(start_int);
+            } else {
+                startExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(start_int));
+            }
+
+            cout << start_int->toStr() << endl;
+            const IRTree *counter = new MoveTree(varExpr, startExpr);
+            if (counter->isExpr()) {
+                countExpr = dynamic_cast<const ExprTree*>(counter);
+            } else {
+                countExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(counter));
+            }
+
+            const IRTree *limit = three_->convert_to_ir(frame);
+            if (limit->isExpr()) {
+                limitExpr = dynamic_cast<const ExprTree*>(limit);
+            } else {
+                limitExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(limit));
+            }
+
+            const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
+
+            const IRTree *bodyTree = four_->convert_to_ir(frame);
+            const StmtTree *bodyStmt;
+            if (bodyTree->isExpr()) {
+                bodyStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(bodyTree));
+            } else {
+                bodyStmt = dynamic_cast<const StmtTree*>(bodyTree);
+            }
+
+            const ExprTree *plus = new BinOpTree(IRTree::Operator::PLUS, countExpr, new ConstTree(1));
+
+            return new SeqTree(new LabelTree(testLabel),
+                    new SeqTree(new CJumpTree(IRTree::Operator::NE,
+                            conditional, new ConstTree(0), bodyLabel, doneLabel),
+                        new SeqTree(new LabelTree(bodyLabel),
+                            new SeqTree(bodyStmt,
+                                new SeqTree(new MoveTree(countExpr, plus),
+                                    new SeqTree(new UJumpTree(testLabel),
+                                        new SeqTree(new LabelTree(doneLabel), NULL)))))));
         }
 
         virtual const vector<string> get_var_names() const {
@@ -1043,6 +1104,10 @@ class UntypedVarDeclaration {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1261,6 +1326,10 @@ class RecordField {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using RecordFieldASTNode = NoEvalBinaryASTNode<RecordField>;
@@ -1277,6 +1346,10 @@ class RecordTypeAST {
 
         const ExprTree *convert_to_ir(Frame *frame, std::vector<const RecordFieldASTNode*> vec_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
