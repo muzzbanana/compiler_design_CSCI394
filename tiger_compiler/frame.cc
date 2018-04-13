@@ -37,7 +37,7 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	sp += 1;
 	fp = sp;
 	//	-> add locals in order to stack and localsmap
-	for (uint h = 0; h < local_variables.size(); h++) {
+	for (int h = 0; h < local_variables.size(); h++) {
 		std::pair<std::string,int> local = local_variables[h]; 
 		auto loc = std::make_pair(std::get<0>(local),h);//name and i
 		current[1].push_back(loc);
@@ -57,10 +57,14 @@ int frame::popframe(){
 	//	-> takes fp and pops everything before on the stack, 
 	while (stack.size()>fp) {stack.pop_back();}
 	//	-> pop *map, pop temp1addr, 
-	current[0] = tempmap.pop_back();
-	currentlabel = labelmap.pop_back();
-	current[1] = localsmap.pop_back();
-	current[2] = argsmap.pop_back();
+	current[0] = tempmap.back();
+	tempmap.pop_back();
+	currentlabel = labelmap.back();
+	labelmap.pop_back();
+	current[1] = localsmap.back();
+	localsmap.pop_back();
+	current[2] = argsmap.back();
+	argsmap.pop_back();
 	temp1addr.pop_back();
 	//	-> fp = return address (temp1addr-1), 
 	fp = stack[fp-1];
@@ -88,8 +92,8 @@ int frame::addlabel(std::string name){
 int frame::lookuptemp(std::string name){
 	auto templist = current[0];
 	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
-		if (*iter->first() == name){
-			return *iter->second();
+		if (iter->first == name){
+			return iter->second;
 		};
 	};
 	return (-1); // no such name in temp ---> should also look up previous temps 
@@ -99,13 +103,13 @@ int frame::lookupvar(std::string name){
 	auto localslist = current[1];
 	auto argslist = current[2];
 	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
-		if (*iter->first() == name){
-			return *iter->second();
+		if (iter->first == name){
+			return iter->second;
 		};
 	};
 	for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
-		if (*iter->first() == name){
-			return *iter->second();
+		if (iter->first == name){
+			return iter->second;
 		};
 	};
 	return (-1); //should iterate through the stacks of previous scopes too
