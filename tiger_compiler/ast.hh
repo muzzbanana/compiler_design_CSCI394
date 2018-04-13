@@ -221,8 +221,7 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return new MoveTree(new TempTree(new Temp()),
-                new NameTree(new Label(value_)));
+            return new NameTree(new Label(value_));
         }
 
         virtual const vector<string> get_var_names() const {
@@ -1043,8 +1042,8 @@ class ForTo {
             Label *bodyLabel = new Label("body");
             Label *doneLabel = new Label("done");
 
-            const IRTree *variable = one_->convert_to_ir(frame);
-            const IRTree *start_int = two_->convert_to_ir(frame);
+            const IRTree *varExpr = one_->convert_to_ir(frame);
+            const IRTree *startExpr = two_->convert_to_ir(frame);
 
             const ExprTree *varExpr;
             const ExprTree *limitExpr;
@@ -1063,7 +1062,6 @@ class ForTo {
                 startExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(start_int));
             }
 
-            cout << start_int->toStr() << endl;
             const IRTree *counter = new MoveTree(varExpr, startExpr);
             if (counter->isExpr()) {
                 countExpr = dynamic_cast<const ExprTree*>(counter);
