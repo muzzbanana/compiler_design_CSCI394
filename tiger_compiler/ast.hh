@@ -10,6 +10,7 @@
 #include <cmath>
 #include <set>
 #include <algorithm>
+#include <vector>
 #include "type.hh"
 #include "scope.hh"
 #include "irtree.hh"
@@ -19,7 +20,7 @@ using namespace std;
 
 namespace tiger {
 
-vector<string> vector_concat(vector<string> a, vector<string> b) {
+inline vector<string> vector_concat(vector<string> a, vector<string> b) {
     // death
     vector<string> c = vector<string>();
     for (auto x : a) {
@@ -334,7 +335,7 @@ template <class O>
 
             virtual const vector<string> get_var_names() const {
                 auto op = O();
-                return op.get_var_names();
+                return op.get_var_names(child_);
             }
 
         private:
@@ -547,7 +548,7 @@ template <class O>
 
             virtual const vector<string> get_var_names() const {
                 auto op = O();
-                return op.get_var_names();
+                return op.get_var_names(left_, right_);
             }
 
         private:
@@ -651,7 +652,7 @@ template <class O>
 
             virtual const vector<string> get_var_names() const {
                 auto op = O();
-                return op.get_var_names();
+                return op.get_var_names(left_, middle_, right_);
             }
 
         private:
@@ -769,7 +770,7 @@ template <class O>
 
             virtual const vector<string> get_var_names() const {
                 auto op = O();
-                return op.get_var_names();
+                return op.get_var_names(one_, two_, three_, four_);
             }
 
 
@@ -843,7 +844,7 @@ template <class O, class E> // E is the elements of the vector (?)
 
             virtual const vector<string> get_var_names() const {
                 auto op = O();
-                return op.get_var_names();
+                return op.get_var_names(vec_);
             }
 
         private:
@@ -900,7 +901,7 @@ class Assignment {
             return new MoveTree(leftExpr, rightExpr);
         }
 
-        virtual const vector<string> get_var_names() const {
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector<string>();
         }
 };
@@ -974,8 +975,7 @@ class IfThenElse {
                            NULL)))))));
         }
 
-        virtual const vector<string> get_var_names() const {
-            // life is meaningless
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), vector_concat(middle_->get_var_names(), right_->get_var_names()));
         }
 };
@@ -1018,7 +1018,7 @@ class WhileDo {
                    new SeqTree(new LabelTree(doneLabel), NULL))))));
         }
 
-        virtual const vector<string> get_var_names() const {
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             /// . / / hj
             return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
@@ -1100,9 +1100,11 @@ class ForTo {
                                         new SeqTree(new LabelTree(doneLabel), NULL)))))));
         }
 
-        virtual const vector<string> get_var_names() const {
-            /// . / / hj
-            return vector_concat(one_->get_var_names(), vector_concat(two_->get_var_names(), vector_concat(three_->get_var_names(), four_->get_var_names())));
+        virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
+            /// great the one
+            vector<string> new_var_name;
+            new_var_name.push_back(one_->toStr());
+            return vector_concat(new_var_name , vector_concat(two_->get_var_names(), vector_concat(three_->get_var_names(), four_->get_var_names())));
         }
 };
 
@@ -1121,8 +1123,11 @@ class UntypedVarDeclaration {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            // the other
+            vector<string> new_var_name;
+            new_var_name.push_back(left_->toStr());
+            return vector_concat(new_var_name , right_->get_var_names());
         }
 };
 
@@ -1141,8 +1146,11 @@ class TypedVarDeclaration {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
+            // the third one
+            vector<string> new_var_name;
+            new_var_name.push_back(left_->toStr());
+            return vector_concat(new_var_name , vector_concat(middle_->get_var_names(), right_->get_var_names()));
         }
 };
 
@@ -1161,8 +1169,9 @@ class TypeDeclaration {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            // type decl, no var names I guess
+            return vector<string>();
         }
 };
 
@@ -1182,8 +1191,8 @@ class LetBlock {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
 
@@ -1199,8 +1208,8 @@ class Declaration {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {
+            return child_->get_var_names();
         }
 };
 
@@ -1220,8 +1229,12 @@ class DeclList {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(std::vector<const DeclarationASTNode*> vec_) const {
+            vector<string> names;
+            for (auto a : vec_ ){
+                names = vector_concat(names, a->get_var_names());
+            }
+            return names;
         }
 };
 
@@ -1241,8 +1254,12 @@ class ExprSeq {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(vector<const ASTNode*> vec_) const {
+            vector<string> names;
+            for (auto a : vec_ ){
+                names = vector_concat(names, a->get_var_names());
+            }
+            return names;
         }
 };
 
@@ -1262,8 +1279,8 @@ class FieldMember {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector<string>();
         }
 };
 
@@ -1283,8 +1300,12 @@ class FieldList {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(std::vector<const FieldMemberASTNode*> vec_) const {
+            vector<string> result;
+            for (auto a : vec_) {
+                result = vector_concat(result, a->get_var_names());
+            }
+            return result;
         }
 };
 
@@ -1304,8 +1325,8 @@ class TypeInstantiation {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left, ASTNode::ASTptr right_) const {
+            return right_->get_var_names();
         }
 };
 
@@ -1321,8 +1342,8 @@ class TypeValue {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {
+            return child_->get_var_names();
         }
 };
 
@@ -1342,8 +1363,8 @@ class RecordField {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector<string>();
         }
 };
 
@@ -1363,8 +1384,8 @@ class RecordTypeAST {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(std::vector<const RecordFieldASTNode*>) const {
+            return vector<string>();
         }
 };
 
@@ -1380,8 +1401,8 @@ class ArrayTypeAST {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {
+            return vector<string>();
         }
 };
 
@@ -1401,8 +1422,8 @@ class DotAccess {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector<string>();
         }
 };
 
@@ -1422,8 +1443,8 @@ class IndexAccess {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
 
@@ -1443,8 +1464,8 @@ class ArrayValue {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
+            return vector_concat(middle_->get_var_names(), right_->get_var_names());
         }
 };
 
@@ -1464,8 +1485,8 @@ class UnTypedFuncDecl {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
+            return vector_concat(middle_->get_var_names(), right_->get_var_names());
         }
 };
 
@@ -1486,8 +1507,8 @@ class TypedFuncDecl {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
+            return vector_concat(three_->get_var_names(), four_->get_var_names());
         }
 };
 
@@ -1507,8 +1528,8 @@ class FuncCall {
             return ExprTree::notImpl;
         }
 
-        virtual const vector<string> get_var_names() const {
-            return vector<string>(); // Placeholder
+        virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
+            return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
 

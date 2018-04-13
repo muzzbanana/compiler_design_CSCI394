@@ -148,3 +148,18 @@ TEST_CASE("check simple for", "[ir-conversion]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check var-name-listing", "[var-names]") {
+    FILE *myfile = fopen("test_ir/varname.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const std::vector<std::string> vars = output->get_var_names();
+    for (auto a : vars) {
+        std::cout << a << std::endl;
+    }
+
+    delete output;
+    fclose(myfile);
+}
