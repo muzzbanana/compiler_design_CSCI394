@@ -120,3 +120,31 @@ TEST_CASE("check simple assign", "[ir-conversion]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check number as if", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/condition_number.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const IRTree *ir = output->convert_to_ir(NULL);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check simple for", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/for.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const IRTree *ir = output->convert_to_ir(NULL);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    delete output;
+    fclose(myfile);
+}

@@ -19,6 +19,18 @@ using namespace std;
 
 namespace tiger {
 
+vector<string> vector_concat(vector<string> a, vector<string> b) {
+    // death
+    vector<string> c = vector<string>();
+    for (auto x : a) {
+        c.push_back(x);
+    }
+    for (auto y : b) {
+        c.push_back(y);
+    }
+    return c;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Base AST node class, to define the hierarchy.
 class ASTNode {
@@ -30,6 +42,7 @@ class ASTNode {
         virtual ~ASTNode() = default;
         virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
         virtual const IRTree *convert_to_ir(Frame *frame) const = 0; // Convert to IR representation
+        virtual const vector<string> get_var_names() const = 0; // Get variable names from node
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
 };
@@ -60,6 +73,10 @@ class NilASTNode : public ASTNode {
         {
             return "nil";
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -87,6 +104,10 @@ class BreakASTNode : public ASTNode {
         virtual std::string toStr() const
         {
             return "break";
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>();
         }
 
     private:
@@ -117,7 +138,16 @@ class NumASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return new MoveTree(new TempTree(new Temp()), new ConstTree(value_));
+            /* We shouldn't put 'move' here because it's technically
+             * a statement. We will add move when we vectorize the
+             * tree -- e.g. we'll change ADD [t1], 3, 4 to
+             * MOV [t2], 3 ; MOV [t3], 4 ; ADD [t1], [t2], [t3]
+             * or whatever */
+            return new ConstTree(value_);
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>();
         }
 
     private:
@@ -150,6 +180,10 @@ class StrASTNode : public ASTNode {
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>();
         }
 
 
@@ -188,6 +222,10 @@ class NameASTNode : public ASTNode {
         virtual const IRTree *convert_to_ir(Frame *frame) const {
             return new MoveTree(new TempTree(new Temp()),
                 new NameTree(new Label(value_)));
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>();
         }
 
 
@@ -242,6 +280,10 @@ template <template <typename> class O>
                 return ExprTree::notImpl;
             }
 
+            virtual const vector<string> get_var_names() const {
+                return vector<string>();
+            }
+
         private:
             const std::string rep_;  // String representation of node
             const ASTptr child_;
@@ -288,6 +330,11 @@ template <class O>
 
             virtual const IRTree *convert_to_ir(Frame *frame) const {
                 return ExprTree::notImpl;
+            }
+
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
             }
 
         private:
@@ -358,6 +405,7 @@ template <template <typename> class O>
             virtual const IRTree *convert_to_ir(Frame *frame) const {
                 IRTree::Operator o;
                 string op = rep1_ + rep2_;
+
                 if (op.compare("+") == 0) {
                     o = IRTree::Operator::PLUS;
                 } if (op.compare("-") == 0) {
@@ -379,24 +427,21 @@ template <template <typename> class O>
                 } if (op.compare("!=") == 0) {
                     o = IRTree::Operator::NE;
                 }
+
                 const IRTree *leftTree = left_->convert_to_ir(frame);
                 const IRTree *rightTree = right_->convert_to_ir(frame);
                 assert(leftTree != NULL);
                 assert(rightTree != NULL);
-                const ExprTree *leftExpr;
-                const ExprTree *rightExpr;
                 /* If they are not already exprs, wrap them in an expr node */
-                if (leftTree->isExpr()) {
-                    leftExpr = dynamic_cast<const ExprTree*>(leftTree);
-                } else {
-                    leftExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(leftTree));
-                }
-                if (rightTree->isExpr()) {
-                    rightExpr = dynamic_cast<const ExprTree*>(rightTree);
-                } else {
-                    rightExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(rightTree));
-                }
+                assert(leftTree->isExpr());
+                assert(rightTree->isExpr());
+                const ExprTree *leftExpr = dynamic_cast<const ExprTree*>(leftTree);
+                const ExprTree *rightExpr = dynamic_cast<const ExprTree*>(rightTree);
                 return new BinOpTree(o, leftExpr, rightExpr);
+            }
+
+            virtual const vector<string> get_var_names() const {
+                return vector<string>();
             }
 
         private:
@@ -500,6 +545,11 @@ template <class O>
                 return op.convert_to_ir(frame, left_, right_);
             }
 
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
+            }
+
         private:
             const std::string rep1_, rep2_, rep3_;  // String representation of node (rep3 goes at end)
             const ASTptr left_, right_;
@@ -599,6 +649,10 @@ template <class O>
                 return op.convert_to_ir(frame, left_, middle_, right_);
             }
 
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
+            }
 
         private:
             const std::string rep1_, rep2_, rep3_, rep4_;  // String representation of node
@@ -713,6 +767,11 @@ template <class O>
                 return op.convert_to_ir(frame, one_, two_, three_, four_);
             }
 
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
+            }
+
 
         private:
             const std::string rep1_, rep2_, rep3_, rep4_, rep5_;  // String representation of node
@@ -782,6 +841,11 @@ template <class O, class E> // E is the elements of the vector (?)
                 return op.convert_to_ir(frame, vec_);
             }
 
+            virtual const vector<string> get_var_names() const {
+                auto op = O();
+                return op.get_var_names();
+            }
+
         private:
             std::vector<const E*> vec_;
             const std::string sep_, first_, last_;
@@ -835,6 +899,10 @@ class Assignment {
 
             return new MoveTree(leftExpr, rightExpr);
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>();
+        }
 };
 
 using AssignASTNode = NoEvalBinaryASTNode<Assignment>;
@@ -860,6 +928,7 @@ class IfThenElse {
             Label *trueLabel = new Label("true");
             Label *falseLabel = new Label("false");
             Label *afterLabel = new Label("after");
+
             /* Convert to something like:
              *      MOVE tmp1, <left>
              *      JNE  tmp1, 0, t, f
@@ -869,6 +938,7 @@ class IfThenElse {
              * .after:
              * */
             const IRTree *condTree = left_->convert_to_ir(frame);
+
             /* Need to pass an expression to CJumpTree -- we know it has to be an expression
              * because of our position in the AST (can't put a statement inside the condition
              * of an if...) but need to convert it */
@@ -902,6 +972,11 @@ class IfThenElse {
                    new SeqTree(falseStmt,
                    new SeqTree(new LabelTree(afterLabel),
                            NULL)))))));
+        }
+
+        virtual const vector<string> get_var_names() const {
+            // life is meaningless
+            return vector_concat(left_->get_var_names(), vector_concat(middle_->get_var_names(), right_->get_var_names()));
         }
 };
 
@@ -942,10 +1017,16 @@ class WhileDo {
                    new SeqTree(new UJumpTree(testLabel),
                    new SeqTree(new LabelTree(doneLabel), NULL))))));
         }
+
+        virtual const vector<string> get_var_names() const {
+            /// . / / hj
+            return vector_concat(left_->get_var_names(), right_->get_var_names());
+        }
 };
 
 using WhileLoopASTNode = NoEvalBinaryASTNode<WhileDo>;
 
+// working but is weird until we are able to get temps
 
 class ForTo {
     public:
@@ -956,9 +1037,72 @@ class ForTo {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
                                 ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
-                                      ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-            return ExprTree::notImpl;
+        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
+                ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+            Label *testLabel = new Label("test");
+            Label *bodyLabel = new Label("body");
+            Label *doneLabel = new Label("done");
+
+            const IRTree *variable = one_->convert_to_ir(frame);
+            const IRTree *start_int = two_->convert_to_ir(frame);
+
+            const ExprTree *varExpr;
+            const ExprTree *limitExpr;
+            const ExprTree *startExpr;
+            const ExprTree *countExpr;
+
+            if (variable->isExpr()) {
+                varExpr = dynamic_cast<const ExprTree*>(variable);
+            } else {
+                varExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(variable));
+            }
+
+            if (start_int->isExpr()) {
+                startExpr = dynamic_cast<const ExprTree*>(start_int);
+            } else {
+                startExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(start_int));
+            }
+
+            cout << start_int->toStr() << endl;
+            const IRTree *counter = new MoveTree(varExpr, startExpr);
+            if (counter->isExpr()) {
+                countExpr = dynamic_cast<const ExprTree*>(counter);
+            } else {
+                countExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(counter));
+            }
+
+            const IRTree *limit = three_->convert_to_ir(frame);
+            if (limit->isExpr()) {
+                limitExpr = dynamic_cast<const ExprTree*>(limit);
+            } else {
+                limitExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(limit));
+            }
+
+            const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
+
+            const IRTree *bodyTree = four_->convert_to_ir(frame);
+            const StmtTree *bodyStmt;
+            if (bodyTree->isExpr()) {
+                bodyStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(bodyTree));
+            } else {
+                bodyStmt = dynamic_cast<const StmtTree*>(bodyTree);
+            }
+
+            const ExprTree *plus = new BinOpTree(IRTree::Operator::PLUS, countExpr, new ConstTree(1));
+
+            return new SeqTree(new LabelTree(testLabel),
+                    new SeqTree(new CJumpTree(IRTree::Operator::NE,
+                            conditional, new ConstTree(0), bodyLabel, doneLabel),
+                        new SeqTree(new LabelTree(bodyLabel),
+                            new SeqTree(bodyStmt,
+                                new SeqTree(new MoveTree(countExpr, plus),
+                                    new SeqTree(new UJumpTree(testLabel),
+                                        new SeqTree(new LabelTree(doneLabel), NULL)))))));
+        }
+
+        virtual const vector<string> get_var_names() const {
+            /// . / / hj
+            return vector_concat(one_->get_var_names(), vector_concat(two_->get_var_names(), vector_concat(three_->get_var_names(), four_->get_var_names())));
         }
 };
 
@@ -976,6 +1120,10 @@ class UntypedVarDeclaration {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using UntypedVarDeclASTNode = NoEvalBinaryASTNode<UntypedVarDeclaration>;
@@ -992,6 +1140,10 @@ class TypedVarDeclaration {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using TypedVarDeclASTNode = TertiaryASTNode<TypedVarDeclaration>;
@@ -1007,6 +1159,10 @@ class TypeDeclaration {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1025,6 +1181,10 @@ class LetBlock {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using LetASTNode = NoEvalBinaryASTNode<LetBlock>;
@@ -1038,6 +1198,10 @@ class Declaration {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using DeclarationASTNode = NoEvalUnaryASTNode<Declaration>;
@@ -1054,6 +1218,10 @@ class DeclList {
 
         const ExprTree *convert_to_ir(Frame *frame, std::vector<const DeclarationASTNode*> vec_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1072,6 +1240,10 @@ class ExprSeq {
         const ExprTree *convert_to_ir(Frame *frame, std::vector<const ASTNode*> vec_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using ExprSeqASTNode = VectorASTNode<ExprSeq, ASTNode>;
@@ -1088,6 +1260,10 @@ class FieldMember {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1106,6 +1282,10 @@ class FieldList {
         const ExprTree *convert_to_ir(Frame *frame, std::vector<const FieldMemberASTNode*> vec_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using FieldListASTNode = VectorASTNode<FieldList, FieldMemberASTNode>;
@@ -1123,6 +1303,10 @@ class TypeInstantiation {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using TypeInstASTNode = NoEvalBinaryASTNode<TypeInstantiation>;
@@ -1136,6 +1320,10 @@ class TypeValue {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using TypeASTNode = NoEvalUnaryASTNode<TypeValue>;
@@ -1152,6 +1340,10 @@ class RecordField {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1170,6 +1362,10 @@ class RecordTypeAST {
         const ExprTree *convert_to_ir(Frame *frame, std::vector<const RecordFieldASTNode*> vec_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using RecordTypeASTNode = VectorASTNode<RecordTypeAST, RecordFieldASTNode>;
@@ -1183,6 +1379,10 @@ class ArrayTypeAST {
         }
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using ArrayTypeASTNode = NoEvalUnaryASTNode<ArrayTypeAST>;
@@ -1199,6 +1399,10 @@ class DotAccess {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1217,6 +1421,10 @@ class IndexAccess {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using IndexASTNode = NoEvalBinaryASTNode<IndexAccess>;
@@ -1234,6 +1442,10 @@ class ArrayValue {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using ArrayASTNode = TertiaryASTNode<ArrayValue>;
@@ -1250,6 +1462,10 @@ class UnTypedFuncDecl {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 
@@ -1269,6 +1485,10 @@ class TypedFuncDecl {
                                       ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
             return ExprTree::notImpl;
         }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
+        }
 };
 
 using TypedFuncDeclASTNode = QuaternaryASTNode<TypedFuncDecl>;
@@ -1285,6 +1505,10 @@ class FuncCall {
 
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             return ExprTree::notImpl;
+        }
+
+        virtual const vector<string> get_var_names() const {
+            return vector<string>(); // Placeholder
         }
 };
 

@@ -15,7 +15,7 @@ public:
 	std::deque<map> tempmap; //stores previous frame's temps
 	std::deque<std::vector<std::string> > labelmap; 
 	std::deque<map> localsmap;
-	std::deque<map> argsmap; 
+	std::deque<map> argsmap;
 	std::deque<int> stack;
 	map current [3]; //current[0] = current tempmap, current[1] = current localsmap, current[2] = current argsmap
 	std::vector<std::string> currentlabel;
