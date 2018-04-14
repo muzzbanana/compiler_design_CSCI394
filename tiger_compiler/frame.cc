@@ -22,7 +22,9 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 	localsmap.push_back(current[1]);
 	tempmap.push_back(current[0]);
 	labelmap.push_back(currentlabel);
-	namemap current [4]; //reinitialize current
+	current[0] = namemap(); //reinitialize current
+	current[1] = namemap();
+	current[2] = namemap();
 	int i = 0-arguments_passed.size();
 	// push arguments in order, adding them to argsmap
 	for (int j = 0;  j< int(arguments_passed.size()); j++) {
@@ -32,7 +34,7 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 		stack.push_back(0); //value pushed onto the stack
 		sp += 1;
 		i+=1;
-	}
+	};
 	//	-> push current fp as a value
 	stack.push_back(fp);
 	sp += 1;
@@ -44,7 +46,7 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 		current[1].push_back(loc);
 		stack.push_back(0); //value pushed onto the stack
 		sp += 1;
-	}
+	};
 	//	-> push return address <= lastsp?
 	stack.push_back(lastsp);
 	sp += 1;
@@ -92,6 +94,7 @@ int Frame::poptemp() { //pops last temp and returns its value
 		templist.pop_back();
 		int ret = stack.back();
 		stack.pop_back();
+		sp -= 1;
 		return ret;
 	}
 }
@@ -121,28 +124,28 @@ int Frame::assignvar(int i, int offset) {
 int Frame::lookupvar(std::string name){ //takes a local or argument name and returns the fp offset
 	auto localslist = current[1];
 	auto argslist = current[2];
-	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
+	for (auto iter = localslist.rbegin(); iter != localslist.rend(); ++iter){
 		if (iter->first == name){
-			return iter->second+temp1addr.back();
+			return iter->second + temp1addr.back();
 		};
 	};
-	for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
+	for (auto iter = argslist.rbegin(); iter != argslist.rend(); ++iter){
 		if (iter->first == name){
-			return iter->second+temp1addr.back();
+			return iter->second + temp1addr.back();
 		};
 	}; //starts iterating through previous Frames to find the last time that variable was used.
 	int num = 1;
-	for (auto i = localsmap.rbegin(); i != localsmap.rend(); ++i) {
+	for (auto i = localsmap.rbegin(), j = argsmap.rbegin(); i != localsmap.rend(); i++, j++) {
 		localslist = *i;
-		//argslist = j;
+		argslist = *j;
 		for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 			if (iter->first == name){
-				return iter->second+temp1addr[temp1addr.size()-num]; //return value
+				return iter->second + temp1addr[temp1addr.size()-num]; //return value
 			};
 		};
 		for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
 			if (iter->first == name){
-				return iter->second+temp1addr[temp1addr.size()-num]; //return value
+				return iter->second + temp1addr[temp1addr.size()-num]; //return value
 			};
 		};
 		num++;
@@ -150,19 +153,19 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 	return 0;
 }
 
-int main() {
-	std::cout<<"start!\n"<<std::endl;
-	auto f = Frame();
-	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
-	std::string str = "var1";
-	std::string stg = "var2";
-	auto vect = std::vector<std::string>();
-	vect.push_back(str);
-	vect.push_back(stg);
-	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n"<<std::endl;
-	f.pushFrame(vect,std::vector<std::string>());
-	std::cout<< f.lookupvar(str) << f.lookupvar(stg)<<std::endl;
-	f.popFrame();
-	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
-	return 0;
-}
+//int main() {
+//	std::cout<<"start!\n"<<std::endl;
+//	auto f = Frame();
+//	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
+//	std::string str = "var1";
+//	std::string stg = "var2";
+//	auto vect = std::vector<std::string>();
+//	vect.push_back(str);
+//	vect.push_back(stg);
+//	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n"<<std::endl;
+//	f.pushFrame(vect,std::vector<std::string>());
+//	std::cout << f.lookupvar(stg) << f.lookupvar(str) << std::endl;
+//	f.popFrame();
+//	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
+//	return 0;
+//}
