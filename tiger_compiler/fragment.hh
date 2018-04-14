@@ -4,19 +4,13 @@
 #include <string>
 #include <vector>
 #include "irtree.hh"
+#include "frame.hh"
 
 using namespace std;
 
 namespace tiger {
 
 class StmtTree;
-
-/* mock classes */
-class Frame {
-    public:
-        Frame() { }
-        virtual ~Frame() { }
-};
 
 class Fragment {
     protected:

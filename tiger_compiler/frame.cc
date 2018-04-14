@@ -11,7 +11,7 @@ Frame::Frame()
 	{
 	}
 
-int Frame::pushFrame(std::vector<std::string> > arguments_passed, std::vector<std::string> > local_variables){
+int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std::string> local_variables){
 	//pushFrame(vector arguments_passed, vector local_variables)
 
 	//assumed vector of pairs in order (name,value)
@@ -115,6 +115,7 @@ int Frame::lookuptemp(std::string name){ //takes temp name and returns the value
 }
 int Frame::assignvar(int i, int offset) {
 	stack[offset] = i;
+	return 0;
 }
 
 int Frame::lookupvar(std::string name){ //takes a local or argument name and returns the fp offset

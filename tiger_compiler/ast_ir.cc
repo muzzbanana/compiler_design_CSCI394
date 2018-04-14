@@ -2,6 +2,22 @@
 
 namespace tiger {
 
+/* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
+const IRTree *convert_ast(ASTNode::ASTptr ast) {
+    vector<string> local_vars = ast->get_var_names();
+    if (local_vars.size() > 1) {
+        string tmp = local_vars[1];
+        local_vars[1] = local_vars[0];
+        local_vars[0] = tmp;
+        std::cout << local_vars[0] << " " << local_vars[1] << std::endl;
+    }
+
+    Frame *frame = new Frame();
+    vector<string> empty_args;
+    frame->pushFrame(empty_args, local_vars);
+    return ast->convert_to_ir(frame);
+}
+
 const StmtTree *Assignment::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     const IRTree *left = left_->convert_to_ir(frame);
     const IRTree *right = right_->convert_to_ir(frame);
@@ -144,23 +160,20 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
 }
 
 const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    cout << "find fp offset for " << left_->toStr() << endl;
     const IRTree *lhs = left_->convert_to_ir(frame);
+    cout << "it is " << lhs->toStr() << endl;
+
     const IRTree *rhs = right_->convert_to_ir(frame);
 
-    const ExprTree *left;
-    const ExprTree *right;
+    assert(lhs != NULL);
+    assert(rhs != NULL);
+    assert(lhs->isExpr());
+    assert(rhs->isExpr());
 
-    if (lhs->isExpr()) {
-        left = dynamic_cast<const ExprTree*>(lhs);
-    } else {
-        left = new StmtExprTree(dynamic_cast<const StmtTree*>(lhs));
-    }
+    const ExprTree *left = dynamic_cast<const ExprTree*>(lhs);
+    const ExprTree *right = dynamic_cast<const ExprTree*>(rhs);
 
-    if (rhs->isExpr()) {
-        right = dynamic_cast<const ExprTree*>(rhs);
-    } else {
-        right = new StmtExprTree(dynamic_cast<const StmtTree*>(rhs));
-    }
     return new MoveTree(left, right);
 }
 
@@ -182,7 +195,7 @@ const ExprTree *LetBlock::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, AST
     } else {
         inExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(in_block));
     }
-    
+
     return new ExprSeqTree(letStmt,inExpr);
 }
 
@@ -216,7 +229,7 @@ const StmtTree *DeclList::convert_to_ir(Frame *frame, std::vector<const Declarat
 }
 
 const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*> vec_) {
-    auto node = vec_.front();  
+    auto node = vec_.front();
     const IRTree *statement = node->convert_to_ir(frame);
     const StmtTree *seqStmt;
 

@@ -14,7 +14,7 @@
 #include "type.hh"
 #include "scope.hh"
 #include "irtree.hh"
-#include "fragment.hh"
+#include "frame.hh"
 
 using namespace std;
 
@@ -162,8 +162,8 @@ class NumASTNode : public ASTNode {
 class StrASTNode : public ASTNode {
     public:
         StrASTNode(std::string value)
-            : ASTNode(), value_(value)
-        {}
+            : ASTNode(), value_(value) {}
+
         virtual ~StrASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
@@ -223,7 +223,11 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            return new NameTree(new Label(value_));
+            // Wrong, because doesn't look up variables in frame.
+            //return new NameTree(new Label(value_));
+
+            // Right: should always return the same variable in a current frame
+            return new NameTree(value_, frame->lookupvar(value_));
         }
 
         virtual const vector<string> get_var_names() const {
@@ -1394,6 +1398,9 @@ class FuncCall {
 };
 
 using FuncCallASTNode = NoEvalBinaryASTNode<FuncCall>;
+
+/* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
+const IRTree *convert_ast(ASTNode::ASTptr ast);
 
 } // namespace
 

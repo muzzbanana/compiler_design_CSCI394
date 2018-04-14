@@ -149,10 +149,11 @@ class MemTree : public ExprTree {
 
 class NameTree : public ExprTree {
     public:
-        NameTree(Label *label);
+        NameTree(std::string name, int fp_offset);
         ~NameTree() = default;
 
-        Label *label_;
+        std::string name_;
+        int fp_offset_;
 
         string toStr() const;
 };
