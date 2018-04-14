@@ -21,7 +21,6 @@ using namespace std;
 namespace tiger {
 
 inline vector<string> vector_concat(vector<string> a, vector<string> b) {
-    // death
     vector<string> c = vector<string>();
     for (auto x : a) {
         c.push_back(x);
@@ -915,7 +914,6 @@ class WhileDo {
         const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
-            /// . / / hj
             return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
@@ -979,7 +977,7 @@ class TypedVarDeclaration {
         const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
             cout << "typed var decl" << endl;
             return ExprTree::notImpl;
-        }            
+        }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             // the third one

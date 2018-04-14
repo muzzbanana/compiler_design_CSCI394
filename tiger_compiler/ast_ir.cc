@@ -97,44 +97,28 @@ const StmtTree *WhileDo::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTN
 }
 
 const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
-                ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+        ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
     Label *testLabel = new Label("test");
     Label *bodyLabel = new Label("body");
     Label *doneLabel = new Label("done");
 
     const IRTree *variable = one_->convert_to_ir(frame);
+    assert(variable->isExpr());
     const IRTree *start_int = two_->convert_to_ir(frame);
+    assert(start_int->isExpr());
 
-    const ExprTree *varExpr;
     const ExprTree *limitExpr;
     const ExprTree *startExpr;
     const ExprTree *countExpr;
 
-    if (variable->isExpr()) {
-        varExpr = dynamic_cast<const ExprTree*>(variable);
-    } else {
-        varExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(variable));
-    }
+    countExpr = dynamic_cast<const ExprTree*>(variable);
+    startExpr = dynamic_cast<const ExprTree*>(start_int);
 
-    if (start_int->isExpr()) {
-        startExpr = dynamic_cast<const ExprTree*>(start_int);
-    } else {
-        startExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(start_int));
-    }
-
-    const IRTree *counter = new MoveTree(varExpr, startExpr);
-    if (counter->isExpr()) {
-        countExpr = dynamic_cast<const ExprTree*>(counter);
-    } else {
-        countExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(counter));
-    }
+    const StmtTree *initialize = new MoveTree(countExpr, startExpr);
 
     const IRTree *limit = three_->convert_to_ir(frame);
-    if (limit->isExpr()) {
-        limitExpr = dynamic_cast<const ExprTree*>(limit);
-    } else {
-        limitExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(limit));
-    }
+    assert(limit->isExpr());
+    limitExpr = dynamic_cast<const ExprTree*>(limit);
 
     const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
 
@@ -148,14 +132,15 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
 
     const ExprTree *plus = new BinOpTree(IRTree::Operator::PLUS, countExpr, new ConstTree(1));
 
-    return new SeqTree(new LabelTree(testLabel),
+    return new SeqTree(initialize,
+            new SeqTree(new LabelTree(testLabel),
             new SeqTree(new CJumpTree(IRTree::Operator::NE,
-                    conditional, new ConstTree(0), bodyLabel, doneLabel),
-                new SeqTree(new LabelTree(bodyLabel),
-                    new SeqTree(bodyStmt,
-                        new SeqTree(new MoveTree(countExpr, plus),
-                            new SeqTree(new UJumpTree(testLabel),
-                                new SeqTree(new LabelTree(doneLabel), NULL)))))));
+                        conditional, new ConstTree(0), bodyLabel, doneLabel),
+            new SeqTree(new LabelTree(bodyLabel),
+            new SeqTree(bodyStmt,
+            new SeqTree(new MoveTree(countExpr, plus),
+            new SeqTree(new UJumpTree(testLabel),
+            new SeqTree(new LabelTree(doneLabel), NULL))))))));
 }
 
 const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
