@@ -155,10 +155,7 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
 }
 
 const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    cout << "find fp offset for " << left_->toStr() << endl;
     const IRTree *lhs = left_->convert_to_ir(frame);
-    cout << "it is " << lhs->toStr() << endl;
-
     const IRTree *rhs = right_->convert_to_ir(frame);
 
     assert(lhs != NULL);

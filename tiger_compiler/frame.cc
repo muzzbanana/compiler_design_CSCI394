@@ -150,7 +150,7 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 	return 0;
 }
 
-int main() {
+/*int main() {
 	std::cout<<"start!\n"<<std::endl;
 	auto f = Frame();
 	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
@@ -165,4 +165,4 @@ int main() {
 	f.popFrame();
 	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
 	return 0;
-}
+}*/
