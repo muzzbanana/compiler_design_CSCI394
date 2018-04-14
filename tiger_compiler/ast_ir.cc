@@ -155,10 +155,25 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
 }
 
 const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    cout << "find fp offset for " << left_->toStr() << endl;
     const IRTree *lhs = left_->convert_to_ir(frame);
-    cout << "it is " << lhs->toStr() << endl;
+    const IRTree *rhs = right_->convert_to_ir(frame);
 
+    assert(lhs != NULL);
+    assert(rhs != NULL);
+    assert(lhs->isExpr());
+    assert(rhs->isExpr());
+
+    const ExprTree *left = dynamic_cast<const ExprTree*>(lhs);
+    const ExprTree *right = dynamic_cast<const ExprTree*>(rhs);
+
+    return new MoveTree(left, right);
+}
+
+const StmtTree *TypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+    /* This is exactly the same as UntypedVarDeclaration,
+     * because we don't care about the type at this point
+     * (assuming it already got checked by semantic_checks) */
+    const IRTree *lhs = left_->convert_to_ir(frame);
     const IRTree *rhs = right_->convert_to_ir(frame);
 
     assert(lhs != NULL);

@@ -35,7 +35,7 @@ NameTree::NameTree(Label *label) : ExprTree(tt::NAME), label_(label) { }
 
 TempTree::TempTree(Temp *temp) : ExprTree(tt::TEMP), temp_(temp) { }
 
-VarTree::VarTree(std::string name, int fp_offset) : ExprTree(tt::VAR), name_(name), fp_offset_(fp_offset) { }
+VarTree::VarTree(std::string name, int offset) : ExprTree(tt::VAR), name_(name), offset_(offset) { }
 
 /* statement trees */
 
@@ -162,7 +162,7 @@ string VarTree::toStr() const {
     ss << "[";
     ss << name_;
     ss << " fp+";
-    ss << fp_offset_;
+    ss << offset_;
     ss << "]";
     return ss.str();
 }
