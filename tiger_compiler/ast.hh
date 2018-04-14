@@ -223,11 +223,9 @@ class NameASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(Frame *frame) const {
-            // Wrong, because doesn't look up variables in frame.
-            //return new NameTree(new Label(value_));
-
-            // Right: should always return the same variable in a current frame
-            return new NameTree(value_, frame->lookupvar(value_));
+            /* Now returns a new shiny VarTree, since NameTree is (I think?) for
+             * static data that is labeled with a label in asm. */
+            return new VarTree(value_, frame->lookupvar(value_));
         }
 
         virtual const vector<string> get_var_names() const {
@@ -573,23 +571,19 @@ template <class O>
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
                     ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), left_(left),
-                middle_(middle), right_(right), parens_(parens), location_(loc)
-        {}
+                middle_(middle), right_(right), parens_(parens), location_(loc) { }
 
             TertiaryASTNode(std::string rep1, std::string rep2, std::string rep3,
                     ASTptr left, ASTptr middle, ASTptr right, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(""), left_(left),
-                middle_(middle), right_(right), parens_(parens), location_(loc)
-        {}
+                middle_(middle), right_(right), parens_(parens), location_(loc) { }
 
             TertiaryASTNode(std::string rep1, std::string rep2, ASTptr left, ASTptr middle, ASTptr right,
                     int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(""), rep4_(""), left_(left), middle_(middle),
-                right_(right), parens_(parens), location_(loc)
-        {}
+                right_(right), parens_(parens), location_(loc) { }
 
-            virtual ~TertiaryASTNode()
-            {
+            virtual ~TertiaryASTNode() {
                 delete left_;
                 delete middle_;
                 delete right_;
@@ -600,14 +594,12 @@ template <class O>
                 return op.type_verify(scope, left_, middle_, right_, location_);
             }
 
-            value_t eval() const
-            {
+            value_t eval() const {
                 auto op = O();
                 return op(left_, middle_, right_);
             }
 
-            virtual std::string toStr() const
-            {
+            virtual std::string toStr() const {
                 std::stringstream ss;
                 if (parens_) {
                     ss << "(";
@@ -678,14 +670,12 @@ template <class O>
             QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4,
                     ASTptr one, ASTptr two, ASTptr three, ASTptr four, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(""),
-                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc)
-        {}
+                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc) { }
 
             QuaternaryASTNode(std::string rep1, std::string rep2, std::string rep3, std::string rep4, std::string rep5,
                     ASTptr one, ASTptr two, ASTptr three, ASTptr four, int loc, bool parens=true)
                 : ASTNode(), rep1_(rep1), rep2_(rep2), rep3_(rep3), rep4_(rep4), rep5_(rep5),
-                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc)
-        {}
+                one_(one), two_(two), three_(three), four_(four), parens_(parens), location_(loc) { }
 
             virtual ~QuaternaryASTNode()
             {

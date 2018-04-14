@@ -23,6 +23,7 @@ class IRTree {
             MEM,
             NAME,
             TEMP,
+            VAR,
             EXPR,
             CJUMP,
             UJUMP,
@@ -148,22 +149,40 @@ class MemTree : public ExprTree {
 };
 
 class NameTree : public ExprTree {
+    /* Represents static data that has a label
+     * in the code. e.g. string literals. */
     public:
-        NameTree(std::string name, int fp_offset);
+        NameTree(Label *label);
         ~NameTree() = default;
 
-        std::string name_;
-        int fp_offset_;
+        Label *label_;
 
         string toStr() const;
 };
 
 class TempTree : public ExprTree {
+    /* Represents a temporary value for intermediate
+     * results in calculations. */
     public:
         TempTree(Temp *temp);
         ~TempTree() = default;
 
         Temp *temp_;
+
+        string toStr() const;
+};
+
+class VarTree : public ExprTree {
+    /* Represents a variable; has an index
+     * representing its offset from the frame
+     * pointer (which is negative for arguments,
+     * positive for local variables) */
+    public:
+        VarTree(std::string name, int fp_offset);
+        ~VarTree() = default;
+
+        std::string name_;
+        int fp_offset_;
 
         string toStr() const;
 };
