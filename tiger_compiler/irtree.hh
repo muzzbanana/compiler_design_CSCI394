@@ -178,11 +178,11 @@ class VarTree : public ExprTree {
      * pointer (which is negative for arguments,
      * positive for local variables) */
     public:
-        VarTree(std::string name, int fp_offset);
+        VarTree(std::string name, int offset);
         ~VarTree() = default;
 
         std::string name_;
-        int fp_offset_;
+        int offset_;
 
         string toStr() const;
 };

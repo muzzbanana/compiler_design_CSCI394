@@ -169,6 +169,24 @@ const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTp
     return new MoveTree(left, right);
 }
 
+const StmtTree *TypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+    /* This is exactly the same as UntypedVarDeclaration,
+     * because we don't care about the type at this point
+     * (assuming it already got checked by semantic_checks) */
+    const IRTree *lhs = left_->convert_to_ir(frame);
+    const IRTree *rhs = right_->convert_to_ir(frame);
+
+    assert(lhs != NULL);
+    assert(rhs != NULL);
+    assert(lhs->isExpr());
+    assert(rhs->isExpr());
+
+    const ExprTree *left = dynamic_cast<const ExprTree*>(lhs);
+    const ExprTree *right = dynamic_cast<const ExprTree*>(rhs);
+
+    return new MoveTree(left, right);
+}
+
 const ExprTree *LetBlock::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     const IRTree *let_block = left_->convert_to_ir(frame);
     const IRTree *in_block = right_->convert_to_ir(frame);
