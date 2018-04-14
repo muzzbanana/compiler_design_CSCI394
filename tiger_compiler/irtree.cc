@@ -31,9 +31,11 @@ ExprSeqTree::ExprSeqTree(const StmtTree *stmt, const ExprTree *expr)
 
 MemTree::MemTree(const ExprTree *expr) : ExprTree(tt::MEM), expr_(expr) { }
 
-NameTree::NameTree(std::string name, int fp_offset) : ExprTree(tt::NAME), name_(name), fp_offset_(fp_offset) { }
+NameTree::NameTree(Label *label) : ExprTree(tt::NAME), label_(label) { }
 
 TempTree::TempTree(Temp *temp) : ExprTree(tt::TEMP), temp_(temp) { }
+
+VarTree::VarTree(std::string name, int fp_offset) : ExprTree(tt::VAR), name_(name), fp_offset_(fp_offset) { }
 
 /* statement trees */
 
@@ -145,16 +147,23 @@ string MemTree::toStr() const {
 string NameTree::toStr() const {
     stringstream ss;
     ss << "name ";
-    ss << name_;
-    ss << " [fp+";
-    ss << fp_offset_;
-    ss << "]";
+    ss << label_->toStr();
     return ss.str();
 }
 
 string TempTree::toStr() const {
     stringstream ss;
     ss << temp_->toStr();
+    return ss.str();
+}
+
+string VarTree::toStr() const {
+    stringstream ss;
+    ss << "[";
+    ss << name_;
+    ss << " fp+";
+    ss << fp_offset_;
+    ss << "]";
     return ss.str();
 }
 

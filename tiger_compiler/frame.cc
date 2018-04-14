@@ -33,13 +33,13 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 		sp += 1;
 		i+=1;
 	}
-	//	-> push current fp as a value 
+	//	-> push current fp as a value
 	stack.push_back(fp);
 	sp += 1;
 	fp = sp;
 	//	-> add locals in order to stack and localsmap
 	for (int h = 0; h < int(local_variables.size()); h++) {
-		std::string local = local_variables[h]; 
+		std::string local = local_variables[h];
 		auto loc = std::make_pair(local,h);//name and offset from fp
 		current[1].push_back(loc);
 		stack.push_back(0); //value pushed onto the stack
@@ -54,10 +54,10 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 }
 
 int Frame::popFrame(){
-	//popFrame() 
-	//	-> takes fp and pops everything before on the stack, 
+	//popFrame()
+	//	-> takes fp and pops everything before on the stack,
 	while (int(stack.size())>fp) {stack.pop_back();}
-	//	-> pop *map, pop temp1addr, 
+	//	-> pop *map, pop temp1addr,
 	current[0] = tempmap.back();
 	tempmap.pop_back();
 	currentlabel = labelmap.back();
@@ -67,7 +67,7 @@ int Frame::popFrame(){
 	current[2] = argsmap.back();
 	argsmap.pop_back();
 	temp1addr.pop_back();
-	//	-> fp = return address (temp1addr-1), 
+	//	-> fp = return address (temp1addr-1),
 	fp = stack[fp-1];
 	//	-> sp = fp
 	sp = fp;
@@ -111,7 +111,7 @@ int Frame::lookuptemp(std::string name){ //takes temp name and returns the value
 			return iter->second+temp1addr.back();
 		};
 	};
-	return (-1); 
+	return (-1);
 }
 int Frame::assignvar(int i, int offset) {
 	stack[offset] = i;
@@ -131,10 +131,24 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 			return iter->second+temp1addr.back();
 		};
 	}; //starts iterating through previous Frames to find the last time that variable was used.
+<<<<<<< HEAD
 	int num = 1;
 	for (auto i = localsmap.rbegin(); i != localsmap.rend(); ++i) {
 		localslist = *i;
 		//argslist = j;
+=======
+	auto cleanup = std::deque<namemap>(); //to store popped maps until they can be pushed back on in order.
+	auto cleanuptemp1addr = std::deque<int>();
+	while (argsmap.empty() == 0) {
+		cleanup.push_back(localslist); //clears the previous Frames lists
+		cleanup.push_back(argslist);
+		cleanuptemp1addr.push_back(temp1addr.back());
+		temp1addr.pop_back();
+		localslist = localsmap.back(); //pops on the next set of Frame maps
+		localsmap.pop_back();
+		argslist = argsmap.back();
+		argsmap.pop_back();
+>>>>>>> 68dadf3c6cf7ebc5da0a80031c95e7322b5f1d19
 		for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 			if (iter->first == name){
 				return iter->second+temp1addr[temp1addr.size()-num]; //return value
@@ -145,9 +159,27 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 				return iter->second+temp1addr[temp1addr.size()-num]; //return value
 			};
 		};
+<<<<<<< HEAD
 		num++;
 	} ;//if no return here, the variable isn't in any map
 	return 0; 
+=======
+
+	} //if no return here, the variable isn't in any map
+	localsmap.push_back(localslist);
+	argsmap.push_back(argslist);
+	while (cleanup.empty() == 0) {
+		argsmap.push_back(cleanup.back());
+		cleanup.pop_back();
+		localsmap.push_back(cleanup.back());
+		cleanup.pop_back();
+	}
+	while(cleanuptemp1addr.empty()==0) { //clean up temp1address
+		temp1addr.push_back(cleanuptemp1addr.back());
+		cleanuptemp1addr.pop_back();
+	}
+	return 0;
+>>>>>>> 68dadf3c6cf7ebc5da0a80031c95e7322b5f1d19
 }
 
 int main() {
