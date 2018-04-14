@@ -131,84 +131,38 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 			return iter->second+temp1addr.back();
 		};
 	}; //starts iterating through previous Frames to find the last time that variable was used.
-	auto cleanup = std::deque<namemap>(); //to store popped maps until they can be pushed back on in order.
-	auto cleanuptemp1addr = std::deque<int>();
-	while (argsmap.empty() == 0) {
-		cleanup.push_back(localslist); //clears the previous Frames lists
-		cleanup.push_back(argslist);
-		cleanuptemp1addr.push_back(temp1addr.back());
-		temp1addr.pop_back();
-		localslist = localsmap.back(); //pops on the next set of Frame maps
-		localsmap.pop_back();
-		argslist = argsmap.back();
-		argsmap.pop_back(); 
+	int num = 1;
+	for (auto i = localsmap.rbegin(); i != localsmap.rend(); ++i) {
+		localslist = *i;
+		//argslist = j;
 		for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 			if (iter->first == name){
-				//flush cleanup
-				localsmap.push_back(localslist);
-				argsmap.push_back(argslist);
-				while (cleanup.empty() == 0) {
-					argsmap.push_back(cleanup.back());
-					cleanup.pop_back();
-					localsmap.push_back(cleanup.back());
-					cleanup.pop_back();
-				}
-				while(cleanuptemp1addr.empty()==0) { //clean up temp1address
-					temp1addr.push_back(cleanuptemp1addr.back());
-					cleanuptemp1addr.pop_back();
-				}
-				return iter->second; //return value
+				return iter->second+temp1addr[temp1addr.size()-num]; //return value
 			};
 		};
 		for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
 			if (iter->first == name){
-				//flush cleanup
-				localsmap.push_back(localslist);
-				argsmap.push_back(argslist);
-				while (cleanup.empty() == 0) {
-					argsmap.push_back(cleanup.back());
-					cleanup.pop_back();
-					localsmap.push_back(cleanup.back());
-					cleanup.pop_back();
-				}
-				while(cleanuptemp1addr.empty()==0) { //clean up temp1address
-					temp1addr.push_back(cleanuptemp1addr.back());
-					cleanuptemp1addr.pop_back();
-				}
-				return iter->second; //return value
+				return iter->second+temp1addr[temp1addr.size()-num]; //return value
 			};
 		};
-
-	} //if no return here, the variable isn't in any map
-	localsmap.push_back(localslist);
-	argsmap.push_back(argslist);
-	while (cleanup.empty() == 0) {
-		argsmap.push_back(cleanup.back());
-		cleanup.pop_back();
-		localsmap.push_back(cleanup.back());
-		cleanup.pop_back();
-	}
-	while(cleanuptemp1addr.empty()==0) { //clean up temp1address
-		temp1addr.push_back(cleanuptemp1addr.back());
-		cleanuptemp1addr.pop_back();
-	}
+		num++;
+	} ;//if no return here, the variable isn't in any map
 	return 0; 
 }
 
-//int main() {
-//	std::cout<<"start!\n";
-//	auto f = Frame();
-//	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n";
-//	std::string str = "var1";
-//	auto a = make_pair(str,2);
-//	std::string stg = "var2";
-//	auto b = make_pair(stg,18);
-//	map vect;
-//	vect.push_back(a);
-//	vect.push_back(b);
-//	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n";
-//	f.pushFrame(vect,vect);
-//	f.popFrame();
-//	std::cout << "did not technically abort!!!!!!1\n\n";
-//	return 0;
-//}
+int main() {
+	std::cout<<"start!\n"<<std::endl;
+	auto f = Frame();
+	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
+	std::string str = "var1";
+	std::string stg = "var2";
+	auto vect = std::vector<std::string>();
+	vect.push_back(str);
+	vect.push_back(stg);
+	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n"<<std::endl;
+	f.pushFrame(vect,std::vector<std::string>());
+	std::cout<< f.lookupvar(str) << f.lookupvar(stg)<<std::endl;
+	f.popFrame();
+	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
+	return 0;
+}
