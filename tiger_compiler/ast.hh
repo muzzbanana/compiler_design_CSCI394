@@ -21,7 +21,6 @@ using namespace std;
 namespace tiger {
 
 inline vector<string> vector_concat(vector<string> a, vector<string> b) {
-    // death
     vector<string> c = vector<string>();
     for (auto x : a) {
         c.push_back(x);
@@ -886,6 +885,7 @@ class Assignment {
             const IRTree *right = right_->convert_to_ir(frame);
             const ExprTree *leftExpr;
             const ExprTree *rightExpr;
+
             if (left->isExpr()) {
                 leftExpr = dynamic_cast<const ExprTree*>(left);
             } else {
@@ -1018,7 +1018,6 @@ class WhileDo {
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
-            /// . / / hj
             return vector_concat(left_->get_var_names(), right_->get_var_names());
         }
 };
@@ -1043,38 +1042,23 @@ class ForTo {
             Label *doneLabel = new Label("done");
 
             const IRTree *variable = one_->convert_to_ir(frame);
+            assert(variable->isExpr());
             const IRTree *start_int = two_->convert_to_ir(frame);
+            assert(start_int->isExpr());
 
             const ExprTree *varExpr;
             const ExprTree *limitExpr;
             const ExprTree *startExpr;
             const ExprTree *countExpr;
 
-            if (variable->isExpr()) {
-                varExpr = dynamic_cast<const ExprTree*>(variable);
-            } else {
-                varExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(variable));
-            }
+            varExpr = dynamic_cast<const ExprTree*>(variable);
+            startExpr = dynamic_cast<const ExprTree*>(start_int);
 
-            if (start_int->isExpr()) {
-                startExpr = dynamic_cast<const ExprTree*>(start_int);
-            } else {
-                startExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(start_int));
-            }
-
-            const IRTree *counter = new MoveTree(varExpr, startExpr);
-            if (counter->isExpr()) {
-                countExpr = dynamic_cast<const ExprTree*>(counter);
-            } else {
-                countExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(counter));
-            }
+            const StmtTree *initialize = new MoveTree(varExpr, startExpr);
 
             const IRTree *limit = three_->convert_to_ir(frame);
-            if (limit->isExpr()) {
-                limitExpr = dynamic_cast<const ExprTree*>(limit);
-            } else {
-                limitExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(limit));
-            }
+            assert(limit->isExpr());
+            limitExpr = dynamic_cast<const ExprTree*>(limit);
 
             const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
 
@@ -1088,14 +1072,15 @@ class ForTo {
 
             const ExprTree *plus = new BinOpTree(IRTree::Operator::PLUS, countExpr, new ConstTree(1));
 
-            return new SeqTree(new LabelTree(testLabel),
+            return new SeqTree(initialize,
+                    new SeqTree(new LabelTree(testLabel),
                     new SeqTree(new CJumpTree(IRTree::Operator::NE,
                             conditional, new ConstTree(0), bodyLabel, doneLabel),
-                        new SeqTree(new LabelTree(bodyLabel),
-                            new SeqTree(bodyStmt,
-                                new SeqTree(new MoveTree(countExpr, plus),
-                                    new SeqTree(new UJumpTree(testLabel),
-                                        new SeqTree(new LabelTree(doneLabel), NULL)))))));
+                    new SeqTree(new LabelTree(bodyLabel),
+                    new SeqTree(bodyStmt,
+                    new SeqTree(new MoveTree(countExpr, plus),
+                    new SeqTree(new UJumpTree(testLabel),
+                    new SeqTree(new LabelTree(doneLabel), NULL)))))));
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
