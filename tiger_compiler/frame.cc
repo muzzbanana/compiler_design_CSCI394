@@ -17,18 +17,19 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	//assumed vector of pairs in order (name,value)
 	//	-> lastsp=self.sp
 	int lastsp = sp;
-	//	-> push new *map, push arguments in order, adding them to argsmap
+	//	-> push new *maps,
 	argsmap.push_back(current[2]);
 	localsmap.push_back(current[1]);
 	tempmap.push_back(current[0]);
 	labelmap.push_back(currentlabel);
 	map current [4]; //reinitialize current
 	int i = 0-arguments_passed.size();
+	// push arguments in order, adding them to argsmap
 	for (int j = 0;  j< int(arguments_passed.size()); j++) {
 		std::pair<std::string,int> arg = arguments_passed[j];
-		std::pair<std::string,int> argum = std::make_pair(std::get<0>(arg),sp);//name and current sp
+		std::pair<std::string,int> argum = std::make_pair(std::get<0>(arg),i); //name and negative fp offset
 		current[2].push_back(argum);
-		stack.push_back(std::get<1>(arg)); //value
+		stack.push_back(std::get<1>(arg)); //value pushed onto the stack
 		sp += 1;
 		i+=1;
 	}
@@ -39,9 +40,9 @@ int frame::pushframe(map arguments_passed, map local_variables){
 	//	-> add locals in order to stack and localsmap
 	for (int h = 0; h < int(local_variables.size()); h++) {
 		std::pair<std::string,int> local = local_variables[h]; 
-		auto loc = std::make_pair(std::get<0>(local),sp);//name and current sp
+		auto loc = std::make_pair(std::get<0>(local),h);//name and offset from fp
 		current[1].push_back(loc);
-		stack.push_back(std::get<1>(local)); //value
+		stack.push_back(std::get<1>(local)); //value pushed onto the stack
 		sp += 1;
 	}
 	//	-> push return address <= lastsp?
@@ -74,14 +75,26 @@ int frame::popframe(){
 
 }
 
-int frame::addtemp(std::string name,int value){
+int frame::addtemp(std::string name,int value){ //adds new temporary to the stack and maps the name to the stack address
 	auto templist = current[0];
-	std::pair<std::string,int> newpair (name,value);
+	std::pair<std::string,int> newpair (name,templist.size());
 	templist.push_back(newpair);
+	stack.push_back(value);
+	sp +=1;
 	return 0;
 }
 
-//needs: poptemp 
+int frame::poptemp() { //pops last temp and returns its value
+	auto templist = current[0];
+	if (templist.empty()==1) {
+		return (-1);
+	} else {
+		templist.pop_back();
+		int ret = stack.back();
+		stack.pop_back();
+		return ret;
+	}
+}
 
 int frame::addlabel(std::string name){ //probably useless, but here if we need it again
 	auto labellist = currentlabel;
@@ -91,37 +104,40 @@ int frame::addlabel(std::string name){ //probably useless, but here if we need i
 
 
 
-int frame::lookuptemp(std::string name){
+int frame::lookuptemp(std::string name){ //takes temp name and returns the value
 	auto templist = current[0];
 	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
 		if (iter->first == name){
-			return iter->second;
+			return stack[iter->second+temp1addr.back()];
 		};
 	};
 	return (-1); 
 }
 
-int frame::lookupvar(std::string name){
+int frame::lookupvar(std::string name){ //takes a local or argument name and returns the fp offset
 	auto localslist = current[1];
 	auto argslist = current[2];
 	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 		if (iter->first == name){
-			return iter->second;
+			return stack[iter->second+temp1addr.back()];
 		};
 	};
 	for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
 		if (iter->first == name){
-			return iter->second;
+			return stack[iter->second+temp1addr.back()];
 		};
 	}; //starts iterating through previous frames to find the last time that variable was used.
-	auto cleanup = std::deque<map>();
+	auto cleanup = std::deque<map>(); //to store popped maps until they can be pushed back on in order.
+	auto cleanuptemp1addr = std::deque<int>();
 	while (argsmap.empty() == 0) {
-		cleanup.push_back(localslist);
+		cleanup.push_back(localslist); //clears the previous frames lists
 		cleanup.push_back(argslist);
-		localslist = localsmap.back();
+		cleanuptemp1addr.push_back(temp1addr.back());
+		temp1addr.pop_back();
+		localslist = localsmap.back(); //pops on the next set of frame maps
 		localsmap.pop_back();
 		argslist = argsmap.back();
-		argsmap.pop_back(); //find the next set of frame maps
+		argsmap.pop_back(); 
 		for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 			if (iter->first == name){
 				//flush cleanup
@@ -133,7 +149,11 @@ int frame::lookupvar(std::string name){
 					localsmap.push_back(cleanup.back());
 					cleanup.pop_back();
 				}
-				return iter->second;
+				while(cleanuptemp1addr.empty()==0) { //clean up temp1address
+					temp1addr.push_back(cleanuptemp1addr.back());
+					cleanuptemp1addr.pop_back();
+				}
+				return iter->second; //return value
 			};
 		};
 		for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
@@ -147,7 +167,11 @@ int frame::lookupvar(std::string name){
 					localsmap.push_back(cleanup.back());
 					cleanup.pop_back();
 				}
-				return iter->second;
+				while(cleanuptemp1addr.empty()==0) { //clean up temp1address
+					temp1addr.push_back(cleanuptemp1addr.back());
+					cleanuptemp1addr.pop_back();
+				}
+				return iter->second; //return value
 			};
 		};
 
@@ -159,6 +183,10 @@ int frame::lookupvar(std::string name){
 		cleanup.pop_back();
 		localsmap.push_back(cleanup.back());
 		cleanup.pop_back();
+	}
+	while(cleanuptemp1addr.empty()==0) { //clean up temp1address
+		temp1addr.push_back(cleanuptemp1addr.back());
+		cleanuptemp1addr.pop_back();
 	}
 	return (-1); 
 }
