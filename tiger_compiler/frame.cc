@@ -6,13 +6,13 @@
 #include <iostream>
 
 
-frame::frame()
+Frame::Frame()
 	:fp(0),sp(0),tempmap(),labelmap(),localsmap(),argsmap(),stack(),current(),currentlabel(),temp1addr()
 	{
 	}
 
-int frame::pushframe(std::vector<std::string> > arguments_passed, std::vector<std::string> > local_variables){
-	//pushframe(vector arguments_passed, vector local_variables)
+int Frame::pushFrame(std::vector<std::string> > arguments_passed, std::vector<std::string> > local_variables){
+	//pushFrame(vector arguments_passed, vector local_variables)
 
 	//assumed vector of pairs in order (name,value)
 	//	-> lastsp=self.sp
@@ -53,8 +53,8 @@ int frame::pushframe(std::vector<std::string> > arguments_passed, std::vector<st
 	return 0;
 }
 
-int frame::popframe(){
-	//popframe() 
+int Frame::popFrame(){
+	//popFrame() 
 	//	-> takes fp and pops everything before on the stack, 
 	while (int(stack.size())>fp) {stack.pop_back();}
 	//	-> pop *map, pop temp1addr, 
@@ -75,7 +75,7 @@ int frame::popframe(){
 
 }
 
-int frame::addtemp(std::string name,int value){ //adds new temporary to the stack and maps the name to the stack address
+int Frame::addtemp(std::string name,int value){ //adds new temporary to the stack and maps the name to the stack address
 	auto templist = current[0];
 	std::pair<std::string,int> newpair (name,templist.size());
 	templist.push_back(newpair);
@@ -84,7 +84,7 @@ int frame::addtemp(std::string name,int value){ //adds new temporary to the stac
 	return 0;
 }
 
-int frame::poptemp() { //pops last temp and returns its value
+int Frame::poptemp() { //pops last temp and returns its value
 	auto templist = current[0];
 	if (templist.empty()==1) {
 		return (-1);
@@ -96,7 +96,7 @@ int frame::poptemp() { //pops last temp and returns its value
 	}
 }
 
-int frame::addlabel(std::string name){ //probably useless, but here if we need it again
+int Frame::addlabel(std::string name){ //probably useless, but here if we need it again
 	auto labellist = currentlabel;
 	labellist.push_back(name);
 	return 0;
@@ -104,7 +104,7 @@ int frame::addlabel(std::string name){ //probably useless, but here if we need i
 
 
 
-int frame::lookuptemp(std::string name){ //takes temp name and returns the value
+int Frame::lookuptemp(std::string name){ //takes temp name and returns the value
 	auto templist = current[0];
 	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
 		if (iter->first == name){
@@ -113,11 +113,11 @@ int frame::lookuptemp(std::string name){ //takes temp name and returns the value
 	};
 	return (-1); 
 }
-int frame::assignvar(int i, int offset) {
+int Frame::assignvar(int i, int offset) {
 	stack[offset] = i;
 }
 
-int frame::lookupvar(std::string name){ //takes a local or argument name and returns the fp offset
+int Frame::lookupvar(std::string name){ //takes a local or argument name and returns the fp offset
 	auto localslist = current[1];
 	auto argslist = current[2];
 	for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
@@ -129,15 +129,15 @@ int frame::lookupvar(std::string name){ //takes a local or argument name and ret
 		if (iter->first == name){
 			return iter->second+temp1addr.back();
 		};
-	}; //starts iterating through previous frames to find the last time that variable was used.
+	}; //starts iterating through previous Frames to find the last time that variable was used.
 	auto cleanup = std::deque<map>(); //to store popped maps until they can be pushed back on in order.
 	auto cleanuptemp1addr = std::deque<int>();
 	while (argsmap.empty() == 0) {
-		cleanup.push_back(localslist); //clears the previous frames lists
+		cleanup.push_back(localslist); //clears the previous Frames lists
 		cleanup.push_back(argslist);
 		cleanuptemp1addr.push_back(temp1addr.back());
 		temp1addr.pop_back();
-		localslist = localsmap.back(); //pops on the next set of frame maps
+		localslist = localsmap.back(); //pops on the next set of Frame maps
 		localsmap.pop_back();
 		argslist = argsmap.back();
 		argsmap.pop_back(); 
@@ -196,8 +196,8 @@ int frame::lookupvar(std::string name){ //takes a local or argument name and ret
 
 //int main() {
 //	std::cout<<"start!\n";
-//	auto f = frame();
-//	std::cout<<"initialized frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n";
+//	auto f = Frame();
+//	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n";
 //	std::string str = "var1";
 //	auto a = make_pair(str,2);
 //	std::string stg = "var2";
@@ -206,8 +206,8 @@ int frame::lookupvar(std::string name){ //takes a local or argument name and ret
 //	vect.push_back(a);
 //	vect.push_back(b);
 //	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n";
-//	f.pushframe(vect,vect);
-//	f.popframe();
+//	f.pushFrame(vect,vect);
+//	f.popFrame();
 //	std::cout << "did not technically abort!!!!!!1\n\n";
 //	return 0;
 //}
