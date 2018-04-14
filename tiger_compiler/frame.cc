@@ -51,7 +51,7 @@ int Frame::pushFrame(std::vector<std::string> arguments_passed, std::vector<std:
 	stack.push_back(lastsp);
 	sp += 1;
 	//	-> push self.temp1addr <= self.sp
-	temp1addr.push_back(sp);
+	temp1addr.push_back(fp);
 	return 0;
 }
 
@@ -111,7 +111,7 @@ int Frame::lookuptemp(std::string name){ //takes temp name and returns the value
 	auto templist = current[0];
 	for (auto iter = templist.begin(); iter != templist.end(); ++iter){
 		if (iter->first == name){
-			return iter->second+temp1addr.back();
+			return iter->second;
 		};
 	};
 	return (-1);
@@ -126,12 +126,12 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 	auto argslist = current[2];
 	for (auto iter = localslist.rbegin(); iter != localslist.rend(); ++iter){
 		if (iter->first == name){
-			return iter->second + temp1addr.back();
+			return iter->second;
 		};
 	};
 	for (auto iter = argslist.rbegin(); iter != argslist.rend(); ++iter){
 		if (iter->first == name){
-			return iter->second + temp1addr.back();
+			return iter->second;
 		};
 	}; //starts iterating through previous Frames to find the last time that variable was used.
 	int num = 1;
@@ -140,12 +140,12 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 		argslist = *j;
 		for (auto iter = localslist.begin(); iter != localslist.end(); ++iter){
 			if (iter->first == name){
-				return iter->second + temp1addr[temp1addr.size()-num]; //return value
+				return iter->second - (temp1addr.back() - temp1addr[temp1addr.size()-num]); //return fp offset
 			};
 		};
 		for (auto iter = argslist.begin(); iter != argslist.end(); ++iter){
 			if (iter->first == name){
-				return iter->second + temp1addr[temp1addr.size()-num]; //return value
+				return iter->second - (temp1addr.back() - temp1addr[temp1addr.size()-num]); //return fp offset
 			};
 		};
 		num++;
@@ -153,19 +153,19 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 	return 0;
 }
 
-//int main() {
-//	std::cout<<"start!\n"<<std::endl;
-//	auto f = Frame();
-//	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
-//	std::string str = "var1";
-//	std::string stg = "var2";
-//	auto vect = std::vector<std::string>();
-//	vect.push_back(str);
-//	vect.push_back(stg);
-//	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n"<<std::endl;
-//	f.pushFrame(vect,std::vector<std::string>());
-//	std::cout << f.lookupvar(stg) << f.lookupvar(str) << std::endl;
-//	f.popFrame();
-//	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
-//	return 0;
-//}
+int main() {
+	std::cout<<"start!\n"<<std::endl;
+	auto f = Frame();
+	std::cout<<"initialized Frame!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111\n\n"<<std::endl;
+	std::string str = "var1";
+	std::string stg = "var2";
+	auto vect = std::vector<std::string>();
+	vect.push_back(str);
+	vect.push_back(stg);
+	std::cout<<"map made!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111111\n\n"<<std::endl;
+	f.pushFrame(vect,std::vector<std::string>());
+	std::cout << f.lookupvar(stg) << f.lookupvar(str) << std::endl;
+	f.popFrame();
+	std::cout << "did not technically abort!!!!!!1\n\n"<<std::endl;
+	return 0;
+}
