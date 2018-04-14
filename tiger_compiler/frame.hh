@@ -23,7 +23,7 @@ public:
 
 	int pushFrame(std::vector<std::string> arguments_passed, std::vector<std::string> local_variables);//pushes new Frame
 	int popFrame(); //pops said newest Frame
-	int addtemp(std::string name,int value); //adds temporary to current Frame
+	int addtemp(std::string name); //adds temporary to current Frame
 	int poptemp(); //pops last temporary from Frame
 	int addlabel(std::string);
 	int lookuptemp(std::string name); //returns the temporary's sp offset
