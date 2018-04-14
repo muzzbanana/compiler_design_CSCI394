@@ -10,23 +10,24 @@ class frame {
 public:
 	frame();
 	~frame()=default;
-	int fp;
-	int sp;
+	int fp; //frame pointer
+	int sp; //stack pointer
 	std::deque<map> tempmap; //stores previous frame's temps
 	std::deque<std::vector<std::string> > labelmap; 
-	std::deque<map> localsmap;
-	std::deque<map> argsmap;
-	std::deque<int> stack;
+	std::deque<map> localsmap; //stores previous frame's locals
+	std::deque<map> argsmap; //stores previous frame's arguments
+	std::deque<int> stack; //the representation of the actual stack 
 	map current [3]; //current[0] = current tempmap, current[1] = current localsmap, current[2] = current argsmap
-	std::vector<std::string> currentlabel;
-	std::deque<int> temp1addr;
+	std::vector<std::string> currentlabel; 
+	std::deque<int> temp1addr; //makes sure to keep track of the first temp address for each stack.
 	
-	int pushframe(map arguments_passed, map local_variables);
-	int popframe();
-	int addtemp(std::string name,int value);
-	int addlabel(std::string);
-	int lookuptemp(std::string name);
-	int lookupvar(std::string name);
+	int pushframe(map arguments_passed, map local_variables);//pushes new frame
+	int popframe(); //pops said newest frame
+	int addtemp(std::string name,int value); //adds temporary to current frame
+	int poptemp(); //pops last temporary from frame
+	int addlabel(std::string); 
+	int lookuptemp(std::string name); //returns the temporary's current value
+	int lookupvar(std::string name); //returns the value of the local or argument
 
 
 private:

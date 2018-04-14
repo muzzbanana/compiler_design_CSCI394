@@ -168,3 +168,17 @@ TEST_CASE("check var-name-listing", "[var-names]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check variable decleration", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/var_decl.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const IRTree *ir = output->convert_to_ir(NULL);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    delete output;
+    fclose(myfile);
+}
