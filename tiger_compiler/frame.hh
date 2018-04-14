@@ -21,12 +21,13 @@ public:
 	std::vector<std::string> currentlabel; 
 	std::deque<int> temp1addr; //makes sure to keep track of the first temp address for each stack.
 	
-	int pushframe(map arguments_passed, map local_variables);//pushes new frame
+	int pushframe(std::vector<std::string> > arguments_passed, std::vector<std::string> > local_variables);//pushes new frame
 	int popframe(); //pops said newest frame
 	int addtemp(std::string name,int value); //adds temporary to current frame
 	int poptemp(); //pops last temporary from frame
 	int addlabel(std::string); 
 	int lookuptemp(std::string name); //returns the temporary's current value
+	int assignvar(int i, int offset);
 	int lookupvar(std::string name); //returns the value of the local or argument
 
 
