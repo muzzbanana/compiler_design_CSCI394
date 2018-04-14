@@ -22,7 +22,7 @@ int Frame::pushFrame(std::vector<std::string> > arguments_passed, std::vector<st
 	localsmap.push_back(current[1]);
 	tempmap.push_back(current[0]);
 	labelmap.push_back(currentlabel);
-	map current [4]; //reinitialize current
+	namemap current [4]; //reinitialize current
 	int i = 0-arguments_passed.size();
 	// push arguments in order, adding them to argsmap
 	for (int j = 0;  j< int(arguments_passed.size()); j++) {
@@ -130,7 +130,7 @@ int Frame::lookupvar(std::string name){ //takes a local or argument name and ret
 			return iter->second+temp1addr.back();
 		};
 	}; //starts iterating through previous Frames to find the last time that variable was used.
-	auto cleanup = std::deque<map>(); //to store popped maps until they can be pushed back on in order.
+	auto cleanup = std::deque<namemap>(); //to store popped maps until they can be pushed back on in order.
 	auto cleanuptemp1addr = std::deque<int>();
 	while (argsmap.empty() == 0) {
 		cleanup.push_back(localslist); //clears the previous Frames lists

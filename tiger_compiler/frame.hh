@@ -3,7 +3,7 @@
 #include <utility>
 #include <string>
 #pragma once
-using map = std::vector<std::pair<std::string,int> >; //maps names to sp (was originally fp offsets)
+using namemap = std::vector<std::pair<std::string,int> >; //maps names to sp (was originally fp offsets)
 
 
 class Frame {
@@ -12,12 +12,12 @@ public:
 	~Frame()=default;
 	int fp; //Frame pointer
 	int sp; //stack pointer
-	std::deque<map> tempmap; //stores previous Frame's temps
+	std::deque<namemap> tempmap; //stores previous Frame's temps
 	std::deque<std::vector<std::string> > labelmap; 
-	std::deque<map> localsmap; //stores previous Frame's locals
-	std::deque<map> argsmap; //stores previous Frame's arguments
+	std::deque<namemap> localsmap; //stores previous Frame's locals
+	std::deque<namemap> argsmap; //stores previous Frame's arguments
 	std::deque<int> stack; //the representation of the actual stack 
-	map current [3]; //current[0] = current tempmap, current[1] = current localsmap, current[2] = current argsmap
+	namemap current [3]; //current[0] = current tempmap, current[1] = current localsmap, current[2] = current argsmap
 	std::vector<std::string> currentlabel; 
 	std::deque<int> temp1addr; //makes sure to keep track of the first temp address for each stack.
 	
