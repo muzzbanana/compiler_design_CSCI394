@@ -1,4 +1,5 @@
 #include "irtree.hh"
+#include <iostream>
 
 namespace tiger {
 
@@ -124,10 +125,13 @@ string ConstTree::toStr() const {
 
 string ExprSeqTree::toStr() const {
     stringstream ss;
-    ss << "ExprSeqTree: statement ";
+    ss << "\n";
     ss << stmt_->toStr();
-    ss << ", expression ";
-    ss << expr_->toStr();
+    ss << "(";
+    if (expr_ != NULL){
+        ss << expr_->toStr();
+    }
+    ss << ")";
     return ss.str();
 }
 
@@ -153,7 +157,6 @@ string TempTree::toStr() const {
 
 string ExprStmtTree::toStr() const {
     stringstream ss;
-    ss << "ExprStmtTree: ";
     ss << expr_->toStr();
     return ss.str();
 }
