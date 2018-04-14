@@ -38,13 +38,15 @@ const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
     Label *afterLabel = new Label("after");
 
     /* Convert to something like:
-     *      MOVE tmp1, <left>
-     *      JNE  tmp1, 0, t, f
-     * .t:  <middle>
-     *      JMP  after
-     * .f:  <right>
-     * .after:
-     * */
+     *      JNE [<left>], 0, t, f
+     *  .t: <middle>
+     *      JMP after
+     *  .f: <right>
+     *  .after: */
+    /* When we vectorize everything, the JNE [<left>], 0, t, f
+     * will convert to something like:
+     *      MOV <left>, tmp1
+     *      JNE tmp1, 0, t, f */
     const IRTree *condTree = left_->convert_to_ir(frame);
 
     /* Need to pass an expression to CJumpTree -- we know it has to be an expression
