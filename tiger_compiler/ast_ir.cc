@@ -5,13 +5,6 @@ namespace tiger {
 /* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
 const IRTree *convert_ast(ASTNode::ASTptr ast) {
     vector<string> local_vars = ast->get_var_names();
-    if (local_vars.size() > 1) {
-        string tmp = local_vars[1];
-        local_vars[1] = local_vars[0];
-        local_vars[0] = tmp;
-        std::cout << local_vars[0] << " " << local_vars[1] << std::endl;
-    }
-
     Frame *frame = new Frame();
     vector<string> empty_args;
     frame->pushFrame(empty_args, local_vars);
