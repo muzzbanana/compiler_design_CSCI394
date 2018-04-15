@@ -12,34 +12,39 @@ using namespace std;
 namespace tiger {
 
 class ExprTree;
-typedef vector<ExprTree*> ExprList;
+typedef vector<const ExprTree*> ExprList;
 
 class Fragment;
 
 class IRTree {
     public:
         enum class TreeType {
-            STMT,
-            BINOP,
-            CALL,
-            CONST,
-            ESEQ,
-            MEM,
-            NAME,
-            TEMP,
-            VAR,
-            EXPR,
-            CJUMP,
-            UJUMP,
-            RETURN,
-            LABEL,
-            MOVE,
-            NEWFRAME,
-            ENDFRAME,
-            SEQ,
-            NOTIMPL,
-            VECTORIZED,
-            VECMOVE,
+            STMT,       /* a statement wrapped in an expr */
+            BINOP,      /* a binary operation +, -, *, /, <, >, <=, >=, <>, = */
+            CALL,       /* a function call */
+            CONST,      /* a constant int */
+            ESEQ,       /* an expression-sequence */
+            MEM,        /* memory access? not used at the moment */
+            NAME,       /* a name representing data at a label */
+            TEMP,       /* a temp */
+            VAR,        /* access to a variable on the stack */
+            EXPR,       /* an expression wrapped in a stmt */
+            CJUMP,      /* a conditional jump */
+            UJUMP,      /* an unconditional jump */
+            RETURN,     /* return a temp */
+            LABEL,      /* a label */
+            MOVE,       /* move data from somewhere to somewhere else */
+            NEWFRAME,   /* new frame with new frame pointer etc */
+            ENDFRAME,   /* pop a frame off the stack */
+            ARGRESERVE, /* reserve space for some arguments */
+            ARGPUT,     /* put an argument onto the stack */
+            ARGREMOVE,  /* remove arguments from stack */
+            SEQ,        /* a sequence of stmts */
+
+            NOTIMPL,    /* not implemented yet */
+
+            VECTORIZED, /* has been flattened into a Fragment */
+            VECMOVE,    /* special restricted kind of move tree for use in fragments */
         };
 
         enum class Operator {
@@ -325,6 +330,47 @@ class EndFrameTree : public StmtTree {
     public:
         EndFrameTree();
         ~EndFrameTree() = default;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
+/* For growing stack when we pass arguments. */
+class ArgReserveTree : public StmtTree {
+    public:
+        ArgReserveTree(const int num_args);
+        ~ArgReserveTree() = default;
+
+        const int num_args_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
+/* Put an argument at a certain index */
+class ArgPutTree : public StmtTree {
+    public:
+        ArgPutTree(const int index, const ExprTree *arg);
+        ~ArgPutTree() = default;
+
+        const int index_;
+
+        const ExprTree *arg_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
+/* Undo the last ArgReserve */
+class ArgRemoveTree : public StmtTree {
+    public:
+        ArgRemoveTree(const int amount);
+        ~ArgRemoveTree() = default;
+
+        const int amount_;
 
         string toStr() const;
 

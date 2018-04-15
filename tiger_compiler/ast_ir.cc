@@ -368,4 +368,23 @@ const ExprTree *IndexAccess::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, 
     return new BinOpTree(IRTree::Operator::PLUS, arrExpr,  new BinOpTree(IRTree::Operator::MUL, indexExpr, new ConstTree(4)));
 }
 
+const ExprTree *FuncCall::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    /* Find the appropriate label for the function */
+    string func_name = left_->toStr();
+    Label *func_label = info->func_labels_[func_name];
+
+    const ExprSeqASTNode *argsseq = dynamic_cast<const ExprSeqASTNode *>(right_);
+
+    vector<const ExprTree*> args_expr_list;
+
+    for (auto a : argsseq->vec_) {
+        const IRTree *arg = a->convert_to_ir(info);
+        assert(arg->isExpr());
+        const ExprTree *argexpr = dynamic_cast<const ExprTree*>(arg);
+        args_expr_list.push_back(argexpr);
+    }
+
+    return new CallTree(new NameTree(func_label), args_expr_list);
+}
+
 } //namespace

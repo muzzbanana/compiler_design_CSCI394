@@ -1400,13 +1400,7 @@ class FuncCall {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            /* Find the appropriate label for the function */
-            string func_name = left_->toStr();
-            Label *func_label = info->func_labels_[func_name];
-
-            return new CallTree(new NameTree(func_label), vector<ExprTree*>());
-        }
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), right_->get_var_names());
