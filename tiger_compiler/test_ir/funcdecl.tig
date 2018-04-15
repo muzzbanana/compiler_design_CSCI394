@@ -1,0 +1,5 @@
+let
+    function f (a : int, b : string, c : int) = let var x := 3 var y := 4 in a + x + c + y end
+in
+    f(3, "asdf", 4)
+end

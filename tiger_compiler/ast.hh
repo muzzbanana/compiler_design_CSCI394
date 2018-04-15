@@ -31,6 +31,13 @@ inline vector<string> vector_concat(vector<string> a, vector<string> b) {
     return c;
 }
 
+class IRInfo {
+    public:
+        IRInfo() = default;
+        Frame *frame_;
+        map<string, Label*> func_labels_;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Base AST node class, to define the hierarchy.
 class ASTNode {
@@ -41,7 +48,7 @@ class ASTNode {
         ASTNode() = default;
         virtual ~ASTNode() = default;
         virtual const Type *type_verify(Scope* scope) const = 0; // Determine type of expression
-        virtual const IRTree *convert_to_ir(Frame *frame) const = 0; // Convert to IR representation
+        virtual const IRTree *convert_to_ir(IRInfo *info) const = 0; // Convert to IR representation
         virtual const vector<string> get_var_names() const = 0; // Get variable names from node
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
@@ -74,7 +81,7 @@ class NilASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) const {
+        virtual const IRTree *convert_to_ir(IRInfo *info) const {
             cout << "nil" << endl;
             return ExprTree::notImpl;
         }
@@ -108,7 +115,7 @@ class BreakASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) const {
+        virtual const IRTree *convert_to_ir(IRInfo *info) const {
             cout << "break" << endl;
             return StmtTree::notImpl;
         }
@@ -150,7 +157,7 @@ class NumASTNode : public ASTNode {
             return std::to_string(value_);
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) const {
+        virtual const IRTree *convert_to_ir(IRInfo *info) const {
             /* We shouldn't put 'move' here because it's technically
              * a statement. We will add move when we vectorize the
              * tree -- e.g. we'll change ADD [t1], 3, 4 to
@@ -192,7 +199,7 @@ class StrASTNode : public ASTNode {
             return -1; /// FIX ME
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) const {
+        virtual const IRTree *convert_to_ir(IRInfo *info) const {
             cout << "str" << endl;
             return ExprTree::notImpl;
         }
@@ -235,10 +242,10 @@ class NameASTNode : public ASTNode {
             return value_;
         }
 
-        virtual const IRTree *convert_to_ir(Frame *frame) const {
+        virtual const IRTree *convert_to_ir(IRInfo *info) const {
             /* Now returns a new shiny VarTree, since NameTree is (I think?) for
              * static data that is labeled with a label in asm. */
-            return new VarTree(value_, frame->lookupvar(value_));
+            return new VarTree(value_, info->frame_->lookupvar(value_));
         }
 
         virtual const vector<string> get_var_names() const {
@@ -294,7 +301,7 @@ template <template <typename> class O>
                 return rep_ + child_->toStr();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 return ExprTree::notImpl;
             }
 
@@ -348,9 +355,9 @@ template <class O>
                 return rep1_ + child_->toStr() + rep2_;
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 auto op = O();
-                return op.convert_to_ir(frame, child_);
+                return op.convert_to_ir(info, child_);
             }
 
             virtual const vector<string> get_var_names() const {
@@ -424,7 +431,7 @@ template <template <typename> class O>
             }
 
             // converts ast node types into ir node types
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 IRTree::Operator o;
                 string op = rep1_ + rep2_;
 
@@ -450,8 +457,8 @@ template <template <typename> class O>
                     o = IRTree::Operator::NE;
                 }
 
-                const IRTree *leftTree = left_->convert_to_ir(frame);
-                const IRTree *rightTree = right_->convert_to_ir(frame);
+                const IRTree *leftTree = left_->convert_to_ir(info);
+                const IRTree *rightTree = right_->convert_to_ir(info);
                 assert(leftTree != NULL);
                 assert(rightTree != NULL);
                 /* If they are not already exprs, wrap them in an expr node */
@@ -564,9 +571,9 @@ template <class O>
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 auto op = O();
-                return op.convert_to_ir(frame, left_, right_);
+                return op.convert_to_ir(info, left_, right_);
             }
 
             virtual const vector<string> get_var_names() const {
@@ -574,9 +581,12 @@ template <class O>
                 return op.get_var_names(left_, right_);
             }
 
+
         private:
             const std::string rep1_, rep2_, rep3_;  // String representation of node (rep3 goes at end)
+        public:
             const ASTptr left_, right_;
+        private:
             const bool parens_;
             int location_;
     };
@@ -664,9 +674,9 @@ template <class O>
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 auto op = O();
-                return op.convert_to_ir(frame, left_, middle_, right_);
+                return op.convert_to_ir(info, left_, middle_, right_);
             }
 
             virtual const vector<string> get_var_names() const {
@@ -782,9 +792,9 @@ template <class O>
                     " " + four_->toStr() + ")";
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 auto op = O();
-                return op.convert_to_ir(frame, one_, two_, three_, four_);
+                return op.convert_to_ir(info, one_, two_, three_, four_);
             }
 
             virtual const vector<string> get_var_names() const {
@@ -858,9 +868,9 @@ template <class O, class E> // E is the elements of the vector (?)
                 return ss.str();
             }
 
-            virtual const IRTree *convert_to_ir(Frame *frame) const {
+            virtual const IRTree *convert_to_ir(IRInfo *info) const {
                 auto op = O();
-                return op.convert_to_ir(frame, vec_);
+                return op.convert_to_ir(info, vec_);
             }
 
             virtual const vector<string> get_var_names() const {
@@ -868,8 +878,9 @@ template <class O, class E> // E is the elements of the vector (?)
                 return op.get_var_names(vec_);
             }
 
-        private:
             std::vector<const E*> vec_;
+
+        private:
             const std::string sep_, first_, last_;
             int location_;
     };
@@ -884,7 +895,7 @@ class Assignment {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector<string>();
@@ -908,7 +919,7 @@ class IfThenElse {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), vector_concat(middle_->get_var_names(), right_->get_var_names()));
@@ -930,7 +941,7 @@ class WhileDo {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), right_->get_var_names());
@@ -950,7 +961,7 @@ class ForTo {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
                                 ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
                 ASTNode::ASTptr three_, ASTNode::ASTptr four_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
@@ -972,7 +983,7 @@ class UntypedVarDeclaration {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             // the other
@@ -993,7 +1004,7 @@ class TypedVarDeclaration {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             // the third one
@@ -1014,7 +1025,7 @@ class TypeDeclaration {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             cout << "type decl" << endl;
             return ExprTree::notImpl;
         }
@@ -1037,7 +1048,7 @@ class LetBlock {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), right_->get_var_names());
@@ -1056,7 +1067,7 @@ class Declaration {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, ASTNode::ASTptr child_);
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr child_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {
             return child_->get_var_names();
@@ -1075,7 +1086,7 @@ class DeclList {
 
         const Type *type_verify(Scope* scope, std::vector<const DeclarationASTNode*> vec_, int location_);
 
-        const StmtTree *convert_to_ir(Frame *frame, std::vector<const DeclarationASTNode*> vec_);
+        const StmtTree *convert_to_ir(IRInfo *info, std::vector<const DeclarationASTNode*> vec_);
 
         virtual const vector<string> get_var_names(std::vector<const DeclarationASTNode*> vec_) const {
             vector<string> names;
@@ -1098,7 +1109,7 @@ class ExprSeq {
 
         const Type *type_verify(Scope* scope, std::vector<const ASTNode*> vec_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, std::vector<const ASTNode*> vec_);
+        const ExprTree *convert_to_ir(IRInfo *info, std::vector<const ASTNode*> vec_);
 
         virtual const vector<string> get_var_names(vector<const ASTNode*> vec_) const {
             vector<string> names;
@@ -1121,7 +1132,7 @@ class FieldMember {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             cout << "FieldMember" << endl;
 
             return ExprTree::notImpl;
@@ -1144,7 +1155,7 @@ class FieldList {
 
         const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, std::vector<const FieldMemberASTNode*> vec_) {
+        const ExprTree *convert_to_ir(IRInfo *info, std::vector<const FieldMemberASTNode*> vec_) {
             cout << "Fieldlist" << endl;
             return ExprTree::notImpl;
         }
@@ -1170,7 +1181,7 @@ class TypeInstantiation {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             cout << "type instantiation" << endl;
             return ExprTree::notImpl;
         }
@@ -1192,7 +1203,7 @@ class TypeValue {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr child_){
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr child_){
             return ExprTree::notImpl;
         }
 
@@ -1213,7 +1224,7 @@ class RecordField {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
             cout << "record field" << endl;
             return ExprTree::notImpl;
         }
@@ -1235,7 +1246,7 @@ class RecordTypeAST {
 
         const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, std::vector<const RecordFieldASTNode*> vec_) {
+        const ExprTree *convert_to_ir(IRInfo *info, std::vector<const RecordFieldASTNode*> vec_) {
             cout << "record type" << endl;
             return ExprTree::notImpl;
         }
@@ -1257,7 +1268,7 @@ class ArrayTypeAST {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr child_){
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr child_){
             return ExprTree::notImpl;
         }
 
@@ -1278,7 +1289,7 @@ class DotAccess {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector<string>();
@@ -1297,7 +1308,7 @@ class IndexAccess {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), right_->get_var_names());
@@ -1316,7 +1327,7 @@ class ArrayValue {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             return vector_concat(middle_->get_var_names(), right_->get_var_names());
@@ -1335,15 +1346,12 @@ class UnTypedFuncDecl {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-            cout << "untyped function decl" << endl;
-            return ExprTree::notImpl;
-        }
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) const {
             // NOTE: We *don't* return the vars explicitly here, because the arguments + local vars
             // within two_, three_, etc. belong to an inner function, so they should be placed
-            // into a new frame, not whatever recursively called us to figure out how
+            // into a new info->frame_, not whatever recursively called us to figure out how
             // many variables to reserve.
             // So we return an empty list since our function doesn't declare any more new variables
             // in the scope of whatever contains it.
@@ -1363,7 +1371,7 @@ class TypedFuncDecl {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr name_node, ASTNode::ASTptr params_node, ASTNode::ASTptr rettype_node, ASTNode::ASTptr funcbody_node, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
                                       ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
             cout << "typed function decl" << endl;
             return ExprTree::notImpl;
@@ -1392,9 +1400,12 @@ class FuncCall {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            cout << "function call" << endl;
-            return ExprTree::notImpl;
+        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+            /* Find the appropriate label for the function */
+            string func_name = left_->toStr();
+            Label *func_label = info->func_labels_[func_name];
+
+            return new CallTree(new NameTree(func_label), vector<ExprTree*>());
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {

@@ -2,19 +2,22 @@
 
 namespace tiger {
 
-/* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
+/* Construct a new info->frame_ for global variables, and then call convert_to_ir on an AST pointer. */
 const IRTree *convert_ast(ASTNode::ASTptr ast) {
     vector<string> local_vars = ast->get_var_names();
     Frame *frame = new Frame();
+    IRInfo *info = new IRInfo();
+
+    info->frame_ = frame;
+
     vector<string> empty_args;
-    frame->pushFrame(empty_args, local_vars);
-    return ast->convert_to_ir(frame);
+    info->frame_->pushFrame(empty_args, local_vars);
+    return ast->convert_to_ir(info);
 }
 
-
-const StmtTree *Assignment::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    const IRTree *left = left_->convert_to_ir(frame);
-    const IRTree *right = right_->convert_to_ir(frame);
+const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    const IRTree *left = left_->convert_to_ir(info);
+    const IRTree *right = right_->convert_to_ir(info);
     const ExprTree *leftExpr;
     const ExprTree *rightExpr;
     if (left->isExpr()) {
@@ -31,7 +34,7 @@ const StmtTree *Assignment::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
     return new MoveTree(leftExpr, rightExpr);
 }
 
-const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+const StmtTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     /* We evaluate the conditional expression and then just create
      * a CJumpnode that checks whether it's equal to 0. */
     Label *trueLabel = new Label("true");
@@ -47,8 +50,9 @@ const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
     /* When we vectorize everything, the JNE [<left>], 0, t, f
      * will convert to something like:
      *      MOV <left>, tmp1
-     *      JNE tmp1, 0, t, f */
-    const IRTree *condTree = left_->convert_to_ir(frame);
+     *      MOV 0, tmp2
+     *      JNE tmp1, tmp2, t, f */
+    const IRTree *condTree = left_->convert_to_ir(info);
 
     /* Need to pass an expression to CJumpTree -- we know it has to be an expression
      * because of our position in the AST (can't put a statement inside the condition
@@ -59,7 +63,7 @@ const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
     /* Then the true and false things need to be examined -- if they're exprs,
      * they need to be wrapped in an ExprStmtTree; otherwise they can just be passed
      * along as stmts. */
-    const IRTree *trueTree = middle_->convert_to_ir(frame);
+    const IRTree *trueTree = middle_->convert_to_ir(info);
     const StmtTree *trueStmt;
     if (trueTree->isExpr()) {
         trueStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(trueTree));
@@ -67,7 +71,7 @@ const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
         trueStmt = dynamic_cast<const StmtTree*>(trueTree);
     }
 
-    const IRTree *falseTree = right_->convert_to_ir(frame);
+    const IRTree *falseTree = right_->convert_to_ir(info);
     const StmtTree *falseStmt;
     if (falseTree->isExpr()) {
         falseStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(falseTree));
@@ -85,13 +89,13 @@ const StmtTree *IfThenElse::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
                    NULL)))))));
 }
 
-const StmtTree *WhileDo::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+const StmtTree *WhileDo::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     Label *testLabel = new Label("test");
     Label *bodyLabel = new Label("body");
     Label *doneLabel = new Label("done");
-    const IRTree *condTree = left_->convert_to_ir(frame);
+    const IRTree *condTree = left_->convert_to_ir(info);
     const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
-    const IRTree *bodyTree = right_->convert_to_ir(frame);
+    const IRTree *bodyTree = right_->convert_to_ir(info);
     const StmtTree *bodyStmt;
     if (bodyTree->isExpr()) {
         bodyStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(bodyTree));
@@ -108,15 +112,15 @@ const StmtTree *WhileDo::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTN
            new SeqTree(new LabelTree(doneLabel), NULL))))));
 }
 
-const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
+const StmtTree *ForTo::convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
         ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
     Label *testLabel = new Label("test");
     Label *bodyLabel = new Label("body");
     Label *doneLabel = new Label("done");
 
-    const IRTree *variable = one_->convert_to_ir(frame);
+    const IRTree *variable = one_->convert_to_ir(info);
     assert(variable->isExpr());
-    const IRTree *start_int = two_->convert_to_ir(frame);
+    const IRTree *start_int = two_->convert_to_ir(info);
     assert(start_int->isExpr());
 
     const ExprTree *limitExpr;
@@ -128,13 +132,13 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
 
     const StmtTree *initialize = new MoveTree(countExpr, startExpr);
 
-    const IRTree *limit = three_->convert_to_ir(frame);
+    const IRTree *limit = three_->convert_to_ir(info);
     assert(limit->isExpr());
     limitExpr = dynamic_cast<const ExprTree*>(limit);
 
     const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
 
-    const IRTree *bodyTree = four_->convert_to_ir(frame);
+    const IRTree *bodyTree = four_->convert_to_ir(info);
     const StmtTree *bodyStmt;
     if (bodyTree->isExpr()) {
         bodyStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(bodyTree));
@@ -155,9 +159,9 @@ const StmtTree *ForTo::convert_to_ir(Frame *frame, ASTNode::ASTptr one_, ASTNode
             new SeqTree(new LabelTree(doneLabel), NULL))))))));
 }
 
-const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    const IRTree *lhs = left_->convert_to_ir(frame);
-    const IRTree *rhs = right_->convert_to_ir(frame);
+const StmtTree *UntypedVarDeclaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    const IRTree *lhs = left_->convert_to_ir(info);
+    const IRTree *rhs = right_->convert_to_ir(info);
 
     assert(lhs != NULL);
     assert(rhs != NULL);
@@ -170,12 +174,12 @@ const StmtTree *UntypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTp
     return new MoveTree(left, right);
 }
 
-const StmtTree *TypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+const StmtTree *TypedVarDeclaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     /* This is exactly the same as UntypedVarDeclaration,
      * because we don't care about the type at this point
      * (assuming it already got checked by semantic_checks) */
-    const IRTree *lhs = left_->convert_to_ir(frame);
-    const IRTree *rhs = right_->convert_to_ir(frame);
+    const IRTree *lhs = left_->convert_to_ir(info);
+    const IRTree *rhs = right_->convert_to_ir(info);
 
     assert(lhs != NULL);
     assert(rhs != NULL);
@@ -188,9 +192,51 @@ const StmtTree *TypedVarDeclaration::convert_to_ir(Frame *frame, ASTNode::ASTptr
     return new MoveTree(left, right);
 }
 
-const ExprTree *LetBlock::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    const IRTree *let_block = left_->convert_to_ir(frame);
-    const IRTree *in_block = right_->convert_to_ir(frame);
+const StmtTree *UnTypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+    /* Get the argument names out of the RecordTypeASTNode representing arguments. */
+    /* (This is kind of hacky, but no less hacky than the string-parsing solution
+     * we came up with last time :P ) */
+    const RecordTypeASTNode *arglist = dynamic_cast<const RecordTypeASTNode *>(middle_);
+    vector<string> argnames;
+    for (ASTNode::ASTptr arg : arglist->vec_) {
+        argnames.push_back(dynamic_cast<const RecordFieldASTNode *>(arg)->left_->toStr());
+    }
+
+    vector<string> localvars = right_->get_var_names();
+
+    /* Push the new frame. */
+    info->frame_->pushFrame(argnames, localvars);
+
+    /* Figure out the IR for the inside of the function. */
+    const IRTree *inner_func = right_->convert_to_ir(info);
+
+    /* Convert it to a StmtTree*. */
+    const StmtTree *inner_stmt = NULL;
+    if (inner_func->isExpr()) {
+        inner_stmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(inner_func));
+    } else {
+        inner_stmt = dynamic_cast<const StmtTree *>(inner_stmt);
+    }
+
+    /* Pop the frame. */
+    info->frame_->popFrame();
+
+    Label *new_func_label = new Label(left_->toStr());
+    info->func_labels_[left_->toStr()] = new_func_label;
+
+    return  new SeqTree(new LabelTree(new_func_label),
+            new SeqTree(new ReturnTree(
+                    new StmtExprTree(
+                        new SeqTree(new NewFrameTree(localvars.size()),
+                            new SeqTree(inner_stmt,
+                                new SeqTree(new EndFrameTree, NULL)))
+                        )
+                    ), NULL));
+}
+
+const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    const IRTree *let_block = left_->convert_to_ir(info);
+    const IRTree *in_block = right_->convert_to_ir(info);
 
     const StmtTree *letStmt;
     if (let_block->isExpr()) {
@@ -210,8 +256,8 @@ const ExprTree *LetBlock::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, AST
     return new ExprSeqTree(letStmt,inExpr);
 }
 
-const StmtTree *Declaration::convert_to_ir(Frame *frame, ASTNode::ASTptr child_) {
-    const IRTree *stmt = child_->convert_to_ir(frame);
+const StmtTree *Declaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr child_) {
+    const IRTree *stmt = child_->convert_to_ir(info);
     const StmtTree *statement;
     if (stmt->isExpr()) {
         statement = new ExprStmtTree(dynamic_cast<const ExprTree*>(stmt));
@@ -221,9 +267,9 @@ const StmtTree *Declaration::convert_to_ir(Frame *frame, ASTNode::ASTptr child_)
     return statement;
 }
 
-const StmtTree *DeclList::convert_to_ir(Frame *frame, std::vector<const DeclarationASTNode*> vec_) {
+const StmtTree *DeclList::convert_to_ir(IRInfo *info, std::vector<const DeclarationASTNode*> vec_) {
     auto node = vec_.front();
-    const IRTree *stmt = node->convert_to_ir(frame);
+    const IRTree *stmt = node->convert_to_ir(info);
     const StmtTree *firstStmt;
     if (stmt->isExpr()) {
         firstStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(stmt));
@@ -236,12 +282,12 @@ const StmtTree *DeclList::convert_to_ir(Frame *frame, std::vector<const Declarat
     }
     vec_.erase(vec_.begin());
 
-    return new SeqTree(firstStmt, this->convert_to_ir(frame, vec_));
+    return new SeqTree(firstStmt, this->convert_to_ir(info, vec_));
 }
 
-const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*> vec_) {
+const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*> vec_) {
     auto node = vec_.front();
-    const IRTree *statement = node->convert_to_ir(frame);
+    const IRTree *statement = node->convert_to_ir(info);
     const StmtTree *seqStmt;
 
     if (statement->isExpr()) {
@@ -255,7 +301,7 @@ const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*>
     }
     vec_.erase(vec_.begin());
 
-    return new ExprSeqTree(seqStmt, this->convert_to_ir(frame, vec_));
+    return new ExprSeqTree(seqStmt, this->convert_to_ir(info, vec_));
 }
 
 const ExprTree *ArrayValue::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
@@ -291,7 +337,7 @@ const ExprTree *ArrayValue::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, A
     return new ExprSeqTree(leftExpr, (new ExprSeqTree(middleExpr, new ExprSeqTree(rightExpr, NULL))));
 }
 
-const ExprTree *DotAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+const ExprTree *DotAccess::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     auto right = right_->toStr();
     auto leftt = left_->precomputed_type_;
     assert(leftt != NULL);
@@ -304,18 +350,18 @@ const ExprTree *DotAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, AS
         }
         index ++;
     }
-    const IRTree *rec = left_->convert_to_ir(frame);
+    const IRTree *rec = left_->convert_to_ir(info);
     assert(rec->isExpr());
     return new BinOpTree(IRTree::Operator::PLUS, dynamic_cast<const ExprTree*>(rec),  new ConstTree(index*4));
 }
 
-const ExprTree *IndexAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+const ExprTree *IndexAccess::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     /* this might be, like, array[x * 2 + 1] or something arbitrarily complex */
-    auto index = right_->convert_to_ir(frame);
+    auto index = right_->convert_to_ir(info);
     assert(index->isExpr());
     const ExprTree *indexExpr = dynamic_cast<const ExprTree*>(index);
 
-    const IRTree *arr = left_->convert_to_ir(frame);
+    const IRTree *arr = left_->convert_to_ir(info);
     assert(arr->isExpr());
     const ExprTree *arrExpr = dynamic_cast<const ExprTree*>(arr);
 
