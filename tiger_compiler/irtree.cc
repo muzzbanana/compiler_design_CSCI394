@@ -62,6 +62,8 @@ ArgPutTree::ArgPutTree(const int index, const ExprTree *arg) : StmtTree(tt::ARGP
 
 ArgRemoveTree::ArgRemoveTree(const int amount) : StmtTree(tt::ARGREMOVE), amount_(amount) { }
 
+StaticStringTree::StaticStringTree(const Label *label, const string value) : StmtTree(tt::STATICSTR), label_(label), value_(value) { }
+
 SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
@@ -161,8 +163,10 @@ Fragment *MemTree::vectorize() const {
 }
 
 Fragment *NameTree::vectorize() const {
-    /* not implemented yet! */
-    return NULL;
+    Temp *result = new Temp();
+    Fragment *v = new Fragment(result);
+    v->append(new FragMove(new TempTree(result), this));
+    return v;
 }
 
 Fragment *TempTree::vectorize() const {
@@ -283,6 +287,12 @@ Fragment *ArgPutTree::vectorize() const {
 }
 
 Fragment *ArgRemoveTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
+}
+
+Fragment *StaticStringTree::vectorize() const {
     Fragment *v = new Fragment(NULL);
     v->append(this);
     return v;
@@ -545,6 +555,15 @@ string ArgRemoveTree::toStr() const {
     ss << "REMOVE ";
     ss << amount_;
     ss << " ARGUMENTS";
+    return ss.str();
+}
+
+string StaticStringTree::toStr() const {
+    stringstream ss;
+    ss << ".";
+    ss << label_->toStr();
+    ss << ":\t";
+    ss << value_;
     return ss.str();
 }
 

@@ -39,6 +39,7 @@ class IRTree {
             ARGRESERVE, /* reserve space for some arguments */
             ARGPUT,     /* put an argument onto the stack */
             ARGREMOVE,  /* remove arguments from stack */
+            STATICSTR,  /* static string data */
             SEQ,        /* a sequence of stmts */
 
             NOTIMPL,    /* not implemented yet */
@@ -371,6 +372,20 @@ class ArgRemoveTree : public StmtTree {
         ~ArgRemoveTree() = default;
 
         const int amount_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
+/* A static string pointer */
+class StaticStringTree : public StmtTree {
+    public:
+        StaticStringTree(const Label *label, const string value);
+        ~StaticStringTree() = default;
+
+        const Label *label_;
+        const string value_;
 
         string toStr() const;
 

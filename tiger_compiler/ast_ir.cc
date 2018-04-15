@@ -2,7 +2,8 @@
 
 namespace tiger {
 
-/* Construct a new info->frame_ for global variables, and then call convert_to_ir on an AST pointer. */
+/* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
+/* Also places function definitions after the rest of the code. */
 const IRTree *convert_ast(ASTNode::ASTptr ast) {
     vector<string> local_vars = ast->get_var_names();
     Frame *frame = new Frame();
@@ -27,7 +28,13 @@ const IRTree *convert_ast(ASTNode::ASTptr ast) {
         func_decls = new SeqTree(a, func_decls);
     }
 
-    return new SeqTree(new ReturnTree(new StmtExprTree(main_stmt)), func_decls);
+    const SeqTree *program = new SeqTree(new ReturnTree(new StmtExprTree(main_stmt)), func_decls);
+
+    for (auto a : info->static_strings_) {
+        program = new SeqTree(new StaticStringTree(a.first, a.second), program);
+    }
+
+    return program;
 }
 
 const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
@@ -350,7 +357,7 @@ const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*>
 
 const ExprTree *ArrayValue::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     return ExprTree::notImpl;
-    // /* 
+    // /*
     //     ignore this, i just wanted to print things and needed to return something so it does not
     //     crop up an error
     // */

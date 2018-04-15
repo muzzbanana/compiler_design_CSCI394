@@ -37,6 +37,7 @@ class IRInfo {
         Frame *frame_;
         map<string, Label*> func_labels_;
         vector<const StmtTree*> functions_;
+        vector<pair<const Label*, string> > static_strings_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -201,8 +202,9 @@ class StrASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(IRInfo *info) const {
-            cout << "str" << endl;
-            return ExprTree::notImpl;
+            Label *strlabel = new Label();
+            info->static_strings_.push_back(make_pair(strlabel, value_));
+            return new NameTree(strlabel);
         }
 
         virtual const vector<string> get_var_names() const {

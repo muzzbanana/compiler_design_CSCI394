@@ -39,7 +39,7 @@ class Label {
         Label(const std::string name) { nlabels ++; index = nlabels; name_ = name; }
         ~Label() { }
 
-        std::string toStr() {
+        std::string toStr() const {
             std::stringstream ss;
             if (name_.length() == 0) {
                 ss << "L";
