@@ -259,18 +259,33 @@ const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*>
 
 const ExprTree *DotAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     auto right = right_->toStr();
-    auto rt = left_->type_verify();
-    for (auto iter = rt.fields_.begin(); iter != rt.fields_.end(); ++iter){
+    auto leftt = left_->precomputed_type_;
+    assert(leftt != NULL);
+    assert(leftt->getKind() == tiger_type::RECORD);
+    const RecordType *rt = dynamic_cast<const RecordType*>(leftt);
+    int index = 0;
+    for (auto iter = rt->fields_.begin(); iter != rt->fields_.end(); ++iter){
         if (iter->first == right) {
-            auto index = iter->second;
+            break;
         }
+        index ++;
     }
-    return new BinOpTree(IRTree::Operator::PLUS, left_->convert_to_ir(frame),  new ConstTree(index*4));
+    const IRTree *rec = left_->convert_to_ir(frame);
+    assert(rec->isExpr());
+    return new BinOpTree(IRTree::Operator::PLUS, dynamic_cast<const ExprTree*>(rec),  new ConstTree(index*4));
 }
 
 const ExprTree *IndexAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-    auto index = right_->eval();
-    return new BinOpTree(IRTree::Operator::PLUS, left_->convert_to_ir(frame),  new ConstTree(index*4));
+    /* this might be, like, array[x * 2 + 1] or something arbitrarily complex */
+    auto index = right_->convert_to_ir(frame);
+    assert(index->isExpr());
+    const ExprTree *indexExpr = dynamic_cast<const ExprTree*>(index);
+
+    const IRTree *arr = left_->convert_to_ir(frame);
+    assert(arr->isExpr());
+    const ExprTree *arrExpr = dynamic_cast<const ExprTree*>(arr);
+
+    return new BinOpTree(IRTree::Operator::PLUS, arrExpr,  new BinOpTree(IRTree::Operator::MUL, indexExpr, new ConstTree(4)));
 }
 
 } //namespace

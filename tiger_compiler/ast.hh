@@ -45,6 +45,14 @@ class ASTNode {
         virtual const vector<string> get_var_names() const = 0; // Get variable names from node
         virtual value_t eval() const = 0;  // Evaluate expression tree
         virtual std::string toStr() const = 0; // For printing purposes
+
+        /* After the semantic check phase, we can find the type of a node
+         * by consulting this variable. Before that, it's just null. */
+        /* This is declared mutable because type_verify() is declared as a const method...
+         * this field just caches whatever is returned by type_verify() to save
+         * it after the scope has already disappeared, and doesn't ever change
+         * after that, so I don't think it's too horrible to use 'mutable' here. */
+        mutable Type const* precomputed_type_ = NULL;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +65,7 @@ class NilASTNode : public ASTNode {
         virtual ~NilASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
+            precomputed_type_ = Type::nilType;
             return Type::nilType;
         }
 
@@ -90,6 +99,7 @@ class BreakASTNode : public ASTNode {
         virtual ~BreakASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
+            precomputed_type_ = Type::nilType;
             return Type::nilType;
         }
 
@@ -126,6 +136,7 @@ class NumASTNode : public ASTNode {
         virtual ~NumASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
+            precomputed_type_ = Type::intType;
             return Type::intType;
         }
 
@@ -167,6 +178,7 @@ class StrASTNode : public ASTNode {
         virtual ~StrASTNode() = default;
 
         virtual const Type *type_verify(Scope* scope) const {
+            precomputed_type_ = Type::stringType;
             return Type::stringType;
         }
 
@@ -215,6 +227,7 @@ class NameASTNode : public ASTNode {
                 cerr << "       unknown variable ‘" << value_ << "’" << endl;
                 return Type::errorType;
             }
+            precomputed_type_ = var_type;
             return var_type;
         }
 
@@ -266,6 +279,7 @@ template <template <typename> class O>
                          << child_->toStr() << "’" << endl;
                     return Type::errorType;
                 }
+                precomputed_type_ = Type::intType;
                 return Type::intType;
             }
 
@@ -318,7 +332,9 @@ template <class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O();
-                return op.type_verify(scope, child_, location_);
+                const Type *result = op.type_verify(scope, child_, location_);
+                precomputed_type_ = result;
+                return result;
             }
 
             value_t eval() const
@@ -374,6 +390,7 @@ template <template <typename> class O>
                 const Type *left_type = left_->type_verify(scope);
                 const Type *right_type = right_->type_verify(scope);
                 if (left_type == Type::intType && right_type == Type::intType) {
+                    precomputed_type_ = Type::intType;
                     return Type::intType;
                 } else if (left_type == Type::errorType || right_type == Type::errorType) {
                     /* this means the error was further down below, so we just pass
@@ -507,7 +524,9 @@ template <class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O();
-                return op.type_verify(scope, left_, right_, location_);
+                const Type *result = op.type_verify(scope, left_, right_, location_);
+                precomputed_type_ = result;
+                return result;
             }
 
             virtual std::string toStr() const
@@ -591,7 +610,9 @@ template <class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O();
-                return op.type_verify(scope, left_, middle_, right_, location_);
+                const Type *result = op.type_verify(scope, left_, middle_, right_, location_);
+                precomputed_type_ = result;
+                return result;
             }
 
             value_t eval() const {
@@ -687,7 +708,9 @@ template <class O>
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O();
-                return op.type_verify(scope, one_, two_, three_, four_, location_);
+                const Type *result = op.type_verify(scope, one_, two_, three_, four_, location_);
+                precomputed_type_ = result;
+                return result;
             }
 
             value_t eval() const
@@ -802,7 +825,9 @@ template <class O, class E> // E is the elements of the vector (?)
 
             virtual const Type *type_verify(Scope* scope) const {
                 auto op = O();
-                return op.type_verify(scope, vec_, location_);
+                const Type *result = op.type_verify(scope, vec_, location_);
+                precomputed_type_ = result;
+                return result;
             }
 
             value_t eval() const
@@ -1253,10 +1278,7 @@ class DotAccess {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            cout << "dot access" << endl;
-            return ExprTree::notImpl;
-        }
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector<string>();
@@ -1275,9 +1297,7 @@ class IndexAccess {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            return ExprTree::notImpl;
-        }
+        const ExprTree *convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector_concat(left_->get_var_names(), right_->get_var_names());
