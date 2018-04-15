@@ -349,36 +349,37 @@ const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*>
 }
 
 const ExprTree *ArrayValue::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
-    /* 
-        ignore this, i just wanted to print things and needed to return something so it does not
-        crop up an error
-    */
-    const IRTree *array_name = left_->convert_to_ir(info);
-    const IRTree *length = middle_->convert_to_ir(info);
-    const IRTree *value = right_->convert_to_ir(info);
-    std::cout << array_name->toStr() << " " << length->toStr() << " " << value->toStr() << std::endl;
-    const StmtTree *leftExpr;
-    const StmtTree *middleExpr;
-    const StmtTree *rightExpr;
+    return ExprTree::notImpl;
+    // /* 
+    //     ignore this, i just wanted to print things and needed to return something so it does not
+    //     crop up an error
+    // */
+    // const IRTree *array_name = left_->convert_to_ir(info);
+    // const IRTree *length = middle_->convert_to_ir(info);
+    // const IRTree *value = right_->convert_to_ir(info);
+    // std::cout << array_name->toStr() << " " << length->toStr() << " " << value->toStr() << std::endl;
+    // const StmtTree *leftExpr;
+    // const StmtTree *middleExpr;
+    // const StmtTree *rightExpr;
 
-    if (array_name->isExpr()) {
-        leftExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(array_name));
-    } else {
-        leftExpr = dynamic_cast<const StmtTree*>(array_name);
-    }
-    if (length->isExpr()) {
-        middleExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(length));
-    } else {
-        middleExpr = dynamic_cast<const StmtTree*>(length);
-    }
-    if (value->isExpr()) {
-        rightExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(value));
-    } else {
-        rightExpr = dynamic_cast<const StmtTree*>(value);
-    }
-    std::cout << leftExpr->toStr() << " " << middleExpr->toStr() << " " << rightExpr->toStr() << std::endl;
+    // if (array_name->isExpr()) {
+    //     leftExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(array_name));
+    // } else {
+    //     leftExpr = dynamic_cast<const StmtTree*>(array_name);
+    // }
+    // if (length->isExpr()) {
+    //     middleExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(length));
+    // } else {
+    //     middleExpr = dynamic_cast<const StmtTree*>(length);
+    // }
+    // if (value->isExpr()) {
+    //     rightExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(value));
+    // } else {
+    //     rightExpr = dynamic_cast<const StmtTree*>(value);
+    // }
+    // std::cout << leftExpr->toStr() << " " << middleExpr->toStr() << " " << rightExpr->toStr() << std::endl;
 
-    return new ExprSeqTree(leftExpr, (new ExprSeqTree(middleExpr, new ExprSeqTree(rightExpr, NULL))));
+    // return new ExprSeqTree(leftExpr, (new ExprSeqTree(middleExpr, new ExprSeqTree(rightExpr, NULL))));
 }
 
 const ExprTree *DotAccess::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {

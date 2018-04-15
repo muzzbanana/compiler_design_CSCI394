@@ -207,17 +207,17 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check array declaration", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/array_decl.tig", "r");
-    yyin = myfile;
-    ASTNode::ASTptr output = NULL;
-    yyparse(&output);
+// TEST_CASE("check array declaration", "[ir-conversion]") {
+//     FILE *myfile = fopen("test_ir/array_decl.tig", "r");
+//     yyin = myfile;
+//     ASTNode::ASTptr output = NULL;
+//     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
-    std::cout << output->toStr() << std::endl;
-    std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+//     const IRTree *ir = convert_ast(output);
+//     std::cout << output->toStr() << std::endl;
+//     std::cout << ir->toStr() << std::endl;
+//     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
 
-    delete output;
-    fclose(myfile);
-}
+//     delete output;
+//     fclose(myfile);
+// }
