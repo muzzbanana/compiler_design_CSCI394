@@ -52,6 +52,10 @@ LabelTree::LabelTree(Label *l) : StmtTree(tt::LABEL), l_(l) { }
 
 MoveTree::MoveTree(const ExprTree *dest, const ExprTree *src) : StmtTree(tt::MOVE), dest_(dest), src_(src) { }
 
+NewFrameTree::NewFrameTree(const int num_locals) : StmtTree(tt::NEWFRAME), num_locals_(num_locals) { }
+
+EndFrameTree::EndFrameTree() : StmtTree(tt::ENDFRAME) { }
+
 SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
@@ -64,7 +68,7 @@ void Fragment::append(const StmtTree *stmt) {
     content_.push_back(stmt);
 }
 
-void Fragment::concatenate(const Fragment *vec) {
+void Fragment::concat(const Fragment *vec) {
     if (vec == NULL) return;
 
     for (auto stmt : vec->content_) {
@@ -89,15 +93,19 @@ Fragment *BinOpTree::vectorize() const {
     StmtTree *move = new FragMove(new TempTree(result),
             new BinOpTree(op_, new TempTree(vleft->result_temp_), new TempTree(vright->result_temp_)));
     Fragment *v = new Fragment(result);
-    v->concatenate(vleft);
-    v->concatenate(vright);
+    v->concat(vleft);
+    v->concat(vright);
     v->append(move);
     return v;
 }
 
 Fragment *CallTree::vectorize() const {
-    /* not implemented yet! */
-    return NULL;
+    /* TODO set up arguments first */
+    Temp *result = new Temp();
+    StmtTree *move = new FragMove(new TempTree(result), this);
+    Fragment *v = new Fragment(result);
+    v->append(move);
+    return v;
 }
 
 Fragment *ConstTree::vectorize() const {
@@ -121,9 +129,9 @@ Fragment *ExprSeqTree::vectorize() const {
     } else {
         v = new Fragment(vstmt->result_temp_);
     }
-    v->concatenate(vstmt);
+    v->concat(vstmt);
     if (vexpr) {
-        v->concatenate(vexpr);
+        v->concat(vexpr);
     }
 
     return v;
@@ -163,8 +171,8 @@ Fragment *CJumpTree::vectorize() const {
     Fragment *compval2 = right_->vectorize();
 
     Fragment *v = new Fragment(result);
-    v->concatenate(compval1);
-    v->concatenate(compval2);
+    v->concat(compval1);
+    v->concat(compval2);
     v->append(new CJumpTree(comp_,
                 new TempTree(compval1->result_temp_),
                 new TempTree(compval2->result_temp_),
@@ -180,8 +188,12 @@ Fragment *UJumpTree::vectorize() const {
 }
 
 Fragment *ReturnTree::vectorize() const {
-    /* not implemented yet! */
-    return NULL;
+    Fragment *vexpr = expr_->vectorize();
+    ReturnTree *rt = new ReturnTree(new TempTree(vexpr->result_temp_));
+    Fragment *v = new Fragment(vexpr->result_temp_);
+    v->concat(vexpr);
+    v->append(rt);
+    return v;
 }
 
 Fragment *LabelTree::vectorize() const {
@@ -196,14 +208,14 @@ Fragment *MoveTree::vectorize() const {
         /* We're moving something into a temp. */
         Fragment *v = new Fragment(dynamic_cast<const TempTree*>(dest_)->temp_);
         Fragment *vsrc = src_->vectorize();
-        v->concatenate(vsrc);
+        v->concat(vsrc);
         v->append(new FragMove(new TempTree(v->result_temp_), new TempTree(vsrc->result_temp_)));
         return v;
     } else if (dest_->getType() == tt::VAR) {
         /* We're moving something to a variable. This produces no result, so our result temp is NULL */
         Fragment *v = new Fragment(NULL);
         Fragment *vsrc = src_->vectorize();
-        v->concatenate(vsrc);
+        v->concat(vsrc);
         v->append(new FragMove(dest_, new TempTree(vsrc->result_temp_)));
         return v;
     } else {
@@ -211,12 +223,24 @@ Fragment *MoveTree::vectorize() const {
         Fragment *vdest = dest_->vectorize();
         Fragment *vsrc = src_->vectorize();
         Fragment *v = new Fragment(vdest->result_temp_);
-        v->concatenate(vsrc);
-        v->concatenate(vdest);
+        v->concat(vsrc);
+        v->concat(vdest);
         /* ? not sure what the dest should be here */
         v->append(new FragMove(new TempTree(vsrc->result_temp_), dest_));
         return v;
     }
+}
+
+Fragment *NewFrameTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
+}
+
+Fragment *EndFrameTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
 }
 
 Fragment *SeqTree::vectorize() const {
@@ -230,16 +254,16 @@ Fragment *SeqTree::vectorize() const {
         v2 = NULL;
     }
 
-    if (v2) {
+    if (v2 && v2->result_temp_) {
         v = new Fragment(v2->result_temp_);
     } else {
         v = new Fragment(v1->result_temp_);
     }
 
-    v->concatenate(v1);
+    v->concat(v1);
 
     if (v2) {
-        v->concatenate(v2);
+        v->concat(v2);
     }
 
     return v;
@@ -316,9 +340,9 @@ string ConstTree::toStr() const {
 
 string ExprSeqTree::toStr() const {
     stringstream ss;
-    ss << "\n";
-    ss << stmt_->toStr();
     ss << "(";
+    ss << stmt_->toStr();
+    ss << " ; ";
     if (expr_ != NULL){
         ss << expr_->toStr();
     }
@@ -335,7 +359,7 @@ string MemTree::toStr() const {
 
 string NameTree::toStr() const {
     stringstream ss;
-    ss << "name ";
+    ss << ".";
     ss << label_->toStr();
     return ss.str();
 }
@@ -349,9 +373,9 @@ string TempTree::toStr() const {
 string VarTree::toStr() const {
     stringstream ss;
     ss << name_;
-    ss << " [";
-    ss << offset_ * 4;
-    ss << "(fp)]";
+    ss << " [fp+";
+    ss << offset_;
+    ss << "]";
     return ss.str();
 }
 
@@ -437,6 +461,18 @@ string MoveTree::toStr() const {
     return ss.str();
 }
 
+string NewFrameTree::toStr() const {
+    stringstream ss;
+    ss << "NEW FRAME (";
+    ss << num_locals_;
+    ss << " locals)";
+    return ss.str();
+}
+
+string EndFrameTree::toStr() const {
+    return "END FRAME";
+}
+
 string SeqTree::toStr() const {
     stringstream ss;
     if (left_) {
@@ -493,10 +529,13 @@ string FragMove::toStr() const {
         ss << bo->right_->toStr();
     } else if (src_->getType() == tt::VAR) {
         ss << "LOAD\t";
-        ss << dynamic_cast<const VarTree*>(src_)->toStr();
+        ss << src_->toStr();
     } else if (dest_->getType() == tt::VAR) {
         ss << "STORE\t";
         ss << src_->toStr();
+    } else if (src_->getType() == tt::CALL) {
+        ss << "CALL\t";
+        ss << dynamic_cast<const CallTree*>(src_)->name_->toStr();
     } else {
         ss << "MOVE\t";
         ss << src_->toStr();

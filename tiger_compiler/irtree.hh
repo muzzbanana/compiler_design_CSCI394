@@ -34,6 +34,8 @@ class IRTree {
             RETURN,
             LABEL,
             MOVE,
+            NEWFRAME,
+            ENDFRAME,
             SEQ,
             NOTIMPL,
             VECTORIZED,
@@ -307,6 +309,28 @@ class MoveTree : public StmtTree {
         virtual Fragment *vectorize() const;
 };
 
+class NewFrameTree : public StmtTree {
+    public:
+        NewFrameTree(const int num_locals);
+        ~NewFrameTree() = default;
+
+        const int num_locals_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
+class EndFrameTree : public StmtTree {
+    public:
+        EndFrameTree();
+        ~EndFrameTree() = default;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize() const;
+};
+
 class SeqTree : public StmtTree {
     public:
         SeqTree();
@@ -330,7 +354,7 @@ class Fragment : public IRTree {
         Fragment(Temp *result_temp);
 
         void append(const StmtTree *stmt);
-        void concatenate(const Fragment *vec);
+        void concat(const Fragment *vec);
 
         string toStr() const;
 
@@ -346,7 +370,8 @@ class Fragment : public IRTree {
 
 /* Represents a 'move' instruction in a Fragment --
  * can only move (a) tmp to tmp (b) tmp to var
- * (c) var to tmp (d) arithmetic instruction to tmp */
+ * (c) var to tmp (d) arithmetic instruction to tmp
+ * (e) result of function call to tmp */
 class FragMove : public StmtTree {
     public:
         FragMove(const ExprTree *dest, const ExprTree *src);
