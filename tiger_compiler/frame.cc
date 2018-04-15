@@ -79,7 +79,7 @@ int Frame::popFrame(){
 
 int Frame::addtemp(std::string name){ //adds new temporary to the stack and maps the name to the stack address
 	auto templist = current[0];
-	std::pair<std::string,int> newpair (name,templist.size());
+	std::pair<std::string,int> newpair (name,sp-fp);
 	templist.push_back(newpair);
 	stack.push_back(0);
 	sp +=1;
