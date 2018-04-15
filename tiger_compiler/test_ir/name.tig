@@ -1,1 +1,1 @@
-name
+let var name := "Bilbert" in name end
