@@ -207,8 +207,17 @@ Fragment *UJumpTree::vectorize() const {
 
 Fragment *ReturnTree::vectorize() const {
     Fragment *vexpr = expr_->vectorize();
-    ReturnTree *rt = new ReturnTree(new TempTree(vexpr->result_temp_));
-    Fragment *v = new Fragment(vexpr->result_temp_);
+    ReturnTree *rt = NULL;
+    Fragment *v = NULL;
+
+    if (vexpr->result_temp_) {
+        rt = new ReturnTree(new TempTree(vexpr->result_temp_));
+        v = new Fragment(vexpr->result_temp_);
+    } else {
+        rt = new ReturnTree(NULL);
+        v = new Fragment(NULL);
+    }
+
     v->concat(vexpr);
     v->append(rt);
     return v;
@@ -478,7 +487,9 @@ string UJumpTree::toStr() const {
 string ReturnTree::toStr() const {
     stringstream ss;
     ss << "RETURN ";
-    ss << expr_->toStr();
+    if (expr_) {
+        ss << expr_->toStr();
+    }
     ss << "\n";
     return ss.str();
 }

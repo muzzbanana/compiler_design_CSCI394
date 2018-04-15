@@ -27,9 +27,7 @@ const IRTree *convert_ast(ASTNode::ASTptr ast) {
         func_decls = new SeqTree(a, func_decls);
     }
 
-    return new SeqTree(main_stmt,
-           new SeqTree(new ReturnTree(new ConstTree(0)),
-               func_decls));
+    return new SeqTree(new ReturnTree(new StmtExprTree(main_stmt)), func_decls);
 }
 
 const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
@@ -350,14 +348,14 @@ const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*>
     return new ExprSeqTree(seqStmt, this->convert_to_ir(info, vec_));
 }
 
-const ExprTree *ArrayValue::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+const ExprTree *ArrayValue::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     /* 
         ignore this, i just wanted to print things and needed to return something so it does not
         crop up an error
     */
-    const IRTree *array_name = left_->convert_to_ir(frame);
-    const IRTree *length = middle_->convert_to_ir(frame);
-    const IRTree *value = right_->convert_to_ir(frame);
+    const IRTree *array_name = left_->convert_to_ir(info);
+    const IRTree *length = middle_->convert_to_ir(info);
+    const IRTree *value = right_->convert_to_ir(info);
     std::cout << array_name->toStr() << " " << length->toStr() << " " << value->toStr() << std::endl;
     const StmtTree *leftExpr;
     const StmtTree *middleExpr;

@@ -192,8 +192,8 @@ TEST_CASE("check variable declaration", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check array declaration", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/array_decl.tig", "r");
+TEST_CASE("check function declaration", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/funcdecl.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
@@ -207,8 +207,8 @@ TEST_CASE("check array declaration", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check function declaration", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/funcdecl.tig", "r");
+TEST_CASE("check array declaration", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/array_decl.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
