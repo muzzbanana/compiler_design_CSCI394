@@ -257,4 +257,20 @@ const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*>
     return new ExprSeqTree(seqStmt, this->convert_to_ir(frame, vec_));
 }
 
+const ExprTree *DotAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    auto right = right_->toStr();
+    auto rt = left_->type_verify();
+    for (auto iter = rt.fields_.begin(); iter != rt.fields_.end(); ++iter){
+        if (iter->first == right) {
+            auto index = iter->second;
+        }
+    }
+    return new BinOpTree(IRTree::Operator::PLUS, left_->convert_to_ir(frame),  new ConstTree(index*4));
+}
+
+const ExprTree *IndexAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    auto index = right_->eval();
+    return new BinOpTree(IRTree::Operator::PLUS, left_->convert_to_ir(frame),  new ConstTree(index*4));
+}
+
 } //namespace
