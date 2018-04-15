@@ -562,8 +562,9 @@ string StaticStringTree::toStr() const {
     stringstream ss;
     ss << ".";
     ss << label_->toStr();
-    ss << ":\t";
+    ss << ":\t\"";
     ss << value_;
+    ss << "\"";
     return ss.str();
 }
 

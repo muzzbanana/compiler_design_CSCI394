@@ -4,7 +4,7 @@ namespace tiger {
 
 /* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
 /* Also places function definitions after the rest of the code. */
-const IRTree *convert_ast(ASTNode::ASTptr ast) {
+const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
     vector<string> local_vars = ast->get_var_names();
     Frame *frame = new Frame();
     IRInfo *info = new IRInfo();
@@ -28,11 +28,16 @@ const IRTree *convert_ast(ASTNode::ASTptr ast) {
         func_decls = new SeqTree(a, func_decls);
     }
 
-    const SeqTree *program = new SeqTree(new ReturnTree(new StmtExprTree(main_stmt)), func_decls);
+    const SeqTree *text = new SeqTree(new ReturnTree(new StmtExprTree(main_stmt)), func_decls);
 
+    const SeqTree *data = NULL;
     for (auto a : info->static_strings_) {
-        program = new SeqTree(new StaticStringTree(a.first, a.second), program);
+        data = new SeqTree(new StaticStringTree(a.first, a.second), data);
     }
+
+    ProgramTree *program = new ProgramTree();
+    program->data_segment = data;
+    program->text_segment = text;
 
     return program;
 }

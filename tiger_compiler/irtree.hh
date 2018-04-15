@@ -448,6 +448,64 @@ class FragMove : public StmtTree {
         const ExprTree *src_;
 };
 
+/* This is what a ProgramTree vectorizes into.
+ * It has a 'data segment' and a 'text segment'. */
+class ProgramFragment {
+    public:
+        ProgramFragment() = default;
+        ~ProgramFragment() = default;
+
+        const Fragment *data_segment;
+        const Fragment *text_segment;
+
+        virtual string toStr() const {
+            stringstream ss;
+            ss << "-- DATA SEGMENT --\n";
+            if (data_segment) {
+                ss << data_segment->toStr();
+            }
+            ss << "\n-- TEXT SEGMENT --\n";
+            ss << text_segment->toStr();
+            return ss.str();
+        }
+};
+
+/* This is what gets returned from convert_ast. It has
+ * a data segment and a text segment but might have arbitrary
+ * nesting of expressions and whatnot. Calling vectorize()
+ * on it will cause it to produce a ProgramFragment. */
+class ProgramTree {
+    public:
+        ProgramTree() = default;
+        ~ProgramTree() = default;
+
+        const StmtTree *data_segment;
+        const StmtTree *text_segment;
+
+        const ProgramFragment *vectorize() const {
+            ProgramFragment *frag = new ProgramFragment;
+            if (data_segment) {
+                frag->data_segment = data_segment->vectorize();
+            } else {
+                frag->data_segment = NULL;
+            }
+            frag->text_segment = text_segment->vectorize();
+            return frag;
+        }
+
+        virtual string toStr() const {
+            stringstream ss;
+            ss << "-- DATA SEGMENT --\n";
+            if (data_segment) {
+                ss << data_segment->toStr();
+            }
+            ss << "\n-- TEXT SEGMENT --\n";
+            ss << text_segment->toStr();
+            return ss.str();
+        }
+};
+
+
 }//namespace
 
 #endif

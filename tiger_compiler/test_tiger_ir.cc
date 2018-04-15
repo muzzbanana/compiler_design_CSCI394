@@ -27,7 +27,7 @@ TEST_CASE("check simple int", "[ir-conversion]") {
     const Type *type = output->type_verify(s);
     REQUIRE(type == Type::intType);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -46,7 +46,7 @@ TEST_CASE("check simple name", "[ir-conversion]") {
     // const Type *type = output->type_verify(s);
     // REQUIRE(type == Type::intType);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -65,7 +65,7 @@ TEST_CASE("check binop plus", "[ir-conversion]") {
     // const Type *type = output->type_verify(s);
     // REQUIRE(type == Type::intType);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -84,7 +84,7 @@ TEST_CASE("check simple if/then/else", "[ir-conversion]") {
     // const Type *type = output->type_verify(s);
     // REQUIRE(type == Type::intType);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -103,7 +103,7 @@ TEST_CASE("check simple while", "[ir-conversion]") {
     // const Type *type = output->type_verify(s);
     // REQUIRE(type == Type::intType);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -118,7 +118,7 @@ TEST_CASE("check simple assign", "[ir-conversion]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -133,7 +133,7 @@ TEST_CASE("check number as if", "[ir-conversion]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -148,7 +148,7 @@ TEST_CASE("check simple for", "[ir-conversion]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -183,7 +183,7 @@ TEST_CASE("check variable declaration", "[ir-conversion]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -198,7 +198,7 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
 
-    const IRTree *ir = convert_ast(output);
+    const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
@@ -213,7 +213,7 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
 //     ASTNode::ASTptr output = NULL;
 //     yyparse(&output);
 
-//     const IRTree *ir = convert_ast(output);
+//     const ProgramTree *ir = convert_ast(output);
 //     std::cout << output->toStr() << std::endl;
 //     std::cout << ir->toStr() << std::endl;
 //     std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;

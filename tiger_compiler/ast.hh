@@ -1413,7 +1413,7 @@ class FuncCall {
 using FuncCallASTNode = NoEvalBinaryASTNode<FuncCall>;
 
 /* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
-const IRTree *convert_ast(ASTNode::ASTptr ast);
+const ProgramTree *convert_ast(ASTNode::ASTptr ast);
 
 } // namespace
 
