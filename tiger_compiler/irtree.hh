@@ -14,7 +14,7 @@ namespace tiger {
 class ExprTree;
 typedef vector<ExprTree*> ExprList;
 
-class VectorizedTree;
+class Fragment;
 
 class IRTree {
     public:
@@ -37,6 +37,7 @@ class IRTree {
             SEQ,
             NOTIMPL,
             VECTORIZED,
+            VECMOVE,
         };
 
         enum class Operator {
@@ -52,7 +53,7 @@ class IRTree {
 
         virtual string toStr() const = 0;
 
-        virtual VectorizedTree *vectorize() const = 0;
+        virtual Fragment *vectorize() const = 0;
 
     protected:
         TreeType type_; /* what's its specific type? */
@@ -83,7 +84,7 @@ class NotImplExprTree : public ExprTree {
         ~NotImplExprTree() = default;
         string toStr() const { return "<not implemented Expr>"; };
 
-        virtual VectorizedTree *vectorize() const { return NULL; }
+        virtual Fragment *vectorize() const { return NULL; }
 };
 
 class StmtExprTree : public ExprTree {
@@ -96,7 +97,7 @@ class StmtExprTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class BinOpTree : public ExprTree {
@@ -114,7 +115,7 @@ class BinOpTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class NameTree;
@@ -129,7 +130,7 @@ class CallTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class ConstTree : public ExprTree {
@@ -141,7 +142,7 @@ class ConstTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class ExprSeqTree : public ExprTree {
@@ -154,7 +155,7 @@ class ExprSeqTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class MemTree : public ExprTree {
@@ -166,7 +167,7 @@ class MemTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class NameTree : public ExprTree {
@@ -180,7 +181,7 @@ class NameTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class TempTree : public ExprTree {
@@ -194,7 +195,7 @@ class TempTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class VarTree : public ExprTree {
@@ -211,7 +212,7 @@ class VarTree : public ExprTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 /* ===== STATEMENT TREES ===== */
@@ -222,7 +223,7 @@ class NotImplStmtTree : public StmtTree {
         ~NotImplStmtTree() = default;
         string toStr() const { return "<not implemented Stmt>"; };
 
-        virtual VectorizedTree *vectorize() const { return NULL; }
+        virtual Fragment *vectorize() const { return NULL; }
 };
 
 class ExprStmtTree : public StmtTree {
@@ -234,7 +235,7 @@ class ExprStmtTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class CJumpTree : public StmtTree {
@@ -254,7 +255,7 @@ class CJumpTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class UJumpTree : public StmtTree {
@@ -266,7 +267,7 @@ class UJumpTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class ReturnTree : public StmtTree {
@@ -278,7 +279,7 @@ class ReturnTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class LabelTree : public StmtTree {
@@ -290,7 +291,7 @@ class LabelTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class MoveTree : public StmtTree {
@@ -303,7 +304,7 @@ class MoveTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
 class SeqTree : public StmtTree {
@@ -317,19 +318,19 @@ class SeqTree : public StmtTree {
 
         string toStr() const;
 
-        virtual VectorizedTree *vectorize() const;
+        virtual Fragment *vectorize() const;
 };
 
-/* ===== VECTORIZED TREE ===== */
+/* ===== FRAGMENT ===== */
 
 /* Represents a series of statements that put their
  * result into a temp. */
-class VectorizedTree : public IRTree {
+class Fragment : public IRTree {
     public:
-        VectorizedTree(Temp *result_temp);
+        Fragment(Temp *result_temp);
 
         void append(const StmtTree *stmt);
-        void concatenate(const VectorizedTree *vec);
+        void concatenate(const Fragment *vec);
 
         string toStr() const;
 
@@ -337,10 +338,28 @@ class VectorizedTree : public IRTree {
 
         Temp *result_temp_;
 
-        VectorizedTree *vectorize() const {
+        Fragment *vectorize() const {
             cerr << "Hey this tree was already vectorized!" << endl;
             return NULL;
         }
+};
+
+/* Represents a 'move' instruction in a Fragment --
+ * can only move (a) tmp to tmp (b) tmp to var
+ * (c) var to tmp (d) arithmetic instruction to tmp */
+class FragMove : public StmtTree {
+    public:
+        FragMove(const ExprTree *dest, const ExprTree *src);
+
+        Fragment *vectorize() const {
+            cerr << "Hey this was already vectorized!" << endl;
+            return NULL;
+        }
+
+        string toStr() const;
+
+        const ExprTree *dest_;
+        const ExprTree *src_;
 };
 
 }//namespace

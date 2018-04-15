@@ -56,15 +56,15 @@ SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
 
-/* vectorized tree */
+/* fragment */
 
-VectorizedTree::VectorizedTree(Temp *result_temp) : IRTree(tt::VECTORIZED), result_temp_(result_temp) { }
+Fragment::Fragment(Temp *result_temp) : IRTree(tt::VECTORIZED), result_temp_(result_temp) { }
 
-void VectorizedTree::append(const StmtTree *stmt) {
+void Fragment::append(const StmtTree *stmt) {
     content_.push_back(stmt);
 }
 
-void VectorizedTree::concatenate(const VectorizedTree *vec) {
+void Fragment::concatenate(const Fragment *vec) {
     if (vec == NULL) return;
 
     for (auto stmt : vec->content_) {
@@ -72,52 +72,54 @@ void VectorizedTree::concatenate(const VectorizedTree *vec) {
     }
 }
 
+FragMove::FragMove(const ExprTree *dest, const ExprTree *src) : StmtTree(tt::VECMOVE), dest_(dest), src_(src) { }
+
 /* vectorization functions */
 
 /* expr trees */
 
-VectorizedTree *StmtExprTree::vectorize() const {
+Fragment *StmtExprTree::vectorize() const {
     return stmt_->vectorize();
 }
 
-VectorizedTree *BinOpTree::vectorize() const {
+Fragment *BinOpTree::vectorize() const {
     Temp *result = new Temp();
-    VectorizedTree *vleft = left_->vectorize();
-    VectorizedTree *vright = right_->vectorize();
-    StmtTree *move = new MoveTree(new TempTree(result),
+    Fragment *vleft = left_->vectorize();
+    Fragment *vright = right_->vectorize();
+    StmtTree *move = new FragMove(new TempTree(result),
             new BinOpTree(op_, new TempTree(vleft->result_temp_), new TempTree(vright->result_temp_)));
-    VectorizedTree *v = new VectorizedTree(result);
+    Fragment *v = new Fragment(result);
     v->concatenate(vleft);
     v->concatenate(vright);
     v->append(move);
     return v;
 }
 
-VectorizedTree *CallTree::vectorize() const {
+Fragment *CallTree::vectorize() const {
     /* not implemented yet! */
     return NULL;
 }
 
-VectorizedTree *ConstTree::vectorize() const {
+Fragment *ConstTree::vectorize() const {
     Temp *result = new Temp();
-    StmtTree *move = new MoveTree(new TempTree(result), this);
-    VectorizedTree *v = new VectorizedTree(result);
+    StmtTree *move = new FragMove(new TempTree(result), this);
+    Fragment *v = new Fragment(result);
     v->append(move);
     return v;
 }
 
-VectorizedTree *ExprSeqTree::vectorize() const {
-    VectorizedTree *vstmt = stmt_->vectorize();
-    VectorizedTree *vexpr = NULL;
+Fragment *ExprSeqTree::vectorize() const {
+    Fragment *vstmt = stmt_->vectorize();
+    Fragment *vexpr = NULL;
     if (expr_) {
         vexpr = expr_->vectorize();
     }
 
-    VectorizedTree *v;
+    Fragment *v;
     if (vexpr) {
-        v = new VectorizedTree(vexpr->result_temp_);
+        v = new Fragment(vexpr->result_temp_);
     } else {
-        v = new VectorizedTree(vstmt->result_temp_);
+        v = new Fragment(vstmt->result_temp_);
     }
     v->concatenate(vstmt);
     if (vexpr) {
@@ -127,40 +129,40 @@ VectorizedTree *ExprSeqTree::vectorize() const {
     return v;
 }
 
-VectorizedTree *MemTree::vectorize() const {
+Fragment *MemTree::vectorize() const {
     /* not implemented yet! */
     return NULL;
 }
 
-VectorizedTree *NameTree::vectorize() const {
+Fragment *NameTree::vectorize() const {
     /* not implemented yet! */
     return NULL;
 }
 
-VectorizedTree *TempTree::vectorize() const {
+Fragment *TempTree::vectorize() const {
     /* not implemented yet! */
     return NULL;
 }
 
-VectorizedTree *VarTree::vectorize() const {
+Fragment *VarTree::vectorize() const {
     Temp *result = new Temp();
-    VectorizedTree *v = new VectorizedTree(result);
-    v->append(new MoveTree(new TempTree(result), this));
+    Fragment *v = new Fragment(result);
+    v->append(new FragMove(new TempTree(result), this));
     return v;
 }
 
 /* statement trees */
 
-VectorizedTree *ExprStmtTree::vectorize() const {
+Fragment *ExprStmtTree::vectorize() const {
     return expr_->vectorize();
 }
 
-VectorizedTree *CJumpTree::vectorize() const {
+Fragment *CJumpTree::vectorize() const {
     Temp *result = new Temp();
-    VectorizedTree *compval1 = left_->vectorize();
-    VectorizedTree *compval2 = right_->vectorize();
+    Fragment *compval1 = left_->vectorize();
+    Fragment *compval2 = right_->vectorize();
 
-    VectorizedTree *v = new VectorizedTree(result);
+    Fragment *v = new Fragment(result);
     v->concatenate(compval1);
     v->concatenate(compval2);
     v->append(new CJumpTree(comp_,
@@ -170,55 +172,55 @@ VectorizedTree *CJumpTree::vectorize() const {
     return v;
 }
 
-VectorizedTree *UJumpTree::vectorize() const {
+Fragment *UJumpTree::vectorize() const {
     /* UJumps don't return a result, so our result_temp_ is null */
-    VectorizedTree *v = new VectorizedTree(NULL);
+    Fragment *v = new Fragment(NULL);
     v->append(this);
     return v;
 }
 
-VectorizedTree *ReturnTree::vectorize() const {
+Fragment *ReturnTree::vectorize() const {
     /* not implemented yet! */
     return NULL;
 }
 
-VectorizedTree *LabelTree::vectorize() const {
+Fragment *LabelTree::vectorize() const {
     /* labels have no result */
-    VectorizedTree *v = new VectorizedTree(NULL);
+    Fragment *v = new Fragment(NULL);
     v->append(this);
     return v;
 }
 
-VectorizedTree *MoveTree::vectorize() const {
+Fragment *MoveTree::vectorize() const {
     if (dest_->getType() == tt::TEMP) {
         /* We're moving something into a temp. */
-        VectorizedTree *v = new VectorizedTree(dynamic_cast<const TempTree*>(dest_)->temp_);
-        VectorizedTree *vsrc = src_->vectorize();
+        Fragment *v = new Fragment(dynamic_cast<const TempTree*>(dest_)->temp_);
+        Fragment *vsrc = src_->vectorize();
         v->concatenate(vsrc);
-        v->append(new MoveTree(new TempTree(v->result_temp_), new TempTree(vsrc->result_temp_)));
+        v->append(new FragMove(new TempTree(v->result_temp_), new TempTree(vsrc->result_temp_)));
         return v;
     } else if (dest_->getType() == tt::VAR) {
         /* We're moving something to a variable. This produces no result, so our result temp is NULL */
-        VectorizedTree *v = new VectorizedTree(NULL);
-        VectorizedTree *vsrc = src_->vectorize();
+        Fragment *v = new Fragment(NULL);
+        Fragment *vsrc = src_->vectorize();
         v->concatenate(vsrc);
-        v->append(new MoveTree(dest_, new TempTree(vsrc->result_temp_)));
+        v->append(new FragMove(dest_, new TempTree(vsrc->result_temp_)));
         return v;
     } else {
         /* Otherwise we're moving an arbitrary expression somewhere. */
-        VectorizedTree *vdest = dest_->vectorize();
-        VectorizedTree *vsrc = src_->vectorize();
-        VectorizedTree *v = new VectorizedTree(vdest->result_temp_);
+        Fragment *vdest = dest_->vectorize();
+        Fragment *vsrc = src_->vectorize();
+        Fragment *v = new Fragment(vdest->result_temp_);
         v->concatenate(vsrc);
         v->concatenate(vdest);
         /* ? not sure what the dest should be here */
-        v->append(new MoveTree(new TempTree(vsrc->result_temp_), dest_));
+        v->append(new FragMove(new TempTree(vsrc->result_temp_), dest_));
         return v;
     }
 }
 
-VectorizedTree *SeqTree::vectorize() const {
-    VectorizedTree *v1, *v2, *v;
+Fragment *SeqTree::vectorize() const {
+    Fragment *v1, *v2, *v;
 
     v1 = left_->vectorize();
 
@@ -229,9 +231,9 @@ VectorizedTree *SeqTree::vectorize() const {
     }
 
     if (v2) {
-        v = new VectorizedTree(v2->result_temp_);
+        v = new Fragment(v2->result_temp_);
     } else {
-        v = new VectorizedTree(v1->result_temp_);
+        v = new Fragment(v1->result_temp_);
     }
 
     v->concatenate(v1);
@@ -450,7 +452,7 @@ string SeqTree::toStr() const {
     return ss.str();
 }
 
-string VectorizedTree::toStr() const {
+string Fragment::toStr() const {
     stringstream ss;
     for (auto a : content_) {
         ss << a->toStr();
@@ -459,7 +461,50 @@ string VectorizedTree::toStr() const {
     return ss.str();
 }
 
+string FragMove::toStr() const {
+    stringstream ss;
+    if (src_->getType() == tt::BINOP) {
+        const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
+        if (bo->op_ == IRTree::Operator::EQ) {
+            ss << "EQ";
+        } else if (bo->op_ == IRTree::Operator::NE) {
+            ss << "NEQ";
+        } else if (bo->op_ == IRTree::Operator::LT) {
+            ss << "LT";
+        } else if (bo->op_ == IRTree::Operator::GT) {
+            ss << "GT";
+        } else if (bo->op_ == IRTree::Operator::GE) {
+            ss << "GE";
+        } else if (bo->op_ == IRTree::Operator::GE) {
+            ss << "LE";
+        } else if (bo->op_ == IRTree::Operator::PLUS) {
+            ss << "ADD";
+        } else if (bo->op_ == IRTree::Operator::MINUS) {
+            ss << "SUB";
+        } else if (bo->op_ == IRTree::Operator::MUL) {
+            ss << "MUL";
+        } else if (bo->op_ == IRTree::Operator::DIV) {
+            ss << "DIV";
+        } else {
+            ss << "??";
+        }
+        ss << "\t";
+        ss << bo->left_->toStr();
+        ss << ", ";
+        ss << bo->right_->toStr();
+    } else if (src_->getType() == tt::VAR) {
+        ss << "LOAD\t";
+        ss << dynamic_cast<const VarTree*>(src_)->toStr();
+    } else if (dest_->getType() == tt::VAR) {
+        ss << "STORE\t";
+        ss << src_->toStr();
+    } else {
+        ss << "MOVE\t";
+        ss << src_->toStr();
+    }
+    ss << " into ";
+    ss << dest_->toStr();
+    return ss.str();
+}
+
 } //NAMESPACE
-
-
-
