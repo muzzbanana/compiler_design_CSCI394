@@ -11,6 +11,7 @@ const IRTree *convert_ast(ASTNode::ASTptr ast) {
     return ast->convert_to_ir(frame);
 }
 
+
 const StmtTree *Assignment::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     const IRTree *left = left_->convert_to_ir(frame);
     const IRTree *right = right_->convert_to_ir(frame);
@@ -255,6 +256,39 @@ const ExprTree *ExprSeq::convert_to_ir(Frame *frame, std::vector<const ASTNode*>
     vec_.erase(vec_.begin());
 
     return new ExprSeqTree(seqStmt, this->convert_to_ir(frame, vec_));
+}
+
+const ExprTree *ArrayValue::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+    /* 
+        ignore this, i just wanted to print things and needed to return something so it does not
+        crop up an error
+    */
+    const IRTree *array_name = left_->convert_to_ir(frame);
+    const IRTree *length = middle_->convert_to_ir(frame);
+    const IRTree *value = right_->convert_to_ir(frame);
+    std::cout << array_name->toStr() << " " << length->toStr() << " " << value->toStr() << std::endl;
+    const StmtTree *leftExpr;
+    const StmtTree *middleExpr;
+    const StmtTree *rightExpr;
+
+    if (array_name->isExpr()) {
+        leftExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(array_name));
+    } else {
+        leftExpr = dynamic_cast<const StmtTree*>(array_name);
+    }
+    if (length->isExpr()) {
+        middleExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(length));
+    } else {
+        middleExpr = dynamic_cast<const StmtTree*>(length);
+    }
+    if (value->isExpr()) {
+        rightExpr = new ExprStmtTree(dynamic_cast<const ExprTree*>(value));
+    } else {
+        rightExpr = dynamic_cast<const StmtTree*>(value);
+    }
+    std::cout << leftExpr->toStr() << " " << middleExpr->toStr() << " " << rightExpr->toStr() << std::endl;
+
+    return new ExprSeqTree(leftExpr, (new ExprSeqTree(middleExpr, new ExprSeqTree(rightExpr, NULL))));
 }
 
 const ExprTree *DotAccess::convert_to_ir(Frame *frame, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
