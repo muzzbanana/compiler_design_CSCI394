@@ -56,6 +56,12 @@ NewFrameTree::NewFrameTree(const int num_locals) : StmtTree(tt::NEWFRAME), num_l
 
 EndFrameTree::EndFrameTree() : StmtTree(tt::ENDFRAME) { }
 
+ArgReserveTree::ArgReserveTree(const int num_args) : StmtTree(tt::ARGRESERVE), num_args_(num_args) { }
+
+ArgPutTree::ArgPutTree(const int index, const ExprTree *arg) : StmtTree(tt::ARGPUT), index_(index), arg_(arg) { }
+
+ArgRemoveTree::ArgRemoveTree(const int amount) : StmtTree(tt::ARGREMOVE), amount_(amount) { }
+
 SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
@@ -100,11 +106,23 @@ Fragment *BinOpTree::vectorize() const {
 }
 
 Fragment *CallTree::vectorize() const {
-    /* TODO set up arguments first */
     Temp *result = new Temp();
     StmtTree *move = new FragMove(new TempTree(result), this);
     Fragment *v = new Fragment(result);
+
+    v->append(new ArgReserveTree(args_.size()));
+
+    int arg_index = 0;
+    for (auto a : args_) {
+        Fragment *varg = a->vectorize();
+        v->concat(varg);
+        v->append(new ArgPutTree(arg_index, new TempTree(varg->result_temp_)));
+        arg_index ++;
+    }
+
     v->append(move);
+    v->append(new ArgRemoveTree(args_.size()));
+
     return v;
 }
 
@@ -243,6 +261,24 @@ Fragment *EndFrameTree::vectorize() const {
     return v;
 }
 
+Fragment *ArgReserveTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
+}
+
+Fragment *ArgPutTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
+}
+
+Fragment *ArgRemoveTree::vectorize() const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
+    return v;
+}
+
 Fragment *SeqTree::vectorize() const {
     Fragment *v1, *v2, *v;
 
@@ -324,10 +360,12 @@ string CallTree::toStr() const {
     stringstream ss;
     ss << "CALL ";
     ss << name_->toStr();
+    ss << " (";
     for (unsigned i = 0; i < args_.size(); i++) {
         if (i != 0) ss << ", ";
         ss << args_[i]->toStr();
     }
+    ss << ")";
     return ss.str();
 }
 
@@ -441,6 +479,7 @@ string ReturnTree::toStr() const {
     stringstream ss;
     ss << "RETURN ";
     ss << expr_->toStr();
+    ss << "\n";
     return ss.str();
 }
 
@@ -471,6 +510,31 @@ string NewFrameTree::toStr() const {
 
 string EndFrameTree::toStr() const {
     return "END FRAME";
+}
+
+string ArgReserveTree::toStr() const {
+    stringstream ss;
+    ss << "PASS ";
+    ss << num_args_;
+    ss << " ARGUMENTS";
+    return ss.str();
+}
+
+string ArgPutTree::toStr() const {
+    stringstream ss;
+    ss << "SET ARG ";
+    ss << index_;
+    ss << " TO ";
+    ss << arg_->toStr();
+    return ss.str();
+}
+
+string ArgRemoveTree::toStr() const {
+    stringstream ss;
+    ss << "REMOVE ";
+    ss << amount_;
+    ss << " ARGUMENTS";
+    return ss.str();
 }
 
 string SeqTree::toStr() const {
