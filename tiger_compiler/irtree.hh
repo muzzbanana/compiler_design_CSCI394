@@ -2,7 +2,9 @@
 #define _IRTREE_HH_
 
 #include <sstream>
+#include <iostream>
 #include "fragment.hh"
+#include "frame.hh"
 #include "temp.hh"
 
 using namespace std;
@@ -11,6 +13,8 @@ namespace tiger {
 
 class ExprTree;
 typedef vector<ExprTree*> ExprList;
+
+class VectorizedTree;
 
 class IRTree {
     public:
@@ -32,6 +36,7 @@ class IRTree {
             MOVE,
             SEQ,
             NOTIMPL,
+            VECTORIZED,
         };
 
         enum class Operator {
@@ -41,11 +46,13 @@ class IRTree {
         IRTree(TreeType type);
         virtual ~IRTree() = default;
 
-        TreeType getType() { return type_; }
+        TreeType getType() const { return type_; }
 
         bool isExpr() const { return is_expr_; }
 
         virtual string toStr() const = 0;
+
+        virtual VectorizedTree *vectorize() const = 0;
 
     protected:
         TreeType type_; /* what's its specific type? */
@@ -75,6 +82,8 @@ class NotImplExprTree : public ExprTree {
         NotImplExprTree() : ExprTree(IRTree::TreeType::NOTIMPL) {}
         ~NotImplExprTree() = default;
         string toStr() const { return "<not implemented Expr>"; };
+
+        virtual VectorizedTree *vectorize() const { return NULL; }
 };
 
 class StmtExprTree : public ExprTree {
@@ -86,6 +95,8 @@ class StmtExprTree : public ExprTree {
         const StmtTree *stmt_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class BinOpTree : public ExprTree {
@@ -102,6 +113,8 @@ class BinOpTree : public ExprTree {
         const ExprTree *right_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class NameTree;
@@ -115,6 +128,8 @@ class CallTree : public ExprTree {
         ExprList args_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class ConstTree : public ExprTree {
@@ -125,6 +140,8 @@ class ConstTree : public ExprTree {
         int value_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class ExprSeqTree : public ExprTree {
@@ -136,6 +153,8 @@ class ExprSeqTree : public ExprTree {
         const ExprTree *expr_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class MemTree : public ExprTree {
@@ -146,6 +165,8 @@ class MemTree : public ExprTree {
         const ExprTree *expr_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class NameTree : public ExprTree {
@@ -158,6 +179,8 @@ class NameTree : public ExprTree {
         Label *label_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class TempTree : public ExprTree {
@@ -170,6 +193,8 @@ class TempTree : public ExprTree {
         Temp *temp_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class VarTree : public ExprTree {
@@ -185,6 +210,8 @@ class VarTree : public ExprTree {
         int offset_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 /* ===== STATEMENT TREES ===== */
@@ -194,6 +221,8 @@ class NotImplStmtTree : public StmtTree {
         NotImplStmtTree() : StmtTree(IRTree::TreeType::NOTIMPL) {}
         ~NotImplStmtTree() = default;
         string toStr() const { return "<not implemented Stmt>"; };
+
+        virtual VectorizedTree *vectorize() const { return NULL; }
 };
 
 class ExprStmtTree : public StmtTree {
@@ -204,6 +233,8 @@ class ExprStmtTree : public StmtTree {
         const ExprTree *expr_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class CJumpTree : public StmtTree {
@@ -222,6 +253,8 @@ class CJumpTree : public StmtTree {
         Label *f_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class UJumpTree : public StmtTree {
@@ -232,6 +265,8 @@ class UJumpTree : public StmtTree {
         Label *label_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class ReturnTree : public StmtTree {
@@ -242,6 +277,8 @@ class ReturnTree : public StmtTree {
         const ExprTree *expr_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class LabelTree : public StmtTree {
@@ -252,6 +289,8 @@ class LabelTree : public StmtTree {
         Label *l_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class MoveTree : public StmtTree {
@@ -263,6 +302,8 @@ class MoveTree : public StmtTree {
         const ExprTree *src_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
 };
 
 class SeqTree : public StmtTree {
@@ -275,6 +316,31 @@ class SeqTree : public StmtTree {
         const StmtTree *right_;
 
         string toStr() const;
+
+        virtual VectorizedTree *vectorize() const;
+};
+
+/* ===== VECTORIZED TREE ===== */
+
+/* Represents a series of statements that put their
+ * result into a temp. */
+class VectorizedTree : public IRTree {
+    public:
+        VectorizedTree(Temp *result_temp);
+
+        void append(const StmtTree *stmt);
+        void concatenate(const VectorizedTree *vec);
+
+        string toStr() const;
+
+        vector<const StmtTree*> content_;
+
+        Temp *result_temp_;
+
+        VectorizedTree *vectorize() const {
+            cerr << "Hey this tree was already vectorized!" << endl;
+            return NULL;
+        }
 };
 
 }//namespace

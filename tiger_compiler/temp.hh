@@ -10,19 +10,26 @@ typedef std::vector<Temp*> TempList;
 
 class Temp {
     public:
-        Temp() { }
-        Temp(const std::string specialname) { }
-        Temp(const Temp& other) { }
+        Temp() {
+            ntemps ++;
+            index = ntemps;
+        }
 
         ~Temp() = default;
 
-        std::string toStr() { return "<temp>"; }
+        std::string toStr() {
+            std::stringstream ss;
+            ss << "t";
+            ss << index;
+            return ss.str();
+        }
 
         int index = -1;
 
     private:
         int offset;
-        std::string specialname;
+
+        static int ntemps;
         //Temp& other;
 };
 

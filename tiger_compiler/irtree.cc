@@ -56,6 +56,193 @@ SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
 
+/* vectorized tree */
+
+VectorizedTree::VectorizedTree(Temp *result_temp) : IRTree(tt::VECTORIZED), result_temp_(result_temp) { }
+
+void VectorizedTree::append(const StmtTree *stmt) {
+    content_.push_back(stmt);
+}
+
+void VectorizedTree::concatenate(const VectorizedTree *vec) {
+    if (vec == NULL) return;
+
+    for (auto stmt : vec->content_) {
+        append(stmt);
+    }
+}
+
+/* vectorization functions */
+
+/* expr trees */
+
+VectorizedTree *StmtExprTree::vectorize() const {
+    return stmt_->vectorize();
+}
+
+VectorizedTree *BinOpTree::vectorize() const {
+    Temp *result = new Temp();
+    VectorizedTree *vleft = left_->vectorize();
+    VectorizedTree *vright = right_->vectorize();
+    StmtTree *move = new MoveTree(new TempTree(result),
+            new BinOpTree(op_, new TempTree(vleft->result_temp_), new TempTree(vright->result_temp_)));
+    VectorizedTree *v = new VectorizedTree(result);
+    v->concatenate(vleft);
+    v->concatenate(vright);
+    v->append(move);
+    return v;
+}
+
+VectorizedTree *CallTree::vectorize() const {
+    /* not implemented yet! */
+    return NULL;
+}
+
+VectorizedTree *ConstTree::vectorize() const {
+    Temp *result = new Temp();
+    StmtTree *move = new MoveTree(new TempTree(result), this);
+    VectorizedTree *v = new VectorizedTree(result);
+    v->append(move);
+    return v;
+}
+
+VectorizedTree *ExprSeqTree::vectorize() const {
+    VectorizedTree *vstmt = stmt_->vectorize();
+    VectorizedTree *vexpr = NULL;
+    if (expr_) {
+        vexpr = expr_->vectorize();
+    }
+
+    VectorizedTree *v;
+    if (vexpr) {
+        v = new VectorizedTree(vexpr->result_temp_);
+    } else {
+        v = new VectorizedTree(vstmt->result_temp_);
+    }
+    v->concatenate(vstmt);
+    if (vexpr) {
+        v->concatenate(vexpr);
+    }
+
+    return v;
+}
+
+VectorizedTree *MemTree::vectorize() const {
+    /* not implemented yet! */
+    return NULL;
+}
+
+VectorizedTree *NameTree::vectorize() const {
+    /* not implemented yet! */
+    return NULL;
+}
+
+VectorizedTree *TempTree::vectorize() const {
+    /* not implemented yet! */
+    return NULL;
+}
+
+VectorizedTree *VarTree::vectorize() const {
+    Temp *result = new Temp();
+    VectorizedTree *v = new VectorizedTree(result);
+    v->append(new MoveTree(new TempTree(result), this));
+    return v;
+}
+
+/* statement trees */
+
+VectorizedTree *ExprStmtTree::vectorize() const {
+    return expr_->vectorize();
+}
+
+VectorizedTree *CJumpTree::vectorize() const {
+    Temp *result = new Temp();
+    VectorizedTree *compval1 = left_->vectorize();
+    VectorizedTree *compval2 = right_->vectorize();
+
+    VectorizedTree *v = new VectorizedTree(result);
+    v->concatenate(compval1);
+    v->concatenate(compval2);
+    v->append(new CJumpTree(comp_,
+                new TempTree(compval1->result_temp_),
+                new TempTree(compval2->result_temp_),
+                t_, f_));
+    return v;
+}
+
+VectorizedTree *UJumpTree::vectorize() const {
+    /* UJumps don't return a result, so our result_temp_ is null */
+    VectorizedTree *v = new VectorizedTree(NULL);
+    v->append(this);
+    return v;
+}
+
+VectorizedTree *ReturnTree::vectorize() const {
+    /* not implemented yet! */
+    return NULL;
+}
+
+VectorizedTree *LabelTree::vectorize() const {
+    /* labels have no result */
+    VectorizedTree *v = new VectorizedTree(NULL);
+    v->append(this);
+    return v;
+}
+
+VectorizedTree *MoveTree::vectorize() const {
+    if (dest_->getType() == tt::TEMP) {
+        /* We're moving something into a temp. */
+        VectorizedTree *v = new VectorizedTree(dynamic_cast<const TempTree*>(dest_)->temp_);
+        VectorizedTree *vsrc = src_->vectorize();
+        v->concatenate(vsrc);
+        v->append(new MoveTree(new TempTree(v->result_temp_), new TempTree(vsrc->result_temp_)));
+        return v;
+    } else if (dest_->getType() == tt::VAR) {
+        /* We're moving something to a variable. This produces no result, so our result temp is NULL */
+        VectorizedTree *v = new VectorizedTree(NULL);
+        VectorizedTree *vsrc = src_->vectorize();
+        v->concatenate(vsrc);
+        v->append(new MoveTree(dest_, new TempTree(vsrc->result_temp_)));
+        return v;
+    } else {
+        /* Otherwise we're moving an arbitrary expression somewhere. */
+        VectorizedTree *vdest = dest_->vectorize();
+        VectorizedTree *vsrc = src_->vectorize();
+        VectorizedTree *v = new VectorizedTree(vdest->result_temp_);
+        v->concatenate(vsrc);
+        v->concatenate(vdest);
+        /* ? not sure what the dest should be here */
+        v->append(new MoveTree(new TempTree(vsrc->result_temp_), dest_));
+        return v;
+    }
+}
+
+VectorizedTree *SeqTree::vectorize() const {
+    VectorizedTree *v1, *v2, *v;
+
+    v1 = left_->vectorize();
+
+    if (right_) {
+        v2 = right_->vectorize();
+    } else {
+        v2 = NULL;
+    }
+
+    if (v2) {
+        v = new VectorizedTree(v2->result_temp_);
+    } else {
+        v = new VectorizedTree(v1->result_temp_);
+    }
+
+    v->concatenate(v1);
+
+    if (v2) {
+        v->concatenate(v2);
+    }
+
+    return v;
+}
+
 /* tostr functions */
 
 string StmtExprTree::toStr() const {
@@ -259,6 +446,15 @@ string SeqTree::toStr() const {
     }
     if (right_) {
         ss << right_->toStr();
+    }
+    return ss.str();
+}
+
+string VectorizedTree::toStr() const {
+    stringstream ss;
+    for (auto a : content_) {
+        ss << a->toStr();
+        ss << "\n";
     }
     return ss.str();
 }

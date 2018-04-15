@@ -30,6 +30,7 @@ TEST_CASE("check simple int", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -48,6 +49,7 @@ TEST_CASE("check simple name", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -66,6 +68,7 @@ TEST_CASE("check binop plus", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -84,6 +87,7 @@ TEST_CASE("check simple if/then/else", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -102,6 +106,7 @@ TEST_CASE("check simple while", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -116,6 +121,7 @@ TEST_CASE("check simple assign", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -130,6 +136,7 @@ TEST_CASE("check number as if", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -144,6 +151,7 @@ TEST_CASE("check simple for", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
@@ -178,6 +186,7 @@ TEST_CASE("check variable declaration", "[ir-conversion]") {
     const IRTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
+    std::cout << ir->vectorize()->toStr() << std::endl;
 
     delete output;
     fclose(myfile);
