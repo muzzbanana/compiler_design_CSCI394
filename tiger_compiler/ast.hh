@@ -36,6 +36,7 @@ class IRInfo {
         IRInfo() = default;
         Frame *frame_;
         map<string, Label*> func_labels_;
+        vector<const StmtTree*> functions_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
