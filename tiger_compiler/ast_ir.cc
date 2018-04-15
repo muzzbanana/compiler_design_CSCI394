@@ -12,7 +12,24 @@ const IRTree *convert_ast(ASTNode::ASTptr ast) {
 
     vector<string> empty_args;
     info->frame_->pushFrame(empty_args, local_vars);
-    return ast->convert_to_ir(info);
+
+    const IRTree *main_ir = ast->convert_to_ir(info);
+
+    const StmtTree *main_stmt = NULL;
+    if (main_ir->isExpr()) {
+        main_stmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(main_ir));
+    } else {
+        main_stmt = dynamic_cast<const StmtTree*>(main_ir);
+    }
+
+    const SeqTree *func_decls = NULL;
+    for (auto a : info->functions_) {
+        func_decls = new SeqTree(a, func_decls);
+    }
+
+    return new SeqTree(main_stmt,
+           new SeqTree(new ReturnTree(new ConstTree(0)),
+               func_decls));
 }
 
 const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
@@ -224,14 +241,23 @@ const StmtTree *UnTypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr lef
     Label *new_func_label = new Label(left_->toStr());
     info->func_labels_[left_->toStr()] = new_func_label;
 
-    return  new SeqTree(new LabelTree(new_func_label),
+    /* Note that we store the functions in a vector rather than interpolating
+     * them directly into the generated fragments. This is so that we can put
+     * the functions at the end of the output rather than having them scattered
+     * throughout the code (which makes the code path through assembly kind
+     * of unpredictable.) */
+    info->functions_.push_back(
+        new SeqTree(new LabelTree(new_func_label),
             new SeqTree(new ReturnTree(
-                    new StmtExprTree(
-                        new SeqTree(new NewFrameTree(localvars.size()),
-                            new SeqTree(inner_stmt,
-                                new SeqTree(new EndFrameTree, NULL)))
-                        )
-                    ), NULL));
+                new StmtExprTree(
+                    new SeqTree(new NewFrameTree(localvars.size()),
+                    new SeqTree(inner_stmt,
+                    new SeqTree(new EndFrameTree, NULL)))
+                )
+            ), NULL))
+        );
+
+    return NULL;
 }
 
 const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
@@ -259,6 +285,14 @@ const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, AST
 const StmtTree *Declaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr child_) {
     const IRTree *stmt = child_->convert_to_ir(info);
     const StmtTree *statement;
+    if (stmt == NULL) {
+        /* If it returned null, it's something that doesn't want to put its
+         * code here (so either a type declaration, which doesn't turn into
+         * any generated code, or a function declaration, which will get moved
+         * to the end. */
+        return NULL;
+    }
+
     if (stmt->isExpr()) {
         statement = new ExprStmtTree(dynamic_cast<const ExprTree*>(stmt));
     } else {
@@ -271,18 +305,30 @@ const StmtTree *DeclList::convert_to_ir(IRInfo *info, std::vector<const Declarat
     auto node = vec_.front();
     const IRTree *stmt = node->convert_to_ir(info);
     const StmtTree *firstStmt;
-    if (stmt->isExpr()) {
+
+    if (stmt == NULL) {
+        firstStmt = NULL;
+    } else if (stmt->isExpr()) {
         firstStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(stmt));
     } else {
         firstStmt = dynamic_cast<const StmtTree*>(stmt);
     }
+
     if (vec_.size() == 1){
         // const StmtTree *nullStmt = dynamic_cast<const StmtTree*>(NULL);
-        return new SeqTree(firstStmt,NULL);
+        if (firstStmt == NULL) {
+            return NULL;
+        } else {
+            return new SeqTree(firstStmt,NULL);
+        }
     }
     vec_.erase(vec_.begin());
 
-    return new SeqTree(firstStmt, this->convert_to_ir(info, vec_));
+    if (firstStmt == NULL) {
+        return this->convert_to_ir(info, vec_);
+    } else {
+        return new SeqTree(firstStmt, this->convert_to_ir(info, vec_));
+    }
 }
 
 const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*> vec_) {
