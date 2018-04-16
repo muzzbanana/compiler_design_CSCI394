@@ -28,6 +28,7 @@ class IRTree {
             NAME,       /* a name representing data at a label */
             TEMP,       /* a temp */
             VAR,        /* access to a variable on the stack */
+            COND,       /* conditional expression */
             EXPR,       /* an expression wrapped in a stmt */
             CJUMP,      /* a conditional jump */
             UJUMP,      /* an unconditional jump */
@@ -223,6 +224,27 @@ class VarTree : public ExprTree {
         virtual Fragment *vectorize(const Temp *result) const;
 };
 
+/* Represents a conditional expression (an if-statement that returns a value.)
+ * Decomposes to a CJumpTree + some other stuff when vectorized. */
+class ConditionalExprTree : public ExprTree {
+    public:
+        ConditionalExprTree(IRTree::Operator comp, const ExprTree *left, const ExprTree *right,
+                const ExprTree *trueVal, const ExprTree *falseVal);
+        ~ConditionalExprTree() = default;
+
+        IRTree::Operator comp_;
+
+        const ExprTree *left_;
+        const ExprTree *right_;
+
+        const ExprTree *trueVal_;
+        const ExprTree *falseVal_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize(const Temp *result) const;
+};
+
 /* ===== STATEMENT TREES ===== */
 
 class NotImplStmtTree : public StmtTree {
@@ -268,10 +290,10 @@ class CJumpTree : public StmtTree {
 
 class UJumpTree : public StmtTree {
     public:
-        UJumpTree(Label *label);
+        UJumpTree(const Label *label);
         ~UJumpTree() = default;
 
-        Label *label_;
+        const Label *label_;
 
         string toStr() const;
 
@@ -292,10 +314,10 @@ class ReturnTree : public StmtTree {
 
 class LabelTree : public StmtTree {
     public:
-        LabelTree(Label *l);
+        LabelTree(const Label *l);
         ~LabelTree() = default;
 
-        Label *l_;
+        const Label *l_;
 
         string toStr() const;
 
@@ -489,7 +511,9 @@ class ProgramTree {
             } else {
                 frag->data_segment = NULL;
             }
-            frag->text_segment = text_segment->vectorize(NULL);
+            const Temp *textresult = new Temp();
+            cout << "TEXTRESULTTEMP: " << textresult->toStr() << endl;
+            frag->text_segment = text_segment->vectorize(textresult);
             return frag;
         }
 

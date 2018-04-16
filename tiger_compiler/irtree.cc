@@ -37,6 +37,10 @@ TempTree::TempTree(const Temp *temp) : ExprTree(tt::TEMP), temp_(temp) { }
 
 VarTree::VarTree(std::string name, int offset) : ExprTree(tt::VAR), name_(name), offset_(offset) { }
 
+ConditionalExprTree::ConditionalExprTree(IRTree::Operator comp, const ExprTree *left, const ExprTree *right,
+        const ExprTree *trueVal, const ExprTree *falseVal)
+    : ExprTree(tt::COND), comp_(comp), left_(left), right_(right), trueVal_(trueVal), falseVal_(falseVal) { }
+
 /* statement trees */
 
 ExprStmtTree::ExprStmtTree(const ExprTree *expr) : StmtTree(tt::EXPR), expr_(expr) { }
@@ -44,11 +48,11 @@ ExprStmtTree::ExprStmtTree(const ExprTree *expr) : StmtTree(tt::EXPR), expr_(exp
 CJumpTree::CJumpTree(IRTree::Operator comp, const ExprTree *left, const ExprTree *right, Label *t, Label *f)
     : StmtTree(tt::CJUMP), comp_(comp), left_(left), right_(right), t_(t), f_(f) { }
 
-UJumpTree::UJumpTree(Label *label) : StmtTree(tt::UJUMP), label_(label) { }
+UJumpTree::UJumpTree(const Label *label) : StmtTree(tt::UJUMP), label_(label) { }
 
 ReturnTree::ReturnTree(const ExprTree *expr) : StmtTree(tt::RETURN), expr_(expr) { }
 
-LabelTree::LabelTree(Label *l) : StmtTree(tt::LABEL), l_(l) { }
+LabelTree::LabelTree(const Label *l) : StmtTree(tt::LABEL), l_(l) { }
 
 MoveTree::MoveTree(const ExprTree *dest, const ExprTree *src) : StmtTree(tt::MOVE), dest_(dest), src_(src) { }
 
@@ -99,8 +103,10 @@ Fragment *BinOpTree::vectorize(const Temp *result) const {
     const Temp *right_tmp = new Temp();
     Fragment *vleft = left_->vectorize(left_tmp);
     Fragment *vright = right_->vectorize(right_tmp);
+
     StmtTree *move = new FragMove(new TempTree(result),
             new BinOpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp)));
+
     Fragment *v = new Fragment(result);
     v->concat(vleft);
     v->concat(vright);
@@ -109,7 +115,7 @@ Fragment *BinOpTree::vectorize(const Temp *result) const {
 }
 
 Fragment *CallTree::vectorize(const Temp *result) const {
-    StmtTree *move = new FragMove(new TempTree(result), this);
+    StmtTree *move = new FragMove(new TempTree(result), new CallTree(name_, vector<const ExprTree*>()));
     Fragment *v = new Fragment(result);
 
     v->append(new ArgReserveTree(args_.size()));
@@ -137,8 +143,7 @@ Fragment *ConstTree::vectorize(const Temp *result) const {
 }
 
 Fragment *ExprSeqTree::vectorize(const Temp *result) const {
-    const Temp *first_result = new Temp();
-    Fragment *vstmt = stmt_->vectorize(first_result);
+    Fragment *vstmt = stmt_->vectorize(result);
     Fragment *vexpr = NULL;
     if (expr_) {
         vexpr = expr_->vectorize(result);
@@ -178,6 +183,36 @@ Fragment *TempTree::vectorize(const Temp *result) const {
 Fragment *VarTree::vectorize(const Temp *result) const {
     Fragment *v = new Fragment(result);
     v->append(new FragMove(new TempTree(result), this));
+    return v;
+}
+
+Fragment *ConditionalExprTree::vectorize(const Temp *result) const {
+    Fragment *v = new Fragment(result);
+
+    Temp *comp_result1 = new Temp();
+    Temp *comp_result2 = new Temp();
+    Fragment *compval1 = left_->vectorize(comp_result1);
+    Fragment *compval2 = right_->vectorize(comp_result2);
+
+    Label *trueLabel = new Label("true");
+    Label *falseLabel = new Label("false");
+    Label *afterLabel = new Label("after");
+
+    Fragment *trueresult = trueVal_->vectorize(result);
+    Fragment *falseresult = falseVal_->vectorize(result);
+
+    v->concat(compval1);
+    v->concat(compval2);
+    v->append(new CJumpTree(comp_,
+                new TempTree(comp_result1),
+                new TempTree(comp_result2),
+                trueLabel, falseLabel));
+    v->append(new LabelTree(trueLabel));
+    v->concat(trueresult);
+    v->append(new UJumpTree(afterLabel));
+    v->append(new LabelTree(falseLabel));
+    v->concat(falseresult);
+    v->append(new LabelTree(afterLabel));
     return v;
 }
 
@@ -223,7 +258,7 @@ Fragment *ReturnTree::vectorize(const Temp *result) const {
 
 Fragment *LabelTree::vectorize(const Temp *result) const {
     /* labels have no result */
-    Fragment *v = new Fragment(result);
+    Fragment *v = new Fragment(NULL);
     v->append(this);
     return v;
 }
@@ -231,25 +266,20 @@ Fragment *LabelTree::vectorize(const Temp *result) const {
 Fragment *MoveTree::vectorize(const Temp *result) const {
     if (dest_->getType() == tt::TEMP) {
         /* We're moving something into a temp. */
-        Fragment *v = new Fragment(dynamic_cast<const TempTree*>(dest_)->temp_);
         Fragment *vsrc = src_->vectorize(result);
         return vsrc;
     } else if (dest_->getType() == tt::VAR) {
-        /* We're moving something to a variable. This produces no result, so our result temp is NULL */
-        Fragment *v = new Fragment(NULL);
+        /* We're moving something to a variable. */
+        Fragment *v = new Fragment(result);
         Fragment *vsrc = src_->vectorize(result);
         v->concat(vsrc);
         v->append(new FragMove(dest_, new TempTree(vsrc->result_temp_)));
         return v;
     } else {
-        const Temp *src_result = new Temp();
         /* Otherwise we're moving an arbitrary expression somewhere. */
-        Fragment *vdest = dest_->vectorize(result);
-        Fragment *vsrc = src_->vectorize(src_result);
-        Fragment *v = new Fragment(vdest->result_temp_);
+        Fragment *vsrc = src_->vectorize(result);
+        Fragment *v = new Fragment(result);
         v->concat(vsrc);
-        v->concat(vdest);
-        v->append(new FragMove(new TempTree(result), new TempTree(src_result)));
         return v;
     }
 }
@@ -293,17 +323,27 @@ Fragment *StaticStringTree::vectorize(const Temp *result) const {
 Fragment *SeqTree::vectorize(const Temp *result) const {
     Fragment *v1, *v2, *v;
 
-    Temp *leftResult = new Temp();
-
-    v1 = left_->vectorize(leftResult);
-
     if (right_) {
         v2 = right_->vectorize(result);
     } else {
         v2 = NULL;
     }
 
-    v = new Fragment(result);
+    /* since we're in a seqtree, we don't do anything with v1's
+     * return value; therefore, we can reuse the 'result' temp
+     * for both values */
+    v1 = left_->vectorize(result);
+    if (v2 && v2->result_temp_) {
+        /* Propagate the null-ness or non-null-ness of v2's result
+         * back up to parent sequences, so we can put the last
+         * result-y expression into the actual returned register.
+         * (otherwise we end up returning a nonsense temp that doesn't
+         * have anything in it) */
+        v = new Fragment(v2->result_temp_);
+    } else {
+        /* Same; if v1 actually had no result, pass that back up */
+        v = new Fragment(v1->result_temp_);
+    }
 
     v->concat(v1);
 
@@ -426,6 +466,51 @@ string VarTree::toStr() const {
     }
     ss << offset_;
     ss << "]";
+    return ss.str();
+}
+
+string ConditionalExprTree::toStr() const {
+    stringstream ss;
+    ss << "(if ";
+    ss << left_->toStr();
+    switch (comp_) {
+        case IRTree::Operator::EQ:
+            ss << " = ";
+            break;
+        case IRTree::Operator::NE:
+            ss << " != ";
+            break;
+        case IRTree::Operator::LT:
+            ss << " < ";
+            break;
+        case IRTree::Operator::GT:
+            ss << " > ";
+            break;
+        case IRTree::Operator::LE:
+            ss << " <= ";
+            break;
+        case IRTree::Operator::GE:
+            ss << " >= ";
+            break;
+        case IRTree::Operator::PLUS:
+            ss << " + ";
+            break;
+        case IRTree::Operator::MINUS:
+            ss << " - ";
+            break;
+        case IRTree::Operator::MUL:
+            ss << " * ";
+            break;
+        case IRTree::Operator::DIV:
+            ss << " / ";
+            break;
+    }
+    ss << right_->toStr();
+    ss << " then ";
+    ss << trueVal_->toStr();
+    ss << " else ";
+    ss << falseVal_->toStr();
+    ss << ")";
     return ss.str();
 }
 

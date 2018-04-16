@@ -68,13 +68,9 @@ const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
     return new MoveTree(leftExpr, rightExpr);
 }
 
-const StmtTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+const ExprTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     /* We evaluate the conditional expression and then just create
      * a CJumpnode that checks whether it's equal to 0. */
-    Label *trueLabel = new Label("true");
-    Label *falseLabel = new Label("false");
-    Label *afterLabel = new Label("after");
-
     /* Convert to something like:
      *      JNE [<left>], 0, t, f
      *  .t: <middle>
@@ -98,21 +94,21 @@ const StmtTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
      * they need to be wrapped in an ExprStmtTree; otherwise they can just be passed
      * along as stmts. */
     const IRTree *trueTree = middle_->convert_to_ir(info);
-    const StmtTree *trueStmt;
+    const ExprTree *trueExpr;
     if (trueTree->isExpr()) {
-        trueStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(trueTree));
+        trueExpr = dynamic_cast<const ExprTree*>(trueTree);
     } else {
-        trueStmt = dynamic_cast<const StmtTree*>(trueTree);
+        trueExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(trueTree));
     }
 
     const IRTree *falseTree = right_->convert_to_ir(info);
-    const StmtTree *falseStmt;
+    const ExprTree *falseExpr;
     if (falseTree->isExpr()) {
-        falseStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(falseTree));
+        falseExpr = dynamic_cast<const ExprTree*>(falseTree);
     } else {
-        falseStmt = dynamic_cast<const StmtTree*>(falseTree);
+        falseExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(falseTree));
     }
-    return new SeqTree(new CJumpTree(IRTree::Operator::NE,
+    /*return new SeqTree(new CJumpTree(IRTree::Operator::NE,
                 conditional, new ConstTree(0), trueLabel, falseLabel),
            new SeqTree(new LabelTree(trueLabel),
            new SeqTree(trueStmt,
@@ -120,7 +116,8 @@ const StmtTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
            new SeqTree(new LabelTree(falseLabel),
            new SeqTree(falseStmt,
            new SeqTree(new LabelTree(afterLabel),
-                   NULL)))))));
+                   NULL)))))));*/
+    return new ConditionalExprTree(IRTree::Operator::NE, conditional, new ConstTree(0), trueExpr, falseExpr);
 }
 
 const StmtTree *WhileDo::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
