@@ -207,6 +207,8 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
     fclose(myfile);
 }
 
+<<<<<<< HEAD
+=======
 TEST_CASE("check recursive function from test_semantic", "[ir-conversion]") {
     FILE *myfile = fopen("test_ir/semantic_recursive.tig", "r");
     yyin = myfile;
@@ -224,6 +226,7 @@ TEST_CASE("check recursive function from test_semantic", "[ir-conversion]") {
     fclose(myfile);
 }
 
+>>>>>>> a879fae6e8f32391bdc3dd8c5373439c84172c29
 TEST_CASE("check array declaration", "[ir-conversion]") {
     FILE *myfile = fopen("test_ir/array_decl.tig", "r");
     yyin = myfile;

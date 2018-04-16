@@ -1029,8 +1029,7 @@ class TypeDeclaration {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
         const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            cout << "type decl" << endl;
-            return ExprTree::notImpl;
+            return NULL;
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
