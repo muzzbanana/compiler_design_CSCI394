@@ -9,8 +9,8 @@ const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
     Frame *frame = new Frame();
     IRInfo *info = new IRInfo();
 
-    info->initArray_label = new Label("initArray");
-    info->malloc_label = new Label("malloc");
+    info->initArray_label = new Label("initArray", false);
+    info->malloc_label = new Label("malloc", false);
 
     info->frame_ = frame;
 

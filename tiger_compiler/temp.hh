@@ -35,8 +35,11 @@ class Temp {
 
 class Label {
     public:
-        Label() { nlabels ++; index = nlabels; }
-        Label(const std::string name) { nlabels ++; index = nlabels; name_ = name; }
+        Label() { nlabels ++; index = nlabels; append_idx_ = true; }
+        Label(const std::string name, bool append_idx=true) : append_idx_(append_idx) {
+            nlabels ++; index = nlabels; name_ = name;
+        }
+
         ~Label() { }
 
         std::string toStr() const {
@@ -46,13 +49,17 @@ class Label {
             } else {
                 ss << name_;
             }
-            ss << index;
+
+            if (append_idx_) {
+                ss << index;
+            }
             return ss.str();
         }
 
         int index = -1;
 
     private:
+        bool append_idx_;
         std::string name_ = "";
 
         static int nlabels;
