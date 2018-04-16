@@ -512,7 +512,6 @@ class ProgramTree {
                 frag->data_segment = NULL;
             }
             const Temp *textresult = new Temp();
-            cout << "TEXTRESULTTEMP: " << textresult->toStr() << endl;
             frag->text_segment = text_segment->vectorize(textresult);
             return frag;
         }

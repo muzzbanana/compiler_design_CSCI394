@@ -9,6 +9,9 @@ const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
     Frame *frame = new Frame();
     IRInfo *info = new IRInfo();
 
+    info->initArray_label = new Label("initArray");
+    info->malloc_label = new Label("malloc");
+
     info->frame_ = frame;
 
     vector<string> empty_args;
@@ -419,9 +422,9 @@ const ExprTree *ArrayValue::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
     information.push_back(size);
     information.push_back(val);
 
-    const StmtTree *a = new MoveTree(new TempTree(temp), new CallTree(new NameTree(new Label("malloc")),details));
+    const StmtTree *a = new MoveTree(new TempTree(temp), new CallTree(new NameTree(info->malloc_label),details));
 
-    return new ExprSeqTree(a, new CallTree(new NameTree(new Label("initArray")), information));
+    return new ExprSeqTree(a, new CallTree(new NameTree(info->initArray_label), information));
 }
 
 const ExprTree *DotAccess::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {

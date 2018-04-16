@@ -38,6 +38,8 @@ class IRInfo {
         map<string, Label*> func_labels_;
         vector<const StmtTree*> functions_;
         vector<pair<const Label*, string> > static_strings_;
+        Label *malloc_label;
+        Label *initArray_label;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
