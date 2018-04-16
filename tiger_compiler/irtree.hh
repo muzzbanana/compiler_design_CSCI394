@@ -61,7 +61,7 @@ class IRTree {
 
         virtual string toStr() const = 0;
 
-        virtual Fragment *vectorize() const = 0;
+        virtual Fragment *vectorize(const Temp *result) const = 0;
 
     protected:
         TreeType type_; /* what's its specific type? */
@@ -92,7 +92,7 @@ class NotImplExprTree : public ExprTree {
         ~NotImplExprTree() = default;
         string toStr() const { return "<not implemented Expr>"; };
 
-        virtual Fragment *vectorize() const { return NULL; }
+        virtual Fragment *vectorize(const Temp *result) const { return NULL; }
 };
 
 class StmtExprTree : public ExprTree {
@@ -105,7 +105,7 @@ class StmtExprTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class BinOpTree : public ExprTree {
@@ -123,7 +123,7 @@ class BinOpTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class NameTree;
@@ -138,7 +138,7 @@ class CallTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class ConstTree : public ExprTree {
@@ -150,7 +150,7 @@ class ConstTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class ExprSeqTree : public ExprTree {
@@ -163,7 +163,7 @@ class ExprSeqTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class MemTree : public ExprTree {
@@ -175,7 +175,7 @@ class MemTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class NameTree : public ExprTree {
@@ -189,21 +189,21 @@ class NameTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class TempTree : public ExprTree {
     /* Represents a temporary value for intermediate
      * results in calculations. */
     public:
-        TempTree(Temp *temp);
+        TempTree(const Temp *temp);
         ~TempTree() = default;
 
-        Temp *temp_;
+        const Temp *temp_;
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class VarTree : public ExprTree {
@@ -220,7 +220,7 @@ class VarTree : public ExprTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* ===== STATEMENT TREES ===== */
@@ -231,7 +231,7 @@ class NotImplStmtTree : public StmtTree {
         ~NotImplStmtTree() = default;
         string toStr() const { return "<not implemented Stmt>"; };
 
-        virtual Fragment *vectorize() const { return NULL; }
+        virtual Fragment *vectorize(const Temp *result) const { return NULL; }
 };
 
 class ExprStmtTree : public StmtTree {
@@ -243,7 +243,7 @@ class ExprStmtTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class CJumpTree : public StmtTree {
@@ -263,7 +263,7 @@ class CJumpTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class UJumpTree : public StmtTree {
@@ -275,7 +275,7 @@ class UJumpTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class ReturnTree : public StmtTree {
@@ -287,7 +287,7 @@ class ReturnTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class LabelTree : public StmtTree {
@@ -299,7 +299,7 @@ class LabelTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class MoveTree : public StmtTree {
@@ -312,7 +312,7 @@ class MoveTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class NewFrameTree : public StmtTree {
@@ -324,7 +324,7 @@ class NewFrameTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class EndFrameTree : public StmtTree {
@@ -334,7 +334,7 @@ class EndFrameTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* For growing stack when we pass arguments. */
@@ -347,7 +347,7 @@ class ArgReserveTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* Put an argument at a certain index */
@@ -362,7 +362,7 @@ class ArgPutTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* Undo the last ArgReserve */
@@ -375,7 +375,7 @@ class ArgRemoveTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* A static string pointer */
@@ -389,7 +389,7 @@ class StaticStringTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 class SeqTree : public StmtTree {
@@ -403,7 +403,7 @@ class SeqTree : public StmtTree {
 
         string toStr() const;
 
-        virtual Fragment *vectorize() const;
+        virtual Fragment *vectorize(const Temp *result) const;
 };
 
 /* ===== FRAGMENT ===== */
@@ -412,7 +412,7 @@ class SeqTree : public StmtTree {
  * result into a temp. */
 class Fragment : public IRTree {
     public:
-        Fragment(Temp *result_temp);
+        Fragment(const Temp *result_temp);
 
         void append(const StmtTree *stmt);
         void concat(const Fragment *vec);
@@ -421,9 +421,9 @@ class Fragment : public IRTree {
 
         vector<const StmtTree*> content_;
 
-        Temp *result_temp_;
+        const Temp *result_temp_;
 
-        Fragment *vectorize() const {
+        Fragment *vectorize(const Temp *result) const {
             cerr << "Hey this tree was already vectorized!" << endl;
             return NULL;
         }
@@ -437,7 +437,7 @@ class FragMove : public StmtTree {
     public:
         FragMove(const ExprTree *dest, const ExprTree *src);
 
-        Fragment *vectorize() const {
+        Fragment *vectorize(const Temp *result) const {
             cerr << "Hey this was already vectorized!" << endl;
             return NULL;
         }
@@ -472,7 +472,7 @@ class ProgramFragment {
 
 /* This is what gets returned from convert_ast. It has
  * a data segment and a text segment but might have arbitrary
- * nesting of expressions and whatnot. Calling vectorize()
+ * nesting of expressions and whatnot. Calling vectorize(const Temp *result)
  * on it will cause it to produce a ProgramFragment. */
 class ProgramTree {
     public:
@@ -485,11 +485,11 @@ class ProgramTree {
         const ProgramFragment *vectorize() const {
             ProgramFragment *frag = new ProgramFragment;
             if (data_segment) {
-                frag->data_segment = data_segment->vectorize();
+                frag->data_segment = data_segment->vectorize(NULL);
             } else {
                 frag->data_segment = NULL;
             }
-            frag->text_segment = text_segment->vectorize();
+            frag->text_segment = text_segment->vectorize(NULL);
             return frag;
         }
 

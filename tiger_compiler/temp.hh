@@ -17,7 +17,7 @@ class Temp {
 
         ~Temp() = default;
 
-        std::string toStr() {
+        std::string toStr() const {
             std::stringstream ss;
             ss << "t";
             ss << index;
