@@ -1134,11 +1134,7 @@ class FieldMember {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_);
 
-        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
-            cout << "FieldMember" << endl;
-
-            return ExprTree::notImpl;
-        }
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr left_, ASTNode::ASTptr right_) const {
             return vector<string>();
@@ -1157,10 +1153,7 @@ class FieldList {
 
         const Type *type_verify(Scope* scope, std::vector<const FieldMemberASTNode*> vec_, int location_);
 
-        const ExprTree *convert_to_ir(IRInfo *info, std::vector<const FieldMemberASTNode*> vec_) {
-            cout << "Fieldlist" << endl;
-            return ExprTree::notImpl;
-        }
+        const ExprTree *convert_to_ir(IRInfo *info, std::vector<const FieldMemberASTNode*> vec_);
 
         virtual const vector<string> get_var_names(std::vector<const FieldMemberASTNode*> vec_) const {
             vector<string> result;
@@ -1206,7 +1199,7 @@ class TypeValue {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
         const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr child_){
-            return ExprTree::notImpl;
+            return NULL;
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {
@@ -1249,8 +1242,7 @@ class RecordTypeAST {
         const Type *type_verify(Scope* scope, std::vector<const RecordFieldASTNode*> vec_, int location_);
 
         const ExprTree *convert_to_ir(IRInfo *info, std::vector<const RecordFieldASTNode*> vec_) {
-            cout << "record type" << endl;
-            return ExprTree::notImpl;
+            return NULL;
         }
 
         virtual const vector<string> get_var_names(std::vector<const RecordFieldASTNode*>) const {
@@ -1271,7 +1263,7 @@ class ArrayTypeAST {
         const Type *type_verify(Scope* scope, ASTNode::ASTptr child_, int location_);
 
         const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr child_){
-            return ExprTree::notImpl;
+            return NULL;
         }
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr child_) const {

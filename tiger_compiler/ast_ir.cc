@@ -382,6 +382,26 @@ const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*>
     return new ExprSeqTree(seqStmt, this->convert_to_ir(info, vec_));
 }
 
+const StmtTree *FieldMember::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
+    /* a fetch? */
+    const IRTree *left = left_->convert_to_ir(info);
+    const IRTree *right = right_->convert_to_ir(info);
+    const ExprTree *leftExpr;
+    const ExprTree *rightExpr;
+
+    assert(left->isExpr());
+    assert(right->isExpr());
+
+    leftExpr = dynamic_cast<const ExprTree*>(left);
+    rightExpr = dynamic_cast<const ExprTree*>(right);
+
+    return new MoveTree(leftExpr, new MemTree(rightExpr));
+}
+
+const ExprTree *FieldList::convert_to_ir(IRInfo *info, std::vector<const FieldMemberASTNode*> vec_) {
+    return ExprTree::notImpl;
+}
+
 const ExprTree *ArrayValue::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
 
     const IRTree *length = middle_->convert_to_ir(info);

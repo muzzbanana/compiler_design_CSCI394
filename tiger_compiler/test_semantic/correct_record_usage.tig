@@ -1,9 +1,6 @@
 let
     type fruit = { size: int, weight: int, color: string }
     var apple := fruit { size=40, weight=2, color="red" }
-    var lime := fruit { size=35, weight=1, color="red" }
 in
-    apple.weight := 3;
-    apple.color := "green";
-    lime.color := apple.color
+    apple.weight := 3
 end
