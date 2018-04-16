@@ -461,7 +461,7 @@ string VarTree::toStr() const {
     stringstream ss;
     ss << name_;
     ss << " [fp";
-    if (offset_ > 0) {
+    if (offset_ >= 0) {
         ss << "+";
     }
     ss << offset_;
