@@ -1,6 +1,8 @@
 IR Tree Generation
+==================
 
 Sorry for the very late submission.
+The only thing remaining is record types.
 
 ### Frames (frame.cc, frame.hh)
 
@@ -15,7 +17,10 @@ However, temporaries can be added, looked up, and popped to directly and immedia
 
 ### Translation (ast_ir.cc, irtree.cc, irtee.hh)
 
-Every ASTNode has its own `convert_to_ir` and `get_var_names` methods.
+The fucntion `conver_ast` which is defined in ast_ir.cc takes the produced AST and converts each AST node to and IR node. Every ASTNode has its own `convert_to_ir` method.
+
+Additionally, each node has a method `get_var_names` used to get names to add to the frame.
+
 
 
 Tiger Semantics
