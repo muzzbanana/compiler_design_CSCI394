@@ -430,7 +430,10 @@ string TempTree::toStr() const {
 string VarTree::toStr() const {
     stringstream ss;
     ss << name_;
-    ss << " [fp+";
+    ss << " [fp";
+    if (offset_ > 0) {
+        ss << "+";
+    }
     ss << offset_;
     ss << "]";
     return ss.str();

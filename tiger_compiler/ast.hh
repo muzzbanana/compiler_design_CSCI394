@@ -202,7 +202,7 @@ class StrASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(IRInfo *info) const {
-            Label *strlabel = new Label();
+            Label *strlabel = new Label("string");
             info->static_strings_.push_back(make_pair(strlabel, value_));
             return new NameTree(strlabel);
         }
@@ -1374,11 +1374,7 @@ class TypedFuncDecl {
 
         const Type *type_verify(Scope* scope, ASTNode::ASTptr name_node, ASTNode::ASTptr params_node, ASTNode::ASTptr rettype_node, ASTNode::ASTptr funcbody_node, int location_);
 
-        const ExprTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
-                                      ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
-            cout << "typed function decl" << endl;
-            return ExprTree::notImpl;
-        }
+        const StmtTree *convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_);
 
         virtual const vector<string> get_var_names(ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) const {
             // NOTE: We *don't* return the vars explicitly here, because the arguments + local vars

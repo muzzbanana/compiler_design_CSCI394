@@ -207,6 +207,23 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
     fclose(myfile);
 }
 
+TEST_CASE("check recursive function from test_semantic", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/semantic_recursive.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const int result = semantic_checks(output);
+    REQUIRE(result == 0);
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    delete output;
+    fclose(myfile);
+}
+
 // TEST_CASE("check array declaration", "[ir-conversion]") {
 //     FILE *myfile = fopen("test_ir/array_decl.tig", "r");
 //     yyin = myfile;

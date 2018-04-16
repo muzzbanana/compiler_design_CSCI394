@@ -226,37 +226,39 @@ const StmtTree *TypedVarDeclaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr
     return new MoveTree(left, right);
 }
 
-const StmtTree *UnTypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+const StmtTree *convert_func_to_ir(IRInfo *info, ASTNode::ASTptr name, ASTNode::ASTptr args, ASTNode::ASTptr body) {
     /* Get the argument names out of the RecordTypeASTNode representing arguments. */
     /* (This is kind of hacky, but no less hacky than the string-parsing solution
      * we came up with last time :P ) */
-    const RecordTypeASTNode *arglist = dynamic_cast<const RecordTypeASTNode *>(middle_);
+    const RecordTypeASTNode *arglist = dynamic_cast<const RecordTypeASTNode *>(args);
     vector<string> argnames;
     for (ASTNode::ASTptr arg : arglist->vec_) {
         argnames.push_back(dynamic_cast<const RecordFieldASTNode *>(arg)->left_->toStr());
     }
 
-    vector<string> localvars = right_->get_var_names();
+    vector<string> localvars = body->get_var_names();
 
     /* Push the new frame. */
     info->frame_->pushFrame(argnames, localvars);
 
+    /* Put the function's label into the function label table
+     * before we evaluate it, in case the function is recursive. */
+    Label *new_func_label = new Label(name->toStr());
+    info->func_labels_[name->toStr()] = new_func_label;
+
     /* Figure out the IR for the inside of the function. */
-    const IRTree *inner_func = right_->convert_to_ir(info);
+    const IRTree *inner_func = body->convert_to_ir(info);
 
     /* Convert it to a StmtTree*. */
     const StmtTree *inner_stmt = NULL;
     if (inner_func->isExpr()) {
         inner_stmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(inner_func));
     } else {
-        inner_stmt = dynamic_cast<const StmtTree *>(inner_stmt);
+        inner_stmt = dynamic_cast<const StmtTree *>(inner_func);
     }
 
     /* Pop the frame. */
     info->frame_->popFrame();
-
-    Label *new_func_label = new Label(left_->toStr());
-    info->func_labels_[left_->toStr()] = new_func_label;
 
     /* Note that we store the functions in a vector rather than interpolating
      * them directly into the generated fragments. This is so that we can put
@@ -277,16 +279,17 @@ const StmtTree *UnTypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr lef
     return NULL;
 }
 
+const StmtTree *UnTypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
+    return convert_func_to_ir(info, left_, middle_, right_);
+}
+
+const StmtTree *TypedFuncDecl::convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_, ASTNode::ASTptr three_, ASTNode::ASTptr four_) {
+    return convert_func_to_ir(info, one_, two_, four_);
+}
+
 const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
     const IRTree *let_block = left_->convert_to_ir(info);
     const IRTree *in_block = right_->convert_to_ir(info);
-
-    const StmtTree *letStmt;
-    if (let_block->isExpr()) {
-        letStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(let_block));
-    } else {
-        letStmt = dynamic_cast<const StmtTree*>(let_block);
-    }
 
     const ExprTree *inExpr;
 
@@ -296,7 +299,19 @@ const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, AST
         inExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(in_block));
     }
 
-    return new ExprSeqTree(letStmt,inExpr);
+    const StmtTree *letStmt;
+    if (let_block != NULL) {
+        if (let_block->isExpr()) {
+            letStmt = new ExprStmtTree(dynamic_cast<const ExprTree*>(let_block));
+        } else {
+            letStmt = dynamic_cast<const StmtTree*>(let_block);
+        }
+
+        return new ExprSeqTree(letStmt,inExpr);
+    } else {
+        /* No declarations actually ended up turning into any code, so just return the regular block. */
+        return inExpr;
+    }
 }
 
 const StmtTree *Declaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr child_) {

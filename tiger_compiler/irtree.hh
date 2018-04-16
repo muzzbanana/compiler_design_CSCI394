@@ -460,11 +460,11 @@ class ProgramFragment {
 
         virtual string toStr() const {
             stringstream ss;
-            ss << "-- DATA SEGMENT --\n";
             if (data_segment) {
+                ss << "-- DATA SEGMENT --\n";
                 ss << data_segment->toStr();
+                ss << "\n-- TEXT SEGMENT --\n";
             }
-            ss << "\n-- TEXT SEGMENT --\n";
             ss << text_segment->toStr();
             return ss.str();
         }
@@ -495,11 +495,11 @@ class ProgramTree {
 
         virtual string toStr() const {
             stringstream ss;
-            ss << "-- DATA SEGMENT --\n";
             if (data_segment) {
+                ss << "-- DATA SEGMENT --\n";
                 ss << data_segment->toStr();
+                ss << "\n-- TEXT SEGMENT --\n";
             }
-            ss << "\n-- TEXT SEGMENT --\n";
             ss << text_segment->toStr();
             return ss.str();
         }
