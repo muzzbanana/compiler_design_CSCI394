@@ -4,3 +4,7 @@ tiger
 test_tiger
 test_tiger_semantic
 test_tiger_ir
+tiger.tab.c
+tiger.tab.h
+lex.yy.c
+tiger.output
