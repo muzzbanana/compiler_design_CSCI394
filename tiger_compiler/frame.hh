@@ -9,7 +9,7 @@ using namemap = std::vector<std::pair<std::string,int> >; //maps names to sp (wa
 class Frame {
 public:
 	Frame();
-	~Frame()=default;
+	~Frame() = default;
 	int fp; //Frame pointer
 	int sp; //stack pointer
 	std::deque<namemap> tempmap; //stores previous Frame's temps
