@@ -19,6 +19,7 @@ public:
 
     virtual bool isMove(ASMInstruction *instruction) = 0;
     virtual bool isJump(ASMInstruction *instruction) = 0;
+    virtual std::map tempspmap; //to add a temp, tempspmap.emplace(<name>, <sp>) to erase it, tempspmap.erase(tempspmap.find(<name))
 
 protected:
     void emit(Instruction *instruction);
