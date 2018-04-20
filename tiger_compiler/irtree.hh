@@ -65,6 +65,8 @@ class IRTree {
 
         virtual Fragment *vectorize(const Temp *result) const = 0;
 
+        virtual void munch(InstructionList instrs);
+
     protected:
         TreeType type_; /* what's its specific type? */
         bool is_expr_;  /* is it expression? (if no, is stmt) */
@@ -95,6 +97,8 @@ class NotImplExprTree : public ExprTree {
         string toStr() const { return "<not implemented Expr>"; };
 
         virtual Fragment *vectorize(const Temp *result) const { return NULL; }
+
+        virtual void munch(InstructionList instrs);
 };
 
 class StmtExprTree : public ExprTree {
@@ -108,6 +112,8 @@ class StmtExprTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class BinOpTree : public ExprTree {
@@ -126,6 +132,8 @@ class BinOpTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class NameTree;
@@ -141,6 +149,8 @@ class CallTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class ConstTree : public ExprTree {
@@ -153,6 +163,8 @@ class ConstTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class ExprSeqTree : public ExprTree {
@@ -166,6 +178,8 @@ class ExprSeqTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class MemTree : public ExprTree {
@@ -178,6 +192,8 @@ class MemTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class NameTree : public ExprTree {
@@ -192,6 +208,8 @@ class NameTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class TempTree : public ExprTree {
@@ -206,6 +224,8 @@ class TempTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class VarTree : public ExprTree {
@@ -223,6 +243,8 @@ class VarTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* Represents a conditional expression (an if-statement that returns a value.)
@@ -244,6 +266,8 @@ class ConditionalExprTree : public ExprTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* ===== STATEMENT TREES ===== */
@@ -255,6 +279,8 @@ class NotImplStmtTree : public StmtTree {
         string toStr() const { return "<not implemented Stmt>"; };
 
         virtual Fragment *vectorize(const Temp *result) const { return NULL; }
+
+        virtual void munch(InstructionList instrs);
 };
 
 class ExprStmtTree : public StmtTree {
@@ -267,6 +293,8 @@ class ExprStmtTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class CJumpTree : public StmtTree {
@@ -287,6 +315,8 @@ class CJumpTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class UJumpTree : public StmtTree {
@@ -299,6 +329,8 @@ class UJumpTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class ReturnTree : public StmtTree {
@@ -311,6 +343,8 @@ class ReturnTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class LabelTree : public StmtTree {
@@ -323,6 +357,8 @@ class LabelTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class MoveTree : public StmtTree {
@@ -336,6 +372,8 @@ class MoveTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class NewFrameTree : public StmtTree {
@@ -348,6 +386,8 @@ class NewFrameTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class EndFrameTree : public StmtTree {
@@ -358,6 +398,8 @@ class EndFrameTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* For growing stack when we pass arguments. */
@@ -371,6 +413,8 @@ class ArgReserveTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* Put an argument at a certain index */
@@ -386,6 +430,8 @@ class ArgPutTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* Undo the last ArgReserve */
@@ -399,6 +445,8 @@ class ArgRemoveTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* A static string pointer */
@@ -413,6 +461,8 @@ class StaticStringTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 class SeqTree : public StmtTree {
@@ -427,6 +477,8 @@ class SeqTree : public StmtTree {
         string toStr() const;
 
         virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* ===== FRAGMENT ===== */
