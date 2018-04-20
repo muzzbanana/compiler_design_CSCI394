@@ -6,6 +6,7 @@
 #include "fragment.hh"
 #include "frame.hh"
 #include "temp.hh"
+#include "code_gen.hh"
 
 using namespace std;
 
@@ -449,6 +450,8 @@ class Fragment : public IRTree {
             cerr << "Hey this tree was already vectorized!" << endl;
             return NULL;
         }
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* Represents a 'move' instruction in a Fragment --
@@ -468,6 +471,8 @@ class FragMove : public StmtTree {
 
         const ExprTree *dest_;
         const ExprTree *src_;
+
+        virtual void munch(InstructionList instrs);
 };
 
 /* This is what a ProgramTree vectorizes into.
