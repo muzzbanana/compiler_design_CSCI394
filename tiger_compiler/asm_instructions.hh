@@ -25,10 +25,10 @@ class ASMOperation : public ASMInstruction {
 
 class ASMMove : public ASMInstruction{
  public:
-    ASMMOVE();
-    virtual ~ASMMOVE();
+    ASMMove();
+    virtual ~ASMMove();
 
-    virtual bool isMOVE() {return true;}
+    virtual bool isMove() {return true;}
 
     Temp *getSrc() { return src; }
     Temp *getDst() { return dst; }
@@ -38,12 +38,13 @@ class ASMMove : public ASMInstruction{
     Temp *src;
 };
 
-class LABEL : public Instruction
+class ASMLabel : public Instruction
 {
  public:
-    LABEL(const std::string &assem, Label *label);
+    ASMLabel(const std::string &assem, Label *label);
+    virtual ~ASMLabel() = default;
 
-    virtual bool isLABEL() {return true;}
+    virtual bool isLabel() {return true;}
     Label *getLabel() {return label_;}
  private:
     Label *label_;
