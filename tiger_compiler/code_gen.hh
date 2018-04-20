@@ -7,8 +7,8 @@
 
 namespace tiger {
 
-class Instruction;
-typedef std::vector<Instruction*> InstructionList;
+class ASMInstruction;
+typedef std::vector<ASMInstruction*> InstructionList;
 
 class CodeGen {
 public:
@@ -22,7 +22,7 @@ public:
     virtual std::map tempspmap; //to add a temp, tempspmap.emplace(<name>, <sp>) to erase it, tempspmap.erase(tempspmap.find(<name))
 
 protected:
-    void emit(Instruction *instruction);
+    void emit(ASMInstruction *instruction);
     InstructionList instruction_list_;
 };
 
