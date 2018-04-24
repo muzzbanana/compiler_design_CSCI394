@@ -26,7 +26,7 @@ class ASMOperation : public ASMInstruction {
     virtual bool isJump() { return false; }
 };
 
-class ASMMove : public ASMInstruction{
+class ASMMove : public ASMInstruction {
  public:
     ASMMove();
     virtual ~ASMMove();
