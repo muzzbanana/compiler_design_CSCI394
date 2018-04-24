@@ -9,26 +9,32 @@
 namespace tiger {
 
 class ASMInstruction {
-    ASMInstruction();
+    ASMInstruction(const std::string instruction, std::string comment);
     virtual ~ASMInstruction() = default;
 
 };
 
-typedef std::vector<ASMInstructions*> programInstructions;
+// typedef std::vector<ASMInstructions*> InstructionList;
 
 class ASMOperation : public ASMInstruction {
  public:
-    ASMOperation();
+    ASMOperation(const std::string instruction, const std::string operator,
+        const std::string lhs, const std::string rhs, const std::string dst);
     virtual ~ASMOperation() = default;
 
     virtual bool isMove() { return false; }
     virtual bool isLabel() { return false; }
     virtual bool isJump() { return false; }
+private:
+    const std::string instruction_; // things like 'ADD', 'ADDI',...
+    const std::string lhs_;         // left hand side of operation
+    const std::string rhs_;         // right hand side of operation
+    const std::string dst_;         // store result here
 };
 
 class ASMMove : public ASMInstruction{
  public:
-    ASMMove();
+    ASMMove(const std::string instruction, const std::string src, const std::string dst);
     virtual ~ASMMove();
 
     virtual bool isMove() {return true;}
@@ -37,8 +43,12 @@ class ASMMove : public ASMInstruction{
     Temp *getDst() { return dst; }
 
  private:
-    Temp *dst;
-    Temp *src;
+    const std::string instruction_;
+    const std::string src_;
+    const std::string dst_;
+
+    // Temp *dst;
+    // Temp *src;
 };
 
 class ASMLabel : public ASMInstruction {
