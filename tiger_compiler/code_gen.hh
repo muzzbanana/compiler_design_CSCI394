@@ -15,14 +15,12 @@ public:
     CodeGen();
     virtual ~CodeGen() = default
 
-    void generate(IRTree::Stmt *s, InstructionList &instList);
-
     virtual bool isMove(ASMInstruction *instruction) = 0;
     virtual bool isJump(ASMInstruction *instruction) = 0;
+    void emit(InstructionList list);
     virtual std::map tempspmap; //to add a temp, tempspmap.emplace(<name>, <sp>). To erase it, tempspmap.erase(tempspmap.find(<name>))
 
 protected:
-    void emit(ASMInstruction *instruction);
     InstructionList instruction_list_;
 };
 
