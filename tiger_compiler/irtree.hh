@@ -7,6 +7,7 @@
 #include "frame.hh"
 #include "temp.hh"
 #include "code_gen.hh"
+#include "asm_instructions.hh"
 
 using namespace std;
 
@@ -524,7 +525,7 @@ class FragMove : public StmtTree {
         const ExprTree *dest_;
         const ExprTree *src_;
 
-        virtual void munch(InstructionList instrs);
+        virtual void munch(InstructionList instrs) const;
 };
 
 /* This is what a ProgramTree vectorizes into.

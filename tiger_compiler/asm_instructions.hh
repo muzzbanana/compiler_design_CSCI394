@@ -34,7 +34,7 @@ private:
 
 class ASMMove : public ASMInstruction {
  public:
-    ASMMove(const std::string instruction, const std::string src, const std::string dst);
+    ASMMove(const std::string instruction, const std::vector<std::string> arguments, const std::string comment);
     virtual ~ASMMove();
 
     virtual bool isMove() {return true;}
