@@ -18,8 +18,7 @@ class ASMInstruction {
 
 class ASMOperation : public ASMInstruction {
  public:
-    ASMOperation(const std::string instruction, const std::string operator,
-        const std::string lhs, const std::string rhs, const std::string dst);
+    ASMOperation(const std::string instruction, const std::vector<std::string> arguments, const std::string comment);
     virtual ~ASMOperation() = default;
 
     virtual bool isMove() { return false; }
@@ -46,9 +45,6 @@ class ASMMove : public ASMInstruction {
     const std::string instruction_;
     const std::string src_;
     const std::string dst_;
-
-    // Temp *dst;
-    // Temp *src;
 };
 
 class ASMLabel : public ASMInstruction {
@@ -64,10 +60,21 @@ class ASMLabel : public ASMInstruction {
 
 class ASMJump : public ASMInstruction {
  public:
-    ASMJump(const std::string &assem, Label *label);
+    ASMJump(const std::string instruction, Label *label);
     virtual ~ASMJump() = default;
 
     virtual bool isJump() {return true;}
+    Label *getLabel() {return label_;}
+ private:
+    Label *label_;
+};
+
+class ASMCall : public ASMInstruction {
+ public:
+    ASMCall(const std::string instruction, Label *label);
+    virtual ~ASMCall() = default;
+
+    virtual bool isCall() {return true;}
     Label *getLabel() {return label_;}
  private:
     Label *label_;

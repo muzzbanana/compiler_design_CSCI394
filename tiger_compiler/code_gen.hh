@@ -13,7 +13,7 @@ typedef std::vector<ASMInstruction*> InstructionList;
 class CodeGen {
 public:
     CodeGen();
-    virtual ~CodeGen() = default
+    virtual ~CodeGen() = default;
 
     virtual bool isMove(ASMInstruction *instruction) = 0;
     virtual bool isJump(ASMInstruction *instruction) = 0;
