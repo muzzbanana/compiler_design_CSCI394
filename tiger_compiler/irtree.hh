@@ -66,7 +66,7 @@ class IRTree {
 
         virtual Fragment *vectorize(const Temp *result) const = 0;
 
-        virtual void munch(InstructionList instrs);
+        virtual void munch(InstructionList instrs) = 0;
 
     protected:
         TreeType type_; /* what's its specific type? */
@@ -525,7 +525,7 @@ class FragMove : public StmtTree {
         const ExprTree *dest_;
         const ExprTree *src_;
 
-        virtual void munch(InstructionList instrs) const;
+        virtual void munch(InstructionList instrs);
 };
 
 /* This is what a ProgramTree vectorizes into.

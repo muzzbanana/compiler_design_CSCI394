@@ -9,8 +9,14 @@
 namespace tiger {
 
 class ASMInstruction {
-    ASMInstruction(const std::string instruction, std::string comment);
-    virtual ~ASMInstruction() = default;
+    public:
+        ASMInstruction(const std::string instruction, std::string comment)
+            : instruction_(instruction), comment_(comment) { }
+        virtual ~ASMInstruction() = default;
+
+    protected:
+        const std::string instruction_;
+        const std::string comment_;
 
 };
 
@@ -33,18 +39,16 @@ private:
 
 class ASMMove : public ASMInstruction {
  public:
-    ASMMove(const std::string instruction, const std::vector<std::string> arguments, const std::string comment);
-    virtual ~ASMMove();
+    ASMMove(const std::string instruction, const std::vector<std::string> arguments, const std::string comment)
+        : ASMInstruction(instruction, comment), args_(arguments) { }
+    virtual ~ASMMove() { };
 
     virtual bool isMove() {return true;}
 
-    Temp *getSrc() { return src; }
-    Temp *getDst() { return dst; }
+    std::vector<std::string> getArgs() { return args_; }
 
  private:
-    const std::string instruction_;
-    const std::string src_;
-    const std::string dst_;
+    const std::vector<std::string> args_;
 };
 
 class ASMLabel : public ASMInstruction {

@@ -99,19 +99,52 @@ Fragment *StmtExprTree::vectorize(const Temp *result) const {
 }
 
 Fragment *BinOpTree::vectorize(const Temp *result) const {
-    const Temp *left_tmp = new Temp();
-    const Temp *right_tmp = new Temp();
-    Fragment *vleft = left_->vectorize(left_tmp);
-    Fragment *vright = right_->vectorize(right_tmp);
+    if (op_ == Operator::PLUS || op_ == Operator::MINUS || op_ == Operator::MUL || op_ == Operator::DIV) {
+        /*    + - * / have instruction representations     */
+        const Temp *left_tmp = new Temp();
+        const Temp *right_tmp = new Temp();
+        Fragment *vleft = left_->vectorize(left_tmp);
+        Fragment *vright = right_->vectorize(right_tmp);
 
-    StmtTree *move = new FragMove(new TempTree(result),
-            new BinOpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp)));
+        StmtTree *move = new FragMove(new TempTree(result),
+                new BinOpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp)));
 
-    Fragment *v = new Fragment(result);
-    v->concat(vleft);
-    v->concat(vright);
-    v->append(move);
-    return v;
+        Fragment *v = new Fragment(result);
+        v->concat(vleft);
+        v->concat(vright);
+        v->append(move);
+        return v;
+    } else {
+        /* Otherwise, it's a comparison operation - which mips doesn't have
+         * instruction representations for. */
+
+        /* where we put the left operand */
+        const Temp *left_tmp = new Temp();
+        /* where we put the right operand */
+        const Temp *right_tmp = new Temp();
+
+        Fragment *vleft = left_->vectorize(left_tmp);
+        Fragment *vright = right_->vectorize(right_tmp);
+
+        Label *tlabel = new Label("t");
+        Label *flabel = new Label("f");
+        Label *after  = new Label("a");
+
+        /*StmtTree *move = new FragMove(new TempTree(result),
+                new BinOpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp)));*/
+
+        Fragment *v = new Fragment(result);
+        v->concat(vleft);
+        v->concat(vright);
+        v->append(new CJumpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp), tlabel, flabel));
+        v->append(new LabelTree(tlabel));
+        v->append(new FragMove(new TempTree(result), new ConstTree(1)));
+        v->append(new UJumpTree(after));
+        v->append(new LabelTree(flabel));
+        v->append(new FragMove(new TempTree(result), new ConstTree(0)));
+        v->append(new LabelTree(after));
+        return v;
+    }
 }
 
 Fragment *CallTree::vectorize(const Temp *result) const {
@@ -716,58 +749,6 @@ string FragMove::toStr() const {
     ss << " into ";
     ss << dest_->toStr();
     return ss.str();
-}
-
-void FragMove::munch(InstructionList instrs) const {
-    string command;
-    vector<string> args;
-    if (src_->getType() == tt::BINOP) {
-        const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
-        /* TODO mips doesn't have instructions for eq/lt/etc */
-        if (bo->op_ == IRTree::Operator::EQ) {
-            command = "EQ";
-        } else if (bo->op_ == IRTree::Operator::NE) {
-            command = "NEQ";
-        } else if (bo->op_ == IRTree::Operator::LT) {
-            command = "LT";
-        } else if (bo->op_ == IRTree::Operator::GT) {
-            command = "GT";
-        } else if (bo->op_ == IRTree::Operator::GE) {
-            command = "GE";
-        } else if (bo->op_ == IRTree::Operator::GE) {
-            command = "LE";
-        } else if (bo->op_ == IRTree::Operator::PLUS) {
-            command = "add";
-        } else if (bo->op_ == IRTree::Operator::MINUS) {
-            command = "sub";
-        } else if (bo->op_ == IRTree::Operator::MUL) {
-            command = "mult";
-        } else if (bo->op_ == IRTree::Operator::DIV) {
-            command = "div";
-        } else {
-            command = "??";
-        }
-        /* TODO get temp locations and use them here!! */
-        args.push_back(dest_->toStr());
-        args.push_back(bo->left_->toStr());
-        args.push_back(bo->right_->toStr());
-    } else if (src_->getType() == tt::VAR) {
-        command = "lw";
-        args.push_back(dest_->toStr());
-        args.push_back(src_->toStr());
-    } else if (dest_->getType() == tt::VAR) {
-        command = "sw";
-        args.push_back(dest_->toStr());
-        args.push_back(src_->toStr());
-    } else if (src_->getType() == tt::CALL) {
-        command = "jal";
-        args.push_back(dynamic_cast<const CallTree*>(src_)->name_->toStr());
-    } else {
-        command = "move";
-        args.push_back(dest_->toStr());
-        args.push_back(src_->toStr());
-    }
-    instrs.push_back(new ASMMove(command, args, toStr()));
 }
 
 } //NAMESPACE
