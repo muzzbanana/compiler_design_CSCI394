@@ -238,3 +238,17 @@ TEST_CASE("check array declaration", "[ir-conversion]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check nil", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/niltest.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+
+    REQUIRE(ir == NULL);
+
+    delete output;
+    fclose(myfile);
+}

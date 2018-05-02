@@ -86,8 +86,7 @@ class NilASTNode : public ASTNode {
         }
 
         virtual const IRTree *convert_to_ir(IRInfo *info) const {
-            cout << "nil" << endl;
-            return ExprTree::notImpl;
+            return new ConstTree(0);
         }
 
         virtual std::string toStr() const

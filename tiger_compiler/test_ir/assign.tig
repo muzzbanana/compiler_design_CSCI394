@@ -1,1 +1,1 @@
-x := 0
+let var x := 1 in x := 0 end

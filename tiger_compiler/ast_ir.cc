@@ -1,10 +1,18 @@
 #include "ast.hh"
+#include "semantic_checks.hh"
 
 namespace tiger {
 
 /* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
 /* Also places function definitions after the rest of the code. */
 const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
+    /* Do type-checking before converting AST! */
+    int result = semantic_checks(ast);
+    if (result != 0) {
+        /* Failed to typecheck! */
+        return NULL;
+    }
+
     vector<string> local_vars = ast->get_var_names();
     Frame *frame = new Frame();
     IRInfo *info = new IRInfo();
