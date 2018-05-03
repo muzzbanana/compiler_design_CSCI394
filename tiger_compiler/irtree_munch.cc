@@ -11,19 +11,7 @@ void FragMove::munch(InstructionList instrs) {
     if (src_->getType() == tt::BINOP) {
         const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
         /* TODO mips doesn't have instructions for eq/lt/etc */
-        if (bo->op_ == IRTree::Operator::EQ) {
-            command = "EQ";
-        } else if (bo->op_ == IRTree::Operator::NE) {
-            command = "NEQ";
-        } else if (bo->op_ == IRTree::Operator::LT) {
-            command = "LT";
-        } else if (bo->op_ == IRTree::Operator::GT) {
-            command = "GT";
-        } else if (bo->op_ == IRTree::Operator::GE) {
-            command = "GE";
-        } else if (bo->op_ == IRTree::Operator::GE) {
-            command = "LE";
-        } else if (bo->op_ == IRTree::Operator::PLUS) {
+        if (bo->op_ == IRTree::Operator::PLUS) {
             command = "add";
         } else if (bo->op_ == IRTree::Operator::MINUS) {
             command = "sub";
@@ -94,7 +82,40 @@ void ExprStmtTree::munch(InstructionList instrs) {
 /* TODO fill me in! */ }
 
 void CJumpTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    string command;
+    vector<string> args;
+    switch(comp_) {
+        case IRTree::Operator::EQ:
+            command = "beq";
+            break;
+        case IRTree::Operator::NE:
+            command = "bne";
+            break;
+        case IRTree::Operator::LT:
+            command = "blt";
+            break;
+        case IRTree::Operator::LE:
+            command = "ble";
+            break;
+        case IRTree::Operator::GT:
+            command = "bgt";
+            break;
+        case IRTree::Operator::GE:
+            command = "bge";
+            break;
+        default:
+            command = "???";
+    }
+    /* TODO get temp locations and use them here!! */
+    args.push_back(left_->toStr());
+    args.push_back(right_->toStr());
+    args.push_back(t_->toStr());
+    /* this probably shouldn't be an ASMMove but also idk if it matters */
+    instrs.push_back(new ASMMove(command, args, toStr()));
+
+    /* We need to unconditionally branch to false label now if
+     * we didn't jump to true label. */
+    instrs.push_back(new ASMJump("j", f_));
 }
 
 void UJumpTree::munch(InstructionList instrs) {
