@@ -46,31 +46,40 @@ void FragMove::munch(InstructionList instrs) {
 }
 
 void StmtExprTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void BinOpTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void CallTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ConstTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ExprSeqTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void MemTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void NameTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void TempTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void VarTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ConditionalExprTree::munch(InstructionList instrs) {
     /* TODO fill me in ! */
@@ -79,7 +88,8 @@ void ConditionalExprTree::munch(InstructionList instrs) {
 /* statement trees */
 
 void ExprStmtTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+/* TODO fill me in! */
+}
 
 void CJumpTree::munch(InstructionList instrs) {
     string command;
@@ -119,37 +129,48 @@ void CJumpTree::munch(InstructionList instrs) {
 }
 
 void UJumpTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ReturnTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void LabelTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void MoveTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void NewFrameTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void EndFrameTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ArgReserveTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ArgPutTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void ArgRemoveTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void StaticStringTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void SeqTree::munch(InstructionList instrs) {
-/* TODO fill me in! */ }
+    /* TODO fill me in! */
+}
 
 void Fragment::munch(InstructionList instrs) {
     /* TODO fill me in */
