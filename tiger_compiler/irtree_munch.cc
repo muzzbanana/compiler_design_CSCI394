@@ -37,6 +37,10 @@ void FragMove::munch(InstructionList instrs) {
     } else if (src_->getType() == tt::CALL) {
         command = "jal";
         args.push_back(dynamic_cast<const CallTree*>(src_)->name_->toStr());
+    } else if (src_->getType() == tt::CONST) {
+        command = "li";
+        args.push_back(to_string(dynamic_cast<const ConstTree*>(dest_)->value_));
+        args.push_back(src_->toStr());
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -56,45 +60,47 @@ void BinOpTree::munch(InstructionList instrs) {
 }
 
 void CallTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* handled in fragmove */
 }
 
 void ConstTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
-    instrs.push_back(value_->toStr()); //this is probably wrong!
+    //instrs.push_back(value_->toStr()); //this is probably wrong!
+    // see added const section to fragmove
 }
 
 void ExprSeqTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* not here at this point */
 }
 
 void MemTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* i don't think this one is ever used */
 }
 
 void NameTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* not sure if we need this one ? i don't think so */
 }
 
 void TempTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* this is going to be tricky! */
 }
 
 void VarTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* this needs to turn into a 'whatever($fp)' i think */
 }
 
 void ConditionalExprTree::munch(InstructionList instrs) {
-    /* TODO fill me in ! */
     //should be v similar to CJumpTree. What are left and right?
-    string command;
-    vector<string> args;
+    // oh sorry this one doesn't need filled in.
+    // conditionalexprtree gets turned into a cjumptree when we call vectorize()
 }
 
 /* statement trees */
 
 void ExprStmtTree::munch(InstructionList instrs) {
-/* TODO fill me in! */
+    /* not here at this point */
 }
 
 void CJumpTree::munch(InstructionList instrs) {
@@ -147,43 +153,51 @@ void ReturnTree::munch(InstructionList instrs) {
     instrs.push_back(new ASMMove("move", args, toStr()));
     vector<string> ret_args;
     ret_args.push_back("$ra");
+    /* this shouldn't be an ASMMove i don't htink */
     instrs.push_back(new ASMMove("jr", ret_args, toStr()));
 }
 
 void LabelTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* a label */
 }
 
 void MoveTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
     vector<string> args;
     args.push_back(src_->toStr());
     args.push_back(dest_->toStr());
     instrs.push_back(new ASMMove("move", args, toStr()));
 }
 
+/* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* needs to expand stack to hold however many local vars we need */
 }
 
 void EndFrameTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* needs to pop off those local vars (+ maybe temps if there are any left) */
 }
 
 void ArgReserveTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* expand stack to fit N-4 number of arguments (we can pass args 1-4 in $a0-$a3) */
 }
 
 void ArgPutTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* put arg in register or stack */
 }
 
 void ArgRemoveTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* remove args from stack (undo ArgReserve) */
 }
 
 void StaticStringTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    /* a static string i forget the syntax for this tho. .asciiz something */
 }
 
 void SeqTree::munch(InstructionList instrs) {
