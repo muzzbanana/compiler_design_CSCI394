@@ -61,6 +61,7 @@ void CallTree::munch(InstructionList instrs) {
 
 void ConstTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    instrs.push_back(value_->toStr()); //this is probably wrong!
 }
 
 void ExprSeqTree::munch(InstructionList instrs) {
@@ -85,6 +86,9 @@ void VarTree::munch(InstructionList instrs) {
 
 void ConditionalExprTree::munch(InstructionList instrs) {
     /* TODO fill me in ! */
+    //should be v similar to CJumpTree. What are left and right?
+    string command;
+    vector<string> args;
 }
 
 /* statement trees */
@@ -152,6 +156,10 @@ void LabelTree::munch(InstructionList instrs) {
 
 void MoveTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
+    vector<string> args;
+    args.push_back(src_->toStr());
+    args.push_back(dest_->toStr());
+    instrs.push_back(new ASMMove("move", args, toStr()));
 }
 
 void NewFrameTree::munch(InstructionList instrs) {
