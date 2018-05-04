@@ -46,11 +46,13 @@ void FragMove::munch(InstructionList instrs) {
 }
 
 void StmtExprTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* shouldn't be called! */
+    cerr << "error, called StmtExprTree::munch!" << endl;
 }
 
 void BinOpTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* shouldn't be called, since binoptree should only be found inside movetree */
+    cerr << "error, called BinOpTree::munch!" << endl;
 }
 
 void CallTree::munch(InstructionList instrs) {
@@ -133,7 +135,15 @@ void UJumpTree::munch(InstructionList instrs) {
 }
 
 void ReturnTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* TODO use temp stack locations or w/e */
+    /* TODO save and restore return value on stack */
+    vector<string> args;
+    args.push_back(expr_->toStr());
+    args.push_back("$v0");
+    instrs.push_back(new ASMMove("move", args, toStr()));
+    vector<string> ret_args;
+    ret_args.push_back("$ra");
+    instrs.push_back(new ASMMove("jr", ret_args, toStr()));
 }
 
 void LabelTree::munch(InstructionList instrs) {
@@ -169,11 +179,12 @@ void StaticStringTree::munch(InstructionList instrs) {
 }
 
 void SeqTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+    /* shouldn't be called */
+    cerr << "error, called SeqTree::munch!" << endl;
 }
 
 void Fragment::munch(InstructionList instrs) {
-    /* TODO fill me in */
+    /* TODO fill me in (maybe?) */
 }
 
 void NotImplExprTree::munch(InstructionList instrs) {
