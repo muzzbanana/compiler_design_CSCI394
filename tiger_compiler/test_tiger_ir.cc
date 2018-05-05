@@ -13,6 +13,12 @@
 
 using namespace tiger;
 
+void print_instrs(InstructionList il) {
+    for (auto a : il) {
+        std::cout << a->toStr() << std::endl;
+    }
+}
+
 int yyparse(ASTNode::ASTptr *out);
 extern FILE *yyin;
 extern int yylineno;
@@ -30,7 +36,11 @@ TEST_CASE("check simple int", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -49,7 +59,11 @@ TEST_CASE("check simple name", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -68,7 +82,11 @@ TEST_CASE("check binop plus", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -87,7 +105,11 @@ TEST_CASE("check simple if/then/else", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);

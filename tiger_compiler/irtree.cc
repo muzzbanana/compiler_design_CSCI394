@@ -611,7 +611,6 @@ string ReturnTree::toStr() const {
     if (expr_) {
         ss << expr_->toStr();
     }
-    ss << "\n";
     return ss.str();
 }
 

@@ -5,7 +5,7 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
-void FragMove::munch(InstructionList instrs) {
+void FragMove::munch(InstructionList& instrs) const {
     string command;
     vector<string> args;
     if (src_->getType() == tt::BINOP) {
@@ -39,8 +39,8 @@ void FragMove::munch(InstructionList instrs) {
         args.push_back(dynamic_cast<const CallTree*>(src_)->name_->toStr());
     } else if (src_->getType() == tt::CONST) {
         command = "li";
-        args.push_back(to_string(dynamic_cast<const ConstTree*>(dest_)->value_));
-        args.push_back(src_->toStr());
+        args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
+        args.push_back(dest_->toStr());
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -49,50 +49,50 @@ void FragMove::munch(InstructionList instrs) {
     instrs.push_back(new ASMMove(command, args, toStr()));
 }
 
-void StmtExprTree::munch(InstructionList instrs) {
+void StmtExprTree::munch(InstructionList& instrs) const {
     /* shouldn't be called! */
     cerr << "error, called StmtExprTree::munch!" << endl;
 }
 
-void BinOpTree::munch(InstructionList instrs) {
+void BinOpTree::munch(InstructionList& instrs) const {
     /* shouldn't be called, since binoptree should only be found inside movetree */
     cerr << "error, called BinOpTree::munch!" << endl;
 }
 
-void CallTree::munch(InstructionList instrs) {
+void CallTree::munch(InstructionList& instrs) const {
     /* handled in fragmove */
 }
 
-void ConstTree::munch(InstructionList instrs) {
+void ConstTree::munch(InstructionList& instrs) const {
     //instrs.push_back(value_->toStr()); //this is probably wrong!
     // see added const section to fragmove
 }
 
-void ExprSeqTree::munch(InstructionList instrs) {
+void ExprSeqTree::munch(InstructionList& instrs) const {
     /* not here at this point */
 }
 
-void MemTree::munch(InstructionList instrs) {
+void MemTree::munch(InstructionList& instrs) const {
     /* i don't think this one is ever used */
 }
 
-void NameTree::munch(InstructionList instrs) {
+void NameTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* not sure if we need this one ? i don't think so */
 }
 
-void TempTree::munch(InstructionList instrs) {
+void TempTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* this is going to be tricky! */
 
 }
 
-void VarTree::munch(InstructionList instrs) {
+void VarTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* this needs to turn into a 'whatever($fp)' i think */
 }
 
-void ConditionalExprTree::munch(InstructionList instrs) {
+void ConditionalExprTree::munch(InstructionList& instrs) const {
     //should be v similar to CJumpTree. What are left and right?
     // oh sorry this one doesn't need filled in.
     // conditionalexprtree gets turned into a cjumptree when we call vectorize()
@@ -100,11 +100,11 @@ void ConditionalExprTree::munch(InstructionList instrs) {
 
 /* statement trees */
 
-void ExprStmtTree::munch(InstructionList instrs) {
+void ExprStmtTree::munch(InstructionList& instrs) const {
     /* not here at this point */
 }
 
-void CJumpTree::munch(InstructionList instrs) {
+void CJumpTree::munch(InstructionList& instrs) const {
     string command;
     vector<string> args;
     switch(comp_) {
@@ -141,11 +141,11 @@ void CJumpTree::munch(InstructionList instrs) {
     instrs.push_back(new ASMJump("j", f_));
 }
 
-void UJumpTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
+void UJumpTree::munch(InstructionList& instrs) const {
+    instrs.push_back(new ASMJump("j", label_));
 }
 
-void ReturnTree::munch(InstructionList instrs) {
+void ReturnTree::munch(InstructionList& instrs) const {
     /* TODO use temp stack locations or w/e */
     /* TODO save and restore return value on stack */
     vector<string> args;
@@ -154,16 +154,14 @@ void ReturnTree::munch(InstructionList instrs) {
     instrs.push_back(new ASMMove("move", args, toStr())); //I suspect actually this should be an operation? -E
     vector<string> ret_args;
     ret_args.push_back("$ra");
-    /* this shouldn't be an ASMMove i don't htink */
-    instrs.push_back(new ASMMove("jr", ret_args, toStr()));
+    instrs.push_back(new ASMOperation("jr", ret_args, toStr()));
 }
 
-void LabelTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
-    /* a label */
+void LabelTree::munch(InstructionList& instrs) const {
+    instrs.push_back(new ASMLabel(l_));
 }
 
-void MoveTree::munch(InstructionList instrs) {
+void MoveTree::munch(InstructionList& instrs) const {
     vector<string> args;
     args.push_back(src_->toStr());
     args.push_back(dest_->toStr());
@@ -171,27 +169,25 @@ void MoveTree::munch(InstructionList instrs) {
 }
 
 /* this is all function stack stuff hmm */
-void NewFrameTree::munch(InstructionList instrs) {
+void NewFrameTree::munch(InstructionList& instrs) const {
     /* needs to expand stack to hold however many local vars we need */
     vector<string> args;
     args.push_back("$t0");
     args.push_back("$sp");
     instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"));
     vector<string> args2;
-    args.push_back("$sp");
-    args.push_back("$sp");
-    int num = -4*(num_locals_+1)
-    args.push_back(string(num)); //forgot how to dynamically cast this!!
+    args2.push_back("$sp");
+    args2.push_back("$sp");
+    int num = -4*(num_locals_+1);
+    args2.push_back(to_string(num));
     instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's locals"));
     vector<string> args3;
-    args.push_back("($sp)");
-    args.push_back("t0");
+    args3.push_back("($sp)");
+    args3.push_back("$t0");
     instrs.push_back(new ASMOperation("lw", args3, "#puts the return address on the top of the stack"));
-       
-
 }
 
-void EndFrameTree::munch(InstructionList instrs) {
+void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
     // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
     vector<string> args;
@@ -201,41 +197,52 @@ void EndFrameTree::munch(InstructionList instrs) {
 
 }
 
-void ArgReserveTree::munch(InstructionList instrs) {
+void ArgReserveTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* expand stack to fit N-4 number of arguments (we can pass args 1-4 in $a0-$a3) */
 }
 
-void ArgPutTree::munch(InstructionList instrs) {
+void ArgPutTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* put arg in register or stack */
 }
 
-void ArgRemoveTree::munch(InstructionList instrs) {
+void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* remove args from stack (undo ArgReserve) */
 }
 
-void StaticStringTree::munch(InstructionList instrs) {
+void StaticStringTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* a static string i forget the syntax for this tho. .asciiz something */
 }
 
-void SeqTree::munch(InstructionList instrs) {
+void SeqTree::munch(InstructionList& instrs) const {
     /* shouldn't be called */
     cerr << "error, called SeqTree::munch!" << endl;
 }
 
-void Fragment::munch(InstructionList instrs) {
-    /* TODO fill me in (maybe?) */
+void Fragment::munch(InstructionList& instrs) const {
+    for (auto a : content_) {
+        a->munch(instrs);
+    }
 }
 
-void NotImplExprTree::munch(InstructionList instrs) {
+void NotImplExprTree::munch(InstructionList& instrs) const {
     /* don't call this */
 }
 
-void NotImplStmtTree::munch(InstructionList instrs) {
+void NotImplStmtTree::munch(InstructionList& instrs) const {
     /* don't call this */
+}
+
+InstructionList ProgramFragment::munch() const {
+    InstructionList result;
+    if (data_segment != NULL) {
+        data_segment->munch(result);
+    }
+    text_segment->munch(result);
+    return result;
 }
 
 } //NAMESPACE

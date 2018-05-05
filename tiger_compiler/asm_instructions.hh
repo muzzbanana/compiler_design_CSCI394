@@ -2,84 +2,139 @@
 #define ASM_INSTRUCTION_H
 
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "temp.hh"
+
+using namespace std;
 
 namespace tiger {
 
 class ASMInstruction {
     public:
-        ASMInstruction(const std::string instruction, std::string comment)
+        ASMInstruction(const string instruction, string comment)
             : instruction_(instruction), comment_(comment) { }
         virtual ~ASMInstruction() = default;
 
+        virtual string toStr() { return instruction_ + " \t; " + comment_; }
+
     protected:
-        const std::string instruction_;
-        const std::string comment_;
+        const string instruction_;
+        const string comment_;
 
 };
 
-// typedef std::vector<ASMInstructions*> InstructionList;
+// typedef vector<ASMInstructions*> InstructionList;
 
 class ASMOperation : public ASMInstruction {
  public:
-    ASMOperation(const std::string instruction, const std::vector<std::string> arguments, const std::string comment);
+    ASMOperation(const string instruction, const vector<string> args, const string comment)
+        : ASMInstruction(instruction, comment), args_(args) { }
     virtual ~ASMOperation() = default;
 
     virtual bool isMove() { return false; }
     virtual bool isLabel() { return false; }
     virtual bool isJump() { return false; }
+
+    virtual string toStr() {
+        stringstream ss;
+        ss << instruction_;
+        ss << " ";
+        for (unsigned int i = 0; i < args_.size(); i++) {
+            if (i != 0) {
+                ss << ", ";
+            }
+            ss << args_[i];
+        }
+        ss << " \t; " << comment_;
+        return ss.str();
+    }
 private:
-    const std::string instruction_; // things like 'ADD', 'ADDI',...
-    const std::string lhs_;         // left hand side of operation
-    const std::string rhs_;         // right hand side of operation
-    const std::string dst_;         // store result here
+    const vector<string> args_;
 };
 
 class ASMMove : public ASMInstruction {
  public:
-    ASMMove(const std::string instruction, const std::vector<std::string> arguments, const std::string comment)
-        : ASMInstruction(instruction, comment), args_(arguments) { }
+    ASMMove(const string instruction, const vector<string> args, const string comment)
+        : ASMInstruction(instruction, comment), args_(args) { }
     virtual ~ASMMove() { };
 
     virtual bool isMove() {return true;}
 
-    std::vector<std::string> getArgs() { return args_; }
+    vector<string> getArgs() { return args_; }
 
+    virtual string toStr() {
+        stringstream ss;
+        ss << instruction_;
+        ss << " ";
+        for (unsigned int i = 0; i < args_.size(); i++) {
+            if (i != 0) {
+                ss << ", ";
+            }
+            ss << args_[i];
+        }
+        ss << " \t; " << comment_;
+        return ss.str();
+    }
  private:
-    const std::vector<std::string> args_;
+    const vector<string> args_;
 };
 
 class ASMLabel : public ASMInstruction {
  public:
-    ASMLabel(const std::string &assem, Label *label);
+    ASMLabel(const Label *label) : ASMInstruction("", ""), label_(label) { }
     virtual ~ASMLabel() = default;
 
     virtual bool isLabel() {return true;}
-    Label *getLabel() {return label_;}
+    const Label *getLabel() {return label_;}
+
+    virtual string toStr() {
+        stringstream ss;
+        ss << label_->toStr();
+        ss << ":";
+        /* NOTE: I forget the mips label syntax exactly (are there dots?) */
+        return ss.str();
+    }
  private:
-    Label *label_;
+    const Label *label_;
 };
 
 class ASMJump : public ASMInstruction {
  public:
-    ASMJump(const std::string instruction, Label *label);
+    ASMJump(const string instruction, const Label *label)
+        : ASMInstruction(instruction, ""), label_(label) { }
     virtual ~ASMJump() = default;
 
     virtual bool isJump() {return true;}
-    Label *getLabel() {return label_;}
+    const Label *getLabel() {return label_;}
+
+    virtual string toStr() {
+        stringstream ss;
+        ss << instruction_;
+        ss << " ";
+        ss << label_->toStr();
+        return ss.str();
+    }
  private:
-    Label *label_;
+    const Label *label_;
 };
 
 class ASMCall : public ASMInstruction {
  public:
-    ASMCall(const std::string instruction, Label *label);
+    ASMCall(const string instruction, Label *label);
     virtual ~ASMCall() = default;
 
     virtual bool isCall() {return true;}
     Label *getLabel() {return label_;}
+
+    virtual string toStr() {
+        stringstream ss;
+        ss << "jal ";
+        ss << label_->toStr();
+        ss << " \t; " << comment_;
+        return ss.str();
+    }
  private:
     Label *label_;
 };
