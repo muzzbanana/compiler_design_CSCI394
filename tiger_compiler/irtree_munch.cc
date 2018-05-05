@@ -89,7 +89,7 @@ void TempTree::munch(InstructionList& instrs) const {
 
 void VarTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
-    /* this needs to turn into a 'whatever($fp)' i think */
+    /* this needs to turn into offset_($fp) i think */
 }
 
 void ConditionalExprTree::munch(InstructionList& instrs) const {
@@ -171,10 +171,10 @@ void MoveTree::munch(InstructionList& instrs) const {
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList& instrs) const {
     /* needs to expand stack to hold however many local vars we need */
-    vector<string> args;
+    vector<string> args; 
     args.push_back("$t0");
     args.push_back("$sp");
-    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"));
+    instrs.push_back(new ASMOperation("lw", args, "#saves the current return address as a stack pointer")); 
     vector<string> args2;
     args2.push_back("$sp");
     args2.push_back("$sp");
@@ -198,18 +198,45 @@ void EndFrameTree::munch(InstructionList& instrs) const {
 }
 
 void ArgReserveTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
     /* expand stack to fit N-4 number of arguments (we can pass args 1-4 in $a0-$a3) */
+    // if we want to load the first four arguments in this fragment we should do this here
+    vector<string> args;
+    args.push_back("$t0");
+    args.push_back("$sp");
+    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"));
+    if (num_args_>4) {
+        vector<string> args2;
+        args2.push_back("$sp");
+        args2.push_back("$sp");
+        int num = -4*(num_args_-4);
+        args2.push_back(to_string(num));
+        instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's args"));
+    }
+    vector<string> args3;
+    args3.push_back("($sp)");
+    args3.push_back("$t0");
+    instrs.push_back(new ASMOperation("lw", args3, "#puts the return address on the top of the stack"));
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
     /* put arg in register or stack */
+    vector<string> args;
+    args.push_back("$t0");
+    args.push_back("$sp");
+    args.push_back(to_string(index_));
+    instrs.push_back(new ASMOperation("sub", args, "#figures out where to put the current argument"));
+    vector<string> args2;
+    args2.push_back("($t0)");
+    args2.push_back(arg_->toStr());
+    instrs.push_back(new ASMOperation("lw", args2, "#loads the argument into the register"));
 }
 
 void ArgRemoveTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
     /* remove args from stack (undo ArgReserve) */
+    vector<string> args;
+    args.push_back("$sp");
+    args.push_back("($sp)");
+    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"));
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {
