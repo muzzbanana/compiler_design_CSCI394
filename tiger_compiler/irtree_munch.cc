@@ -151,7 +151,7 @@ void ReturnTree::munch(InstructionList instrs) {
     vector<string> args;
     args.push_back(expr_->toStr());
     args.push_back("$v0");
-    instrs.push_back(new ASMMove("move", args, toStr()));
+    instrs.push_back(new ASMMove("move", args, toStr())); //I suspect actually this should be an operation? -E
     vector<string> ret_args;
     ret_args.push_back("$ra");
     /* this shouldn't be an ASMMove i don't htink */
@@ -167,7 +167,7 @@ void MoveTree::munch(InstructionList instrs) {
     vector<string> args;
     args.push_back(src_->toStr());
     args.push_back(dest_->toStr());
-    instrs.push_back(new ASMMove("move", args, toStr()));
+    instrs.push_back(new ASMOperation("move", args, toStr()));
 }
 
 /* this is all function stack stuff hmm */
@@ -176,16 +176,17 @@ void NewFrameTree::munch(InstructionList instrs) {
     vector<string> args;
     args.push_back("$t0");
     args.push_back("$sp");
-    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"))
-    vector<string> args;
+    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"));
+    vector<string> args2;
     args.push_back("$sp");
     args.push_back("$sp");
-    args.push_back(string(-4*(num_locals+1)));
-    instrs.push_back(new ASMOperation("add", args, "#increments stack for new frame's locals"));
-    vector<string> args;
+    int num = -4*(num_locals_+1)
+    args.push_back(string(num)); //forgot how to dynamically cast this!!
+    instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's locals"));
+    vector<string> args3;
     args.push_back("($sp)");
     args.push_back("t0");
-    instrs.push_back(new ASMOperation("lw", args, "#puts the return address on the top of the stack"))
+    instrs.push_back(new ASMOperation("lw", args3, "#puts the return address on the top of the stack"));
        
 
 }
@@ -196,7 +197,7 @@ void EndFrameTree::munch(InstructionList instrs) {
     vector<string> args;
     args.push_back("$sp");
     args.push_back("($sp)");
-    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"))
+    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"));
 
 }
 
