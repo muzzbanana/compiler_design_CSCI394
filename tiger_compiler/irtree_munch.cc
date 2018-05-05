@@ -84,6 +84,7 @@ void NameTree::munch(InstructionList instrs) {
 void TempTree::munch(InstructionList instrs) {
     /* TODO fill me in! */
     /* this is going to be tricky! */
+
 }
 
 void VarTree::munch(InstructionList instrs) {
@@ -171,13 +172,32 @@ void MoveTree::munch(InstructionList instrs) {
 
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
     /* needs to expand stack to hold however many local vars we need */
+    vector<string> args;
+    args.push_back("$t0");
+    args.push_back("$sp");
+    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"))
+    vector<string> args;
+    args.push_back("$sp");
+    args.push_back("$sp");
+    args.push_back(string(-4*(num_locals+1)));
+    instrs.push_back(new ASMOperation("add", args, "#increments stack for new frame's locals"));
+    vector<string> args;
+    args.push_back("($sp)");
+    args.push_back("t0");
+    instrs.push_back(new ASMOperation("lw", args, "#puts the return address on the top of the stack"))
+       
+
 }
 
 void EndFrameTree::munch(InstructionList instrs) {
-    /* TODO fill me in! */
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
+    // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
+    vector<string> args;
+    args.push_back("$sp");
+    args.push_back("($sp)");
+    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"))
+
 }
 
 void ArgReserveTree::munch(InstructionList instrs) {
