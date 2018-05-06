@@ -11,13 +11,26 @@ using namespace std;
 
 namespace tiger {
 
+inline void pad_width(stringstream *ss, unsigned width) {
+    auto len = ss->str().length();
+    for (auto i = len; i < width; i++) {
+        (*ss) << " ";
+    }
+}
+
 class ASMInstruction {
     public:
         ASMInstruction(const string instruction, string comment)
             : instruction_(instruction), comment_(comment) { }
         virtual ~ASMInstruction() = default;
 
-        virtual string toStr() { return instruction_ + " \t# " + comment_; }
+        virtual string toStr() {
+            stringstream ss;
+            ss << instruction_;
+            pad_width(&ss, 25);
+            ss << " # " << comment_;
+            return ss.str();
+        }
 
     protected:
         const string instruction_;
@@ -47,7 +60,8 @@ class ASMOperation : public ASMInstruction {
             }
             ss << args_[i];
         }
-        ss << " \t# " << comment_;
+        pad_width(&ss, 25);
+        ss << " # " << comment_;
         return ss.str();
     }
 private:
@@ -74,7 +88,8 @@ class ASMMove : public ASMInstruction {
             }
             ss << args_[i];
         }
-        ss << " \t# " << comment_;
+        pad_width(&ss, 25);
+        ss << " # " << comment_;
         return ss.str();
     }
  private:
@@ -132,7 +147,8 @@ class ASMCall : public ASMInstruction {
         stringstream ss;
         ss << "jal ";
         ss << label_->toStr();
-        ss << " \t# " << comment_;
+        pad_width(&ss, 25);
+        ss << " # " << comment_;
         return ss.str();
     }
  private:
