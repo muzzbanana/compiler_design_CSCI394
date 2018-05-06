@@ -84,7 +84,6 @@ void NameTree::munch(InstructionList& instrs) const {
 void TempTree::munch(InstructionList& instrs) const {
     /* TODO fill me in! */
     /* this is going to be tricky! */
-
 }
 
 void VarTree::munch(InstructionList& instrs) const {
