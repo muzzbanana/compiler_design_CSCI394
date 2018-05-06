@@ -29,8 +29,8 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
     instrs.push_back(new ASMMove("add", addargs, cmt));
 
     vector<string> putargs;
-    putargs.push_back("($sp)");
     putargs.push_back(reg);
+    putargs.push_back("($sp)");
     instrs.push_back(new ASMMove("sw", putargs, cmt));
 }
 
@@ -71,8 +71,8 @@ void FragMove::munch(InstructionList& instrs) const {
         instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (dest_->getType() == tt::VAR) {
         command = "sw";
-        args.push_back(to_string(4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
         args.push_back(src_->toStr());
+        args.push_back(to_string(4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (src_->getType() == tt::CALL) {
         command = "jal";
@@ -219,7 +219,7 @@ void NewFrameTree::munch(InstructionList& instrs) const {
     vector<string> args; 
     args.push_back("$t0");
     args.push_back("$sp");
-    instrs.push_back(new ASMOperation("lw", args, "#saves the current return address as a stack pointer")); 
+    instrs.push_back(new ASMOperation("move", args, "#saves the current return address as a stack pointer")); 
     vector<string> args2;
     args2.push_back("$sp");
     args2.push_back("$sp");
@@ -227,16 +227,16 @@ void NewFrameTree::munch(InstructionList& instrs) const {
     args2.push_back(to_string(num));
     instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's locals"));
     vector<string> args3;
-    args3.push_back("($sp)");
     args3.push_back("$t0");
-    instrs.push_back(new ASMOperation("lw", args3, "#puts the return address on the top of the stack"));
+    args3.push_back("($sp)");
+    instrs.push_back(new ASMOperation("sw", args3, "#puts the return address on the top of the stack"));
 }
 
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
     // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
     /* Put last temp value into $v0 in case we're returning afterwards */
-    pop_into(instrs, "$v0", toStr());
+    pop_into(instrs, "$v0", "load return value");
     /* Restore stack pointer (hopefully this lines up properly?!) */
     vector<string> args;
     args.push_back("$sp");
@@ -250,7 +250,7 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
     vector<string> args;
     args.push_back("$t0");
     args.push_back("$sp");
-    instrs.push_back(new ASMOperation("lw", args, "#saves the current stack pointer"));
+    instrs.push_back(new ASMOperation("move", args, "#saves the current stack pointer"));
     if (num_args_>4) {
         vector<string> args2;
         args2.push_back("$sp");
@@ -260,9 +260,9 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
         instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's args"));
     }
     vector<string> args3;
-    args3.push_back("($sp)");
     args3.push_back("$t0");
-    instrs.push_back(new ASMOperation("lw", args3, "#puts the return address on the top of the stack"));
+    args3.push_back("($sp)");
+    instrs.push_back(new ASMOperation("sw", args3, "#puts the return address on the top of the stack"));
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
@@ -312,6 +312,7 @@ void NotImplStmtTree::munch(InstructionList& instrs) const {
 
 InstructionList ProgramFragment::munch() const {
     InstructionList result;
+    result.push_back(new ASMLabel(new Label("main", false)));
     if (data_segment != NULL) {
         data_segment->munch(result);
     }

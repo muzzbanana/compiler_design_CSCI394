@@ -34,12 +34,10 @@ const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
         main_stmt = dynamic_cast<const StmtTree*>(main_ir);
     }
 
-    if (local_vars.size() > 0) {
-        /* If we have any local variables, we need to reserve space for them! */
-        main_stmt = new SeqTree(new NewFrameTree(local_vars.size()),
-                    new SeqTree(main_stmt,
-                    new SeqTree(new EndFrameTree, NULL)));
-    }
+    /* If we have any local variables, we need to reserve space for them! */
+    main_stmt = new SeqTree(new NewFrameTree(local_vars.size()),
+                new SeqTree(main_stmt,
+                new SeqTree(new EndFrameTree, NULL)));
 
     const SeqTree *func_decls = NULL;
     for (auto a : info->functions_) {

@@ -17,7 +17,7 @@ class ASMInstruction {
             : instruction_(instruction), comment_(comment) { }
         virtual ~ASMInstruction() = default;
 
-        virtual string toStr() { return instruction_ + " \t; " + comment_; }
+        virtual string toStr() { return instruction_ + " \t# " + comment_; }
 
     protected:
         const string instruction_;
@@ -47,7 +47,7 @@ class ASMOperation : public ASMInstruction {
             }
             ss << args_[i];
         }
-        ss << " \t; " << comment_;
+        ss << " \t# " << comment_;
         return ss.str();
     }
 private:
@@ -74,7 +74,7 @@ class ASMMove : public ASMInstruction {
             }
             ss << args_[i];
         }
-        ss << " \t; " << comment_;
+        ss << " \t# " << comment_;
         return ss.str();
     }
  private:
@@ -132,7 +132,7 @@ class ASMCall : public ASMInstruction {
         stringstream ss;
         ss << "jal ";
         ss << label_->toStr();
-        ss << " \t; " << comment_;
+        ss << " \t# " << comment_;
         return ss.str();
     }
  private:
