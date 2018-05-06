@@ -5,12 +5,40 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
+/* Generate instruction(s) to load the top of stack into
+ * the supplied register. */
+void pop_into(InstructionList& instrs, string reg, string cmt) {
+    vector<string> getargs;
+    getargs.push_back(reg);
+    getargs.push_back("($sp)");
+    instrs.push_back(new ASMMove("lw", getargs, cmt));
+
+    vector<string> addargs;
+    addargs.push_back("$sp");
+    addargs.push_back("$sp");
+    addargs.push_back("4");
+    instrs.push_back(new ASMMove("add", addargs, cmt));
+}
+
+/* Generate instructions to push a given register onto the stack. */
+void push_from(InstructionList& instrs, string reg, string cmt) {
+    vector<string> addargs;
+    addargs.push_back("$sp");
+    addargs.push_back("$sp");
+    addargs.push_back("-4");
+    instrs.push_back(new ASMMove("add", addargs, cmt));
+
+    vector<string> putargs;
+    putargs.push_back("($sp)");
+    putargs.push_back(reg);
+    instrs.push_back(new ASMMove("sw", putargs, cmt));
+}
+
 void FragMove::munch(InstructionList& instrs) const {
     string command;
     vector<string> args;
     if (src_->getType() == tt::BINOP) {
         const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
-        /* TODO mips doesn't have instructions for eq/lt/etc */
         if (bo->op_ == IRTree::Operator::PLUS) {
             command = "add";
         } else if (bo->op_ == IRTree::Operator::MINUS) {
@@ -22,31 +50,46 @@ void FragMove::munch(InstructionList& instrs) const {
         } else {
             command = "??";
         }
-        /* TODO get temp locations and use them here!! */
-        args.push_back(dest_->toStr());
-        args.push_back(bo->left_->toStr());
-        args.push_back(bo->right_->toStr());
+        /* I'm pretty sure that the way it's set up guarantees the
+         * arguments to each binop are always on top. So we just need
+         * to move the top two arguments from the stack to $t0 + $t1,
+         * then do the thing, then store it back on the stack. */
+        /* Pop off backwards because think about subtraction: we push
+         * the first operand onto the stack first, so need to pop first
+         * into t1, then t0. */
+        pop_into(instrs, "$t1", toStr());
+        pop_into(instrs, "$t0", toStr());
+        args.push_back("$t0");
+        args.push_back("$t0");
+        args.push_back("$t1");
+        instrs.push_back(new ASMMove(command, args, toStr()));
+        push_from(instrs, "$t0", toStr());
     } else if (src_->getType() == tt::VAR) {
         command = "lw";
         args.push_back(dest_->toStr());
-        args.push_back(src_->toStr());
+        args.push_back(to_string(4*dynamic_cast<const VarTree*>(src_)->offset_) + "($fp)");
+        instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (dest_->getType() == tt::VAR) {
         command = "sw";
-        args.push_back(dest_->toStr());
+        args.push_back(to_string(4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
         args.push_back(src_->toStr());
+        instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (src_->getType() == tt::CALL) {
         command = "jal";
         args.push_back(dynamic_cast<const CallTree*>(src_)->name_->toStr());
+        instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (src_->getType() == tt::CONST) {
         command = "li";
+        args.push_back("$t0");
         args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
-        args.push_back(dest_->toStr());
+        instrs.push_back(new ASMMove(command, args, toStr()));
+        push_from(instrs, "$t0", toStr());
     } else {
         command = "move";
         args.push_back(dest_->toStr());
         args.push_back(src_->toStr());
+        instrs.push_back(new ASMMove(command, args, toStr()));
     }
-    instrs.push_back(new ASMMove(command, args, toStr()));
 }
 
 void StmtExprTree::munch(InstructionList& instrs) const {
@@ -129,8 +172,10 @@ void CJumpTree::munch(InstructionList& instrs) const {
             command = "???";
     }
     /* TODO get temp locations and use them here!! */
-    args.push_back(left_->toStr());
-    args.push_back(right_->toStr());
+    pop_into(instrs, "$t1", toStr());
+    pop_into(instrs, "$t0", toStr());
+    args.push_back("$t0");
+    args.push_back("$t1");
     args.push_back(t_->toStr());
     /* this probably shouldn't be an ASMMove but also idk if it matters */
     instrs.push_back(new ASMMove(command, args, toStr()));
@@ -147,10 +192,11 @@ void UJumpTree::munch(InstructionList& instrs) const {
 void ReturnTree::munch(InstructionList& instrs) const {
     /* TODO use temp stack locations or w/e */
     /* TODO save and restore return value on stack */
-    vector<string> args;
-    args.push_back(expr_->toStr());
-    args.push_back("$v0");
-    instrs.push_back(new ASMMove("move", args, toStr())); //I suspect actually this should be an operation? -E
+    //vector<string> args;
+    //args.push_back(expr_->toStr());
+    //args.push_back("$v0");
+    //instrs.push_back(new ASMMove("move", args, toStr())); //I suspect actually this should be an operation? -E
+    /* Return value will be moved when we encounter END FRAME */
     vector<string> ret_args;
     ret_args.push_back("$ra");
     instrs.push_back(new ASMOperation("jr", ret_args, toStr()));
@@ -189,11 +235,13 @@ void NewFrameTree::munch(InstructionList& instrs) const {
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
     // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
+    /* Put last temp value into $v0 in case we're returning afterwards */
+    pop_into(instrs, "$v0", toStr());
+    /* Restore stack pointer (hopefully this lines up properly?!) */
     vector<string> args;
     args.push_back("$sp");
     args.push_back("($sp)");
     instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"));
-
 }
 
 void ArgReserveTree::munch(InstructionList& instrs) const {

@@ -101,8 +101,8 @@ Fragment *StmtExprTree::vectorize(const Temp *result) const {
 Fragment *BinOpTree::vectorize(const Temp *result) const {
     if (op_ == Operator::PLUS || op_ == Operator::MINUS || op_ == Operator::MUL || op_ == Operator::DIV) {
         /*    + - * / have instruction representations     */
-        const Temp *left_tmp = new Temp();
         const Temp *right_tmp = new Temp();
+        const Temp *left_tmp = new Temp();
         Fragment *vleft = left_->vectorize(left_tmp);
         Fragment *vright = right_->vectorize(right_tmp);
 
@@ -118,17 +118,17 @@ Fragment *BinOpTree::vectorize(const Temp *result) const {
         /* Otherwise, it's a comparison operation - which mips doesn't have
          * instruction representations for. */
 
-        /* where we put the left operand */
-        const Temp *left_tmp = new Temp();
         /* where we put the right operand */
         const Temp *right_tmp = new Temp();
+        /* where we put the left operand */
+        const Temp *left_tmp = new Temp();
 
         Fragment *vleft = left_->vectorize(left_tmp);
         Fragment *vright = right_->vectorize(right_tmp);
 
-        Label *tlabel = new Label("t");
-        Label *flabel = new Label("f");
-        Label *after  = new Label("a");
+        Label *tlabel = new Label("true");
+        Label *flabel = new Label("false");
+        Label *after  = new Label("after");
 
         /*StmtTree *move = new FragMove(new TempTree(result),
                 new BinOpTree(op_, new TempTree(left_tmp), new TempTree(right_tmp)));*/
@@ -222,8 +222,8 @@ Fragment *VarTree::vectorize(const Temp *result) const {
 Fragment *ConditionalExprTree::vectorize(const Temp *result) const {
     Fragment *v = new Fragment(result);
 
-    Temp *comp_result1 = new Temp();
     Temp *comp_result2 = new Temp();
+    Temp *comp_result1 = new Temp();
     Fragment *compval1 = left_->vectorize(comp_result1);
     Fragment *compval2 = right_->vectorize(comp_result2);
 
@@ -256,8 +256,8 @@ Fragment *ExprStmtTree::vectorize(const Temp *result) const {
 }
 
 Fragment *CJumpTree::vectorize(const Temp *result) const {
-    Temp *comp_result1 = new Temp();
     Temp *comp_result2 = new Temp();
+    Temp *comp_result1 = new Temp();
     Fragment *compval1 = left_->vectorize(comp_result1);
     Fragment *compval2 = right_->vectorize(comp_result2);
 
