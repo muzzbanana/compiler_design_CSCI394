@@ -128,7 +128,11 @@ TEST_CASE("check simple while", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -143,7 +147,11 @@ TEST_CASE("check simple assign", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -158,7 +166,11 @@ TEST_CASE("check number as if", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -173,7 +185,11 @@ TEST_CASE("check simple for", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -208,7 +224,11 @@ TEST_CASE("check variable declaration", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);

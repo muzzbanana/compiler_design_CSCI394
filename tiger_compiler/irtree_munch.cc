@@ -85,13 +85,15 @@ void FragMove::munch(InstructionList& instrs) const {
         push_from(instrs, "$t0", toStr());
     } else if (src_->getType() == tt::VAR) {
         command = "lw";
-        args.push_back(dest_->toStr());
-        args.push_back(to_string(4*dynamic_cast<const VarTree*>(src_)->offset_) + "($fp)");
+        args.push_back("$t0");
+        args.push_back(to_string(-4*dynamic_cast<const VarTree*>(src_)->offset_) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
+        push_from(instrs, "$t0", "push var value on stack");
     } else if (dest_->getType() == tt::VAR) {
+        pop_into(instrs, "$t0", "get value to put");
         command = "sw";
-        args.push_back(src_->toStr());
-        args.push_back(to_string(4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
+        args.push_back("$t0");
+        args.push_back(to_string(-4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (src_->getType() == tt::CALL) {
         command = "jal";
@@ -232,11 +234,19 @@ void MoveTree::munch(InstructionList& instrs) const {
 
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList& instrs) const {
+    /* Set frame pointer to point to base of stack frame (which is current $sp - 4) */
+    /* it's $sp-4 because we need 0($fp) to be the first local, -4($fp) second local, etc. */
+    push_from(instrs, "$fp", "save old frame pointer");
+    vector<string> args0;
+    args0.push_back("$fp");
+    args0.push_back("$sp");
+    args0.push_back("4");
+    instrs.push_back(new ASMOperation("sub", args0, "point at base of frame"));
     /* needs to expand stack to hold however many local vars we need */
-    vector<string> args; 
-    args.push_back("$t0");
-    args.push_back("$sp");
-    instrs.push_back(new ASMOperation("move", args, "#saves the current return address as a stack pointer")); 
+    vector<string> args1;
+    args1.push_back("$t0");
+    args1.push_back("$sp");
+    instrs.push_back(new ASMOperation("move", args1, "#saves the current return address as a stack pointer")); 
     vector<string> args2;
     args2.push_back("$sp");
     args2.push_back("$sp");
@@ -247,6 +257,8 @@ void NewFrameTree::munch(InstructionList& instrs) const {
     args3.push_back("$t0");
     args3.push_back("($sp)");
     instrs.push_back(new ASMOperation("sw", args3, "#puts the return address on the top of the stack"));
+    /* Need to explicitly save return address on stack because MIPS */
+    push_from(instrs, "$ra", "save function return addr");
 }
 
 void EndFrameTree::munch(InstructionList& instrs) const {
@@ -254,6 +266,13 @@ void EndFrameTree::munch(InstructionList& instrs) const {
     // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
     /* Put last temp value into $v0 in case we're returning afterwards */
     pop_into(instrs, "$v0", "load return value");
+    /* Need to explicitly save return address on stack because MIPS */
+    pop_into(instrs, "$ra", "recall function return addr");
+    /* Restore old frame pointer */
+    vector<string> fargs;
+    fargs.push_back("$fp");
+    fargs.push_back("4($sp)");
+    instrs.push_back(new ASMOperation("lw", fargs, "restore old frame pointer"));
     /* Restore stack pointer (hopefully this lines up properly?!) */
     vector<string> args;
     args.push_back("$sp");
@@ -311,6 +330,10 @@ void StaticStringTree::munch(InstructionList& instrs) const {
 void SeqTree::munch(InstructionList& instrs) const {
     /* shouldn't be called */
     cerr << "error, called SeqTree::munch!" << endl;
+}
+
+void SemicolonTree::munch(InstructionList& instrs) const {
+    pop_into(instrs, "$v0", "discard return value of previous expr");
 }
 
 void Fragment::munch(InstructionList& instrs) const {

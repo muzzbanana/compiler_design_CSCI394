@@ -26,8 +26,8 @@ CallTree::CallTree(NameTree *name, const ExprList args)
 
 ConstTree::ConstTree(int value) : ExprTree(tt::CONST), value_(value) { }
 
-ExprSeqTree::ExprSeqTree(const StmtTree *stmt, const ExprTree *expr)
-    : ExprTree(tt::ESEQ), stmt_(stmt), expr_(expr) { }
+ExprSeqTree::ExprSeqTree(const StmtTree *stmt, const ExprTree *expr, bool discard_intermediate)
+    : ExprTree(tt::ESEQ), stmt_(stmt), expr_(expr), discard_intermediate_(discard_intermediate) { }
 
 MemTree::MemTree(const ExprTree *expr) : ExprTree(tt::MEM), expr_(expr) { }
 
@@ -71,6 +71,8 @@ StaticStringTree::StaticStringTree(const Label *label, const string value) : Stm
 SeqTree::SeqTree() : StmtTree(tt::SEQ), left_(NULL), right_(NULL) { }
 
 SeqTree::SeqTree(const StmtTree *left, const StmtTree *right) : StmtTree(tt::SEQ), left_(left), right_(right) { }
+
+SemicolonTree::SemicolonTree() : StmtTree(tt::SEMICOLON) { }
 
 /* fragment */
 
@@ -188,8 +190,12 @@ Fragment *ExprSeqTree::vectorize(const Temp *result) const {
     } else {
         v = new Fragment(vstmt->result_temp_);
     }
+
     v->concat(vstmt);
     if (vexpr) {
+        if (discard_intermediate_) {
+            v->append(new SemicolonTree());
+        }
         v->concat(vexpr);
     }
 
@@ -384,6 +390,12 @@ Fragment *SeqTree::vectorize(const Temp *result) const {
         v->concat(v2);
     }
 
+    return v;
+}
+
+Fragment *SemicolonTree::vectorize(const Temp *result) const {
+    Fragment *v = new Fragment(NULL);
+    v->append(this);
     return v;
 }
 
@@ -690,6 +702,10 @@ string SeqTree::toStr() const {
         ss << right_->toStr();
     }
     return ss.str();
+}
+
+string SemicolonTree::toStr() const {
+    return ";;";
 }
 
 string Fragment::toStr() const {

@@ -44,6 +44,7 @@ class IRTree {
             ARGREMOVE,  /* remove arguments from stack */
             STATICSTR,  /* static string data */
             SEQ,        /* a sequence of stmts */
+            SEMICOLON,  /* throw away a return value */
 
             NOTIMPL,    /* not implemented yet */
 
@@ -170,7 +171,7 @@ class ConstTree : public ExprTree {
 
 class ExprSeqTree : public ExprTree {
     public:
-        ExprSeqTree(const StmtTree *stmt, const ExprTree *expr);
+        ExprSeqTree(const StmtTree *stmt, const ExprTree *expr, bool discard_intermediate = true);
         ~ExprSeqTree() = default;
 
         const StmtTree *stmt_;
@@ -181,6 +182,9 @@ class ExprSeqTree : public ExprTree {
         virtual Fragment *vectorize(const Temp *result) const;
 
         virtual void munch(InstructionList& instrs) const;
+
+    private:
+        bool discard_intermediate_;
 };
 
 class MemTree : public ExprTree {
@@ -290,6 +294,20 @@ class ExprStmtTree : public StmtTree {
         ~ExprStmtTree() = default;
 
         const ExprTree *expr_;
+
+        string toStr() const;
+
+        virtual Fragment *vectorize(const Temp *result) const;
+
+        virtual void munch(InstructionList& instrs) const;
+};
+
+/* Tree that appears when we throw away the result of an expression. */
+/* (Which is represented by the semicolon in Tiger.) */
+class SemicolonTree : public StmtTree {
+    public:
+        SemicolonTree();
+        ~SemicolonTree() = default;
 
         string toStr() const;
 

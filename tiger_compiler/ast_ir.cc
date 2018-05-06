@@ -313,7 +313,7 @@ const ExprTree *LetBlock::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, AST
             letStmt = dynamic_cast<const StmtTree*>(let_block);
         }
 
-        return new ExprSeqTree(letStmt,inExpr);
+        return new ExprSeqTree(letStmt, inExpr, false);
     } else {
         /* No declarations actually ended up turning into any code, so just return the regular block. */
         return inExpr;
@@ -385,6 +385,8 @@ const ExprTree *ExprSeq::convert_to_ir(IRInfo *info, std::vector<const ASTNode*>
     }
     vec_.erase(vec_.begin());
 
+    /* third parameter is false to say that we aren't returning a value from the
+     * first part, so no need to pop it off the stack */
     return new ExprSeqTree(seqStmt, this->convert_to_ir(info, vec_));
 }
 

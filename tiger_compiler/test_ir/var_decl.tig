@@ -1,5 +1,5 @@
 let
-    var x := 0
+    var x := 10
     var y : int := 2
 in
     x + y;
