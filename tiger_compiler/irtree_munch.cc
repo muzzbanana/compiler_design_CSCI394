@@ -20,6 +20,26 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
     instrs.push_back(new ASMMove("add", addargs, cmt));
 }
 
+/* Pop into two registers at once to save on stack pointer math. */
+/* (top of stack -> reg1, next value -> reg2) */
+void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
+    vector<string> getargs1;
+    getargs1.push_back(reg1);
+    getargs1.push_back("($sp)");
+    instrs.push_back(new ASMMove("lw", getargs1, cmt));
+
+    vector<string> getargs2;
+    getargs2.push_back(reg2);
+    getargs2.push_back("4($sp)");
+    instrs.push_back(new ASMMove("lw", getargs2, cmt));
+
+    vector<string> addargs;
+    addargs.push_back("$sp");
+    addargs.push_back("$sp");
+    addargs.push_back("8");
+    instrs.push_back(new ASMMove("add", addargs, cmt));
+}
+
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
     vector<string> addargs;
@@ -57,8 +77,7 @@ void FragMove::munch(InstructionList& instrs) const {
         /* Pop off backwards because think about subtraction: we push
          * the first operand onto the stack first, so need to pop first
          * into t1, then t0. */
-        pop_into(instrs, "$t1", toStr());
-        pop_into(instrs, "$t0", toStr());
+        pop2_into(instrs, "$t1", "$t0", toStr());
         args.push_back("$t0");
         args.push_back("$t0");
         args.push_back("$t1");
@@ -171,9 +190,7 @@ void CJumpTree::munch(InstructionList& instrs) const {
         default:
             command = "???";
     }
-    /* TODO get temp locations and use them here!! */
-    pop_into(instrs, "$t1", toStr());
-    pop_into(instrs, "$t0", toStr());
+    pop2_into(instrs, "$t1", "$t0", toStr());
     args.push_back("$t0");
     args.push_back("$t1");
     args.push_back(t_->toStr());
@@ -273,8 +290,8 @@ void ArgPutTree::munch(InstructionList& instrs) const {
     args.push_back(to_string(index_));
     instrs.push_back(new ASMOperation("sub", args, "#figures out where to put the current argument"));
     vector<string> args2;
-    args2.push_back("($t0)");
     args2.push_back(arg_->toStr());
+    args2.push_back("($t0)");
     instrs.push_back(new ASMOperation("lw", args2, "#loads the argument into the register"));
 }
 
