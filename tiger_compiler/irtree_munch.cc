@@ -36,31 +36,31 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
     addargs.push_back("$sp");
     addargs.push_back("$sp");
     addargs.push_back("4");
-    instrs.push_back(new ASMMove("add", addargs, " ..."));
+    instrs.push_back(new ASMMove("add", addargs, " . . ."));
 }
 
 /* Pop into two registers at once to save on stack pointer math. */
 /* (top of stack -> reg1, next value -> reg2) */
 void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
     do_move(instrs, "lw", reg1, "($sp)", cmt);
-    do_move(instrs, "lw", reg2, "4($sp)", cmt);
-    op_instr(instrs, "add", "$sp", "$sp", "8", " ...");
+    do_move(instrs, "lw", reg2, "4($sp)", " . . .");
+    op_instr(instrs, "add", "$sp", "$sp", "8", " . . .");
 }
 
 /* Generate instructions to perform some operation on the top two values
  * of the stack, and push the result onto the stack. */
 void do_op(InstructionList& instrs, string op, string cmt) {
     do_move(instrs, "lw", "$t0", "4($sp)", cmt);
-    do_move(instrs, "lw", "$t1", "($sp)", " ...");
-    op_instr(instrs, op, "$t0", "$t0", "$t1", " ...");
-    do_move(instrs, "sw", "$t0", "4($sp)", " ...");
-    op_instr(instrs, "add", "$sp", "$sp", "4", " ...");
+    do_move(instrs, "lw", "$t1", "($sp)", " . . .");
+    op_instr(instrs, op, "$t0", "$t0", "$t1", " . . .");
+    do_move(instrs, "sw", "$t0", "4($sp)", " . . .");
+    op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
 }
 
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
     op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
-    do_move(instrs, "sw", reg, "($sp)", " ...");
+    do_move(instrs, "sw", reg, "($sp)", " . . .");
 }
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
@@ -107,15 +107,14 @@ void FragMove::munch(InstructionList& instrs) const {
             /* apparently mips division is kind of complicated... */
             command = "div";
             /* Pop backwards because second operand will be on top of stack */
-            pop_into(instrs, "$t1", toStr());
-            pop_into(instrs, "$t0", " ...");
+            pop2_into(instrs, "$t1", "$t0", toStr());
             args.push_back("$t0");
             args.push_back("$t1");
-            instrs.push_back(new ASMOperation("div", args, " ..."));
+            instrs.push_back(new ASMOperation("div", args, " . . ."));
             vector<string> args2;
             args2.push_back("$t0");
-            instrs.push_back(new ASMOperation("mflo", args2, " ..."));
-            push_from(instrs, "$t0", " ...");
+            instrs.push_back(new ASMOperation("mflo", args2, " . . ."));
+            push_from(instrs, "$t0", " . . .");
         }
         /* I'm pretty sure that the way it's set up guarantees the
          * arguments to each binop are always on top. So we just need
@@ -203,7 +202,7 @@ void CJumpTree::munch(InstructionList& instrs) const {
     args.push_back("$t1");
     args.push_back(t_->toStr());
     /* this probably shouldn't be an ASMMove but also idk if it matters */
-    instrs.push_back(new ASMMove(command, args, " ..."));
+    instrs.push_back(new ASMMove(command, args, " . . ."));
 
     /* We need to unconditionally branch to false label now if
      * we didn't jump to true label. */

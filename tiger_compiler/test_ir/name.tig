@@ -1,1 +1,1 @@
-let var name := "Bilbert" in name end
+let var name := "Bilbert" in print(name) end

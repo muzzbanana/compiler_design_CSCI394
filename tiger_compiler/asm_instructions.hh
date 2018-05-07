@@ -27,8 +27,10 @@ class ASMInstruction {
         virtual string toStr() {
             stringstream ss;
             ss << instruction_;
-            pad_width(&ss, 25);
-            ss << " # " << comment_;
+            if (comment_.length() > 0) {
+                pad_width(&ss, 25);
+                ss << " # " << comment_;
+            }
             return ss.str();
         }
 
