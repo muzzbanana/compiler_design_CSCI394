@@ -15,10 +15,20 @@ stack<int> current_argcount;
 
 /* Generate a 'sw', 'lw', etc. instruction. (taking 2 parameters) */
 void do_move(InstructionList& instrs, string cmd, string dest, string src, string cmt) {
-    vector<string> args;
-    args.push_back(dest);
-    args.push_back(src);
-    instrs.push_back(new ASMMove(cmd, args, cmt));
+    if (dest != src) {
+        vector<string> args;
+        args.push_back(dest);
+        args.push_back(src);
+        instrs.push_back(new ASMMove(cmd, args, cmt));
+    } else {
+        /* Otherwise... don't do anything. But add the comment to the previous thing to
+         * note that we tried */
+        if (instrs.back()->comment_ == " . . .") {
+            instrs.back()->comment_ = cmt;
+        } else if (cmt != " . . .") {
+            instrs.back()->comment_ = instrs.back()->comment_ + "; " + cmt;
+        }
+    }
 }
 
 /* Generate a 'add', 'sub', etc. instruction. (that takes 3 parameters) */
@@ -41,10 +51,31 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
         ASMInstruction *last = instrs.back();
         instrs.pop_back();
         instrs.pop_back();
-        do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(last)->args_[0], last->comment_ + " -> " + cmt);
+        string newcmt;
+        if (cmt == " . . .") {
+            newcmt = last->comment_;
+        } else if (last->comment_ == " . . .") {
+            newcmt = cmt;
+        } else {
+            newcmt = last->comment_ + "; " + cmt;
+        }
+        do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(last)->args_[0], newcmt);
+        instrs.back()->generated_pop_ = true;
     } else {
-        do_move(instrs, "lw", reg, "($sp)", cmt);
-        op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
+        string add_comment = " . . .";
+        if (instrs.size() > 0
+                && instrs.back()->instruction_ == "sw"
+                && instrs.back()->generated_push_
+                && dynamic_cast<const ASMMove*>(instrs.back())->args_[0] == reg) {
+            /* If we just stored the same register onto the top of the stack, there's no need
+             * to load it again. */
+            add_comment = cmt;
+        } else {
+            do_move(instrs, "lw", reg, "($sp)", cmt);
+            instrs.back()->generated_pop_ = true;
+        }
+        op_instr(instrs, "add", "$sp", "$sp", "4", add_comment);
+        instrs.back()->generated_pop_ = true;
     }
 }
 
@@ -68,10 +99,50 @@ void do_op(InstructionList& instrs, string op, string cmt) {
 
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
-    op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
-    instrs.back()->generated_push_ = true;
-    do_move(instrs, "sw", reg, "($sp)", " . . .");
-    instrs.back()->generated_push_ = true;
+    string sw_comment = " . . .";
+    if (instrs.size() > 0
+            && instrs.back()->generated_pop_
+            && instrs.back()->instruction_ == "add"
+            && dynamic_cast<const ASMMove*>(instrs.back())->args_[2] == "4") {
+        /* The last thing was adding to the stack pointer,
+         * so we don't need to subtract from it again --
+         * just get rid of the last instruction */
+        if (instrs.back()->comment_ == " . . .") {
+            sw_comment = cmt;
+        } else if (cmt == " . . .") {
+            sw_comment = instrs.back()->comment_;
+        } else {
+            sw_comment = instrs.back()->comment_ + "; " + cmt;
+        }
+        instrs.pop_back();
+    } else {
+        op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
+        instrs.back()->generated_push_ = true;
+    }
+    if (instrs.size() > 0
+            && instrs.back()->generated_push_
+            && instrs.back()->instruction_ == "sw") {
+        /* If there's a 'sw something, ($sp)' right before us,
+         * then it can't possibly be useful, since we're about
+         * to overwrite it. Thus it can be removed. */
+        if (instrs.back()->comment_ != " . . .") {
+            sw_comment = instrs.back()->comment_ + "; " + sw_comment;
+        }
+        instrs.pop_back();
+    }
+    if (instrs.size() > 0
+            && instrs.back()->generated_pop_
+            && instrs.back()->instruction_ == "lw"
+            && dynamic_cast<const ASMMove*>(instrs.back())->args_[0] == reg) {
+        /* If we just loaded the same register from the stack, there's no
+         * need to push the same thing onto the stack again. */
+        if (instrs.back()->comment_ != " . . .") {
+            instrs.back()->comment_ = instrs.back()->comment_ + "; " + sw_comment;
+        }
+    } else {
+        do_move(instrs, "sw", reg, "($sp)", sw_comment);
+        instrs.back()->generated_push_ = true;
+    }
 }
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
@@ -284,26 +355,26 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
 
 void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
-    pop_into(instrs, "$t1", "get argument value");
+    pop_into(instrs, "$t0", "get argument value");
 
-    op_instr(instrs, "add", "$t0", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
+    op_instr(instrs, "add", "$t1", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
 
-    do_move(instrs, "sw", "$t1", "($t0)", "#loads the argument into appropriate slot");
+    do_move(instrs, "sw", "$t0", "($t1)", "#loads the argument into appropriate slot");
 }
 
 void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* remove args from stack (undo ArgReserve) */
     /* first save return value of function */
-    pop_into(instrs, "$t0", "save returned func val");
+    pop_into(instrs, "$v0", "save returned func val");
     /* remove arguments from stack */
     do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
-    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount.top()), "remove arguments from stack");
+    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount.top()), toStr());
     current_argcount.pop();
     /* Now we just have to restore $s1 to its rightful value */
     pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
-    push_from(instrs, "$t0", "put back returned func val");
+    push_from(instrs, "$v0", "put back returned func val");
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {

@@ -28,7 +28,7 @@ class ASMInstruction {
             stringstream ss;
             ss << instruction_;
             if (comment_.length() > 0) {
-                pad_width(&ss, 25);
+                pad_width(&ss, 23);
                 ss << " # " << comment_;
             }
             return ss.str();
@@ -36,9 +36,10 @@ class ASMInstruction {
 
         const string instruction_;
 
-        const string comment_;
+        string comment_;
 
         bool generated_push_ = false;
+        bool generated_pop_ = false;
 };
 
 // typedef vector<ASMInstructions*> InstructionList;
@@ -63,7 +64,7 @@ class ASMOperation : public ASMInstruction {
             }
             ss << args_[i];
         }
-        pad_width(&ss, 25);
+        pad_width(&ss, 23);
         ss << " # " << comment_;
         return ss.str();
     }
@@ -91,7 +92,7 @@ class ASMMove : public ASMInstruction {
             }
             ss << args_[i];
         }
-        pad_width(&ss, 25);
+        pad_width(&ss, 23);
         ss << " # " << comment_;
         return ss.str();
     }
@@ -150,7 +151,7 @@ class ASMCall : public ASMInstruction {
         stringstream ss;
         ss << "jal ";
         ss << label_->toStr();
-        pad_width(&ss, 25);
+        pad_width(&ss, 23);
         ss << " # " << comment_;
         return ss.str();
     }
