@@ -127,11 +127,11 @@ void FragMove::munch(InstructionList& instrs) const {
         args.push_back("$t0");
         /* Note: we need to subtract an extra 1 from negative arguments,
          * because the thing actually stored at ($fp) is the return address,
-         * and the thing at 4($fp) is the old frame * pointer value --
+         * and the thing at 4($fp) is the old frame pointer value --
          * argument # 0 is at 8($fp). */
         int offset = dynamic_cast<const VarTree*>(src_)->offset_;
         if (offset < 0) {
-            offset -= 1;
+            offset --;
         }
         args.push_back(to_string(-4*offset) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
