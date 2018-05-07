@@ -90,6 +90,8 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
 void munch_stdlib(InstructionList& instrs) {
+    Label *printcommonlabel = new Label("__print_common");
+
     vector<string> rargs;
     rargs.push_back("$ra");
 
@@ -98,16 +100,16 @@ void munch_stdlib(InstructionList& instrs) {
     pargs.push_back("$v0");
     pargs.push_back("4");
     instrs.push_back(new ASMMove("li", pargs, "Load system call code"));
-    pop_into(instrs, "$a0", "get thing to print");
-    instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
-    push_from(instrs, "$0", "return nothing"); /* return nothing */
-    instrs.push_back(new ASMOperation("jr", rargs, ""));
+    instrs.push_back(new ASMJump("j", printcommonlabel));
 
     instrs.push_back(new ASMLabel(new Label("print_int", false)));
     vector<string> piargs;
     piargs.push_back("$v0");
     piargs.push_back("1");
     instrs.push_back(new ASMMove("li", piargs, "Load system call code"));
+    instrs.push_back(new ASMJump("j", printcommonlabel));
+
+    instrs.push_back(new ASMLabel(printcommonlabel));
     pop_into(instrs, "$a0", "get thing to print");
     instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
     push_from(instrs, "$0", "return nothing"); /* return nothing */
