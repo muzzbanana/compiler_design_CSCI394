@@ -3,6 +3,35 @@
 
 namespace tiger {
 
+/* Escape characters within string (e.g. newline -> \n) */
+string escape_string(string input) {
+    stringstream ss;
+    for (auto ch : input) {
+        if (ch == '\a') {
+            ss << "\\a";
+        } else if (ch == '\b') {
+            ss << "\\b";
+        } else if (ch == '\f') {
+            ss << "\\f";
+        } else if (ch == '\n') {
+            ss << "\\n";
+        } else if (ch == '\r') {
+            ss << "\\r";
+        } else if (ch == '\t') {
+            ss << "\\t";
+        } else if (ch == '\v') {
+            ss << "\\v";
+        } else if (ch == '"') {
+            ss << "\\\"";
+        } else if (ch == '\\') {
+            ss << "\\\\";
+        } else {
+            ss << ch;
+        }
+    }
+    return ss.str();
+}
+
 /* Construct a new frame for global variables, and then call convert_to_ir on an AST pointer. */
 /* Also places function definitions after the rest of the code. */
 const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
@@ -51,7 +80,7 @@ const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
 
     const SeqTree *data = NULL;
     for (auto a : info->static_strings_) {
-        data = new SeqTree(new StaticStringTree(a.first, a.second), data);
+        data = new SeqTree(new StaticStringTree(a.first, escape_string(a.second)), data);
     }
 
     ProgramTree *program = new ProgramTree();

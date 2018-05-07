@@ -1,5 +1,5 @@
 let
     function sum_and_product(i: int, j: int, k: int): int = i + j * k
 in
-    sum_and_product(3,4,5) /* This should return 23 */
+    print_int(sum_and_product(3,4,5)) /* This should print 23 */
 end

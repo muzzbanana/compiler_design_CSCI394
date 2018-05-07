@@ -1,8 +1,11 @@
 let
-    function print_sequence(i: int) = (print_int(i); print_int(i+1); print_int(i+2); print("\n"))
+    function print_sequence(i: int, j: int) = (
+        print_int(i); print_int(i+1); print_int(i+2); print("\t");
+        print_int(j); print_int(j+1); print_int(j+2); print("\n")
+    )
 in
-    print_sequence(1);
-    print_sequence(4);
-    print_sequence(7)
+    print_sequence(1,2);
+    print_sequence(4,5);
+    print_sequence(7,8)
 end
 

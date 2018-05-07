@@ -1,4 +1,5 @@
 #include "irtree.hh"
+#include <stack>
 #include <iostream>
 
 namespace tiger {
@@ -8,7 +9,9 @@ using tt = IRTree::TreeType;
 /* --- HELPFUL FUNCTIONS --- */
 
 /* Number of arguments that are currently being passed to a function */
-int current_argcount = 0;
+/* This is a stack so we properly keep track of the number of arguments
+ * being passed to nested function calls (i.e. f(g(a), h(b,c,d)) ) */
+stack<int> current_argcount;
 
 /* Generate a 'sw', 'lw', etc. instruction. (taking 2 parameters) */
 void do_move(InstructionList& instrs, string cmd, string dest, string src, string cmt) {
@@ -256,11 +259,11 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
     push_from(instrs, "$s1", "save prior s1 value");
 
     /* save number of arguments being passed to current function */
-    current_argcount = num_args_;
+    current_argcount.push(num_args_);
 
     /* Reserve space for arguments */
     if (num_args_ > 0) {
-        op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_args_)), "#increments stack for new frame's args");
+        op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_args_)), toStr());
     }
 
     do_move(instrs, "move", "$s1", "$sp", "save location of arguments");
@@ -270,7 +273,7 @@ void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
     pop_into(instrs, "$t1", "get argument value");
 
-    op_instr(instrs, "add", "$t0", "$s1", to_string(-4*(current_argcount-index_-1)), "#figures out where to put the current argument");
+    op_instr(instrs, "add", "$t0", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
 
     do_move(instrs, "sw", "$t1", "($t0)", "#loads the argument into appropriate slot");
 }
@@ -281,8 +284,9 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     pop_into(instrs, "$t0", "save returned func val");
     /* remove arguments from stack */
     do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
-    /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount to get back to where we were */
-    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount), "remove arguments from stack");
+    /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
+    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount.top()), "remove arguments from stack");
+    current_argcount.pop();
     /* Now we just have to restore $s1 to its rightful value */
     pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
