@@ -17,7 +17,7 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
     addargs.push_back("$sp");
     addargs.push_back("$sp");
     addargs.push_back("4");
-    instrs.push_back(new ASMMove("add", addargs, cmt));
+    instrs.push_back(new ASMMove("add", addargs, " . . . "));
 }
 
 /* Pop into two registers at once to save on stack pointer math. */
@@ -31,13 +31,47 @@ void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
     vector<string> getargs2;
     getargs2.push_back(reg2);
     getargs2.push_back("4($sp)");
-    instrs.push_back(new ASMMove("lw", getargs2, cmt));
+    instrs.push_back(new ASMMove("lw", getargs2, " . . . "));
 
     vector<string> addargs;
     addargs.push_back("$sp");
     addargs.push_back("$sp");
     addargs.push_back("8");
-    instrs.push_back(new ASMMove("add", addargs, cmt));
+    instrs.push_back(new ASMMove("add", addargs, " . . . "));
+}
+
+/* Generate instructions to perform some operation on the top two values
+ * of the stack, and push the result onto the stack. */
+void do_op(InstructionList& instrs, string op, string cmt) {
+    /* Pop off backwards because think about subtraction: we push
+     * the first operand onto the stack first, so need to pop first
+     * into t1, then t0. */
+    vector<string> getargs1;
+    getargs1.push_back("$t0");
+    getargs1.push_back("4($sp)");
+    instrs.push_back(new ASMMove("lw", getargs1, cmt));
+
+    vector<string> getargs2;
+    getargs2.push_back("$t1");
+    getargs2.push_back("($sp)");
+    instrs.push_back(new ASMMove("lw", getargs2, " . . . "));
+
+    vector<string> opargs;
+    opargs.push_back("$t0");
+    opargs.push_back("$t0");
+    opargs.push_back("$t1");
+    instrs.push_back(new ASMMove(op, opargs, " . . . "));
+
+    vector<string> putargs;
+    putargs.push_back("$t0");
+    putargs.push_back("4($sp)");
+    instrs.push_back(new ASMMove("sw", putargs, " . . . "));
+
+    vector<string> addargs;
+    addargs.push_back("$sp");
+    addargs.push_back("$sp");
+    addargs.push_back("4");
+    instrs.push_back(new ASMMove("add", addargs, " . . . "));
 }
 
 /* Generate instructions to push a given register onto the stack. */
@@ -51,7 +85,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
     vector<string> putargs;
     putargs.push_back(reg);
     putargs.push_back("($sp)");
-    instrs.push_back(new ASMMove("sw", putargs, cmt));
+    instrs.push_back(new ASMMove("sw", putargs, " . . . "));
 }
 
 void FragMove::munch(InstructionList& instrs) const {
@@ -59,52 +93,70 @@ void FragMove::munch(InstructionList& instrs) const {
     vector<string> args;
     if (src_->getType() == tt::BINOP) {
         const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
-        if (bo->op_ == IRTree::Operator::PLUS) {
-            command = "add";
-        } else if (bo->op_ == IRTree::Operator::MINUS) {
-            command = "sub";
-        } else if (bo->op_ == IRTree::Operator::MUL) {
-            command = "mult";
-        } else if (bo->op_ == IRTree::Operator::DIV) {
-            command = "div";
+        if (bo->op_ != IRTree::Operator::MUL) {
+            if (bo->op_ == IRTree::Operator::PLUS) {
+                command = "add";
+            } else if (bo->op_ == IRTree::Operator::MINUS) {
+                command = "sub";
+            } else if (bo->op_ == IRTree::Operator::DIV) {
+                command = "div";
+            } else {
+                command = "??";
+            }
+            do_op(instrs, command, toStr());
         } else {
-            command = "??";
+            /* apparently mips multiplication is kind of complicated... */
+            command = "mul";
+            pop_into(instrs, "$t0", toStr());
+            pop_into(instrs, "$t1", " . . . ");
+            args.push_back("$t0");
+            args.push_back("$t1");
+            instrs.push_back(new ASMOperation("mult", args, " . . . "));
+            vector<string> args2;
+            args2.push_back("$t0");
+            instrs.push_back(new ASMOperation("mflo", args2, " . . . "));
+            push_from(instrs, "$t0", " . . . ");
         }
         /* I'm pretty sure that the way it's set up guarantees the
          * arguments to each binop are always on top. So we just need
          * to move the top two arguments from the stack to $t0 + $t1,
          * then do the thing, then store it back on the stack. */
-        /* Pop off backwards because think about subtraction: we push
-         * the first operand onto the stack first, so need to pop first
-         * into t1, then t0. */
-        pop2_into(instrs, "$t1", "$t0", toStr());
-        args.push_back("$t0");
-        args.push_back("$t0");
-        args.push_back("$t1");
-        instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", toStr());
     } else if (src_->getType() == tt::VAR) {
         command = "lw";
         args.push_back("$t0");
-        args.push_back(to_string(-4*dynamic_cast<const VarTree*>(src_)->offset_) + "($fp)");
+        /* Note: we need to subtract an extra 1 from negative arguments,
+         * because the thing actually stored at ($fp) is the return address,
+         * and the thing at 4($fp) is the old frame * pointer value --
+         * argument # 0 is at 8($fp). */
+        int offset = dynamic_cast<const VarTree*>(src_)->offset_;
+        if (offset < 0) {
+            offset -= 1;
+        }
+        args.push_back(to_string(-4*offset) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
         push_from(instrs, "$t0", "push var value on stack");
     } else if (dest_->getType() == tt::VAR) {
         pop_into(instrs, "$t0", "get value to put");
         command = "sw";
         args.push_back("$t0");
-        args.push_back(to_string(-4*dynamic_cast<const VarTree*>(dest_)->offset_) + "($fp)");
+        int offset = dynamic_cast<const VarTree*>(dest_)->offset_;
+        if (offset < 0) {
+            offset -= 2;
+        }
+        args.push_back(to_string(-4*offset) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
     } else if (src_->getType() == tt::CALL) {
         command = "jal";
         args.push_back(dynamic_cast<const CallTree*>(src_)->name_->toStr());
         instrs.push_back(new ASMMove(command, args, toStr()));
+        /* Put return value on top of stack */
+        push_from(instrs, "$v0", "Push return value");
     } else if (src_->getType() == tt::CONST) {
         command = "li";
         args.push_back("$t0");
         args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", toStr());
+        push_from(instrs, "$t0", " (put on stack...)");
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -283,43 +335,75 @@ void EndFrameTree::munch(InstructionList& instrs) const {
 void ArgReserveTree::munch(InstructionList& instrs) const {
     /* expand stack to fit N-4 number of arguments (we can pass args 1-4 in $a0-$a3) */
     // if we want to load the first four arguments in this fragment we should do this here
-    vector<string> args;
-    args.push_back("$t0");
-    args.push_back("$sp");
-    instrs.push_back(new ASMOperation("move", args, "#saves the current stack pointer"));
-    if (num_args_>4) {
+    /* j/k I think we should just pass them all on the stack tho */
+    /* We will save the pointer-to-arguments-location-in-stack in register
+     * $s1. this is callee-saved, so we need to save it, but since we don't
+     * use it for anything else we can be confident it won't change. */
+    /* We also save number of arguments in $s2, so we can pop them off later. */
+    push_from(instrs, "$s1", "save prior s1 value");
+    push_from(instrs, "$s2", "save prior s2 value");
+
+    /* Reserve space for arguments */
+    if (num_args_ > 0) {
         vector<string> args2;
         args2.push_back("$sp");
         args2.push_back("$sp");
-        int num = -4*(num_args_-4);
+        int num = -4*(num_args_);
         args2.push_back(to_string(num));
         instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's args"));
     }
-    vector<string> args3;
-    args3.push_back("$t0");
-    args3.push_back("($sp)");
-    instrs.push_back(new ASMOperation("sw", args3, "#puts the return address on the top of the stack"));
+
+    vector<string> argsM;
+    argsM.push_back("$s1");
+    argsM.push_back("$sp");
+    instrs.push_back(new ASMOperation("move", argsM, "save location of arguments"));
+
+    vector<string> argsN;
+    argsN.push_back("$s2");
+    argsN.push_back(to_string(4*num_args_));
+    instrs.push_back(new ASMOperation("li", argsN, "save (4x) number of arguments"));
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
+    /* NOTE: I think we actually can just leave the arguments on the stack where they are
+     * with no need to calculate where they go. But we will have to be mindful then that
+     * they're actually backwards... like arg 0 is below arg 1 on the stack. This can be
+     * fixed in the fragmove var part, though. */
+    pop_into(instrs, "$t1", "get argument value");
+
     vector<string> args;
     args.push_back("$t0");
-    args.push_back("$sp");
-    args.push_back(to_string(index_));
-    instrs.push_back(new ASMOperation("sub", args, "#figures out where to put the current argument"));
+    args.push_back("$s1");
+    args.push_back(to_string(4*index_));
+    instrs.push_back(new ASMOperation("add", args, "#figures out where to put the current argument"));
+
     vector<string> args2;
-    args2.push_back(arg_->toStr());
+    args2.push_back("$t1");
     args2.push_back("($t0)");
-    instrs.push_back(new ASMOperation("lw", args2, "#loads the argument into the register"));
+    instrs.push_back(new ASMOperation("sw", args2, "#loads the argument into appropriate slot"));
 }
 
 void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* remove args from stack (undo ArgReserve) */
+    /* first save return value of function */
+    pop_into(instrs, "$t0", "save returned func val");
+    /* remove arguments from stack */
     vector<string> args;
     args.push_back("$sp");
-    args.push_back("($sp)");
-    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"));
+    args.push_back("$s1");
+    instrs.push_back(new ASMOperation("move", args, "#returns sp to the top of argument list"));
+    /* Now we're back at the top of the arglist, so we just increase $sp by $s2 to get back to where we were */
+    vector<string> args2;
+    args2.push_back("$sp");
+    args2.push_back("$sp");
+    args2.push_back("$s2");
+    instrs.push_back(new ASMOperation("add", args2, "remove arguments from stack"));
+    /* Now we just have to restore $s1 and $s2 to their rightful values */
+    pop_into(instrs, "$s2", "restore $s2 value");
+    pop_into(instrs, "$s1", "restore $s1 value");
+    /* put func return value back on top of stack */
+    push_from(instrs, "$t0", "put back returned func val");
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {

@@ -243,7 +243,11 @@ TEST_CASE("check function declaration", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -260,7 +264,11 @@ TEST_CASE("check recursive function from test_semantic", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -275,7 +283,11 @@ TEST_CASE("check array declaration", "[ir-conversion]") {
     const ProgramTree *ir = convert_ast(output);
     std::cout << output->toStr() << std::endl;
     std::cout << ir->toStr() << std::endl;
-    std::cout << "\n== FRAGMENT ==\n" << ir->vectorize()->toStr() << "\n\n" << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
 
     delete output;
     fclose(myfile);
@@ -294,3 +306,42 @@ TEST_CASE("check nil", "[ir-conversion]") {
     delete output;
     fclose(myfile);
 }
+
+TEST_CASE("check recursive funccall", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/factorial.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check regular funccall", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/regfunc.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
+
+    delete output;
+    fclose(myfile);
+}
+

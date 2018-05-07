@@ -1,0 +1,5 @@
+let
+    function func(i: int):int = i + 2
+in
+    func(5)
+end
