@@ -157,6 +157,12 @@ void FragMove::munch(InstructionList& instrs) const {
         args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
         instrs.push_back(new ASMMove(command, args, toStr()));
         push_from(instrs, "$t0", " (put on stack...)");
+    } else if (src_->getType() == tt::NAME) {
+        command = "la";
+        args.push_back("$t0");
+        args.push_back(dynamic_cast<const NameTree*>(src_)->label_->toStr());
+        instrs.push_back(new ASMMove(command, args, toStr()));
+        push_from(instrs, "$t0", " (put on stack...)");
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -407,8 +413,8 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
     /* a static string i forget the syntax for this tho. .asciiz something */
+    instrs.push_back(new ASMInstruction(label_->toStr() + ": .asciiz \"" + value_ + "\"", ""));
 }
 
 void SeqTree::munch(InstructionList& instrs) const {
@@ -436,10 +442,12 @@ void NotImplStmtTree::munch(InstructionList& instrs) const {
 
 InstructionList ProgramFragment::munch() const {
     InstructionList result;
-    result.push_back(new ASMLabel(new Label("main", false)));
     if (data_segment != NULL) {
+        result.push_back(new ASMInstruction(".data", ""));
         data_segment->munch(result);
+        result.push_back(new ASMInstruction(".text", ""));
     }
+    result.push_back(new ASMLabel(new Label("main", false)));
     text_segment->munch(result);
     return result;
 }
