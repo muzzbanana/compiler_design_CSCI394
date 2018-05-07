@@ -107,8 +107,9 @@ void FragMove::munch(InstructionList& instrs) const {
         } else {
             /* apparently mips division is kind of complicated... */
             command = "div";
-            pop_into(instrs, "$t0", toStr());
-            pop_into(instrs, "$t1", " . . . ");
+            /* Pop backwards because second operand will be on top of stack */
+            pop_into(instrs, "$t1", toStr());
+            pop_into(instrs, "$t0", " . . . ");
             args.push_back("$t0");
             args.push_back("$t1");
             instrs.push_back(new ASMOperation("div", args, " . . . "));
