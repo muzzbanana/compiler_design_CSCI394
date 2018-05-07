@@ -307,8 +307,8 @@ TEST_CASE("check nil", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check recursive funccall", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/factorial.tig", "r");
+TEST_CASE("check regular funccall", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/regfunc.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);
@@ -326,8 +326,27 @@ TEST_CASE("check recursive funccall", "[ir-conversion]") {
     fclose(myfile);
 }
 
-TEST_CASE("check regular funccall", "[ir-conversion]") {
-    FILE *myfile = fopen("test_ir/regfunc.tig", "r");
+TEST_CASE("check funccall w/ multiple args", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/multiargfunc.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check recursive funccall", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/factorial.tig", "r");
     yyin = myfile;
     ASTNode::ASTptr output = NULL;
     yyparse(&output);

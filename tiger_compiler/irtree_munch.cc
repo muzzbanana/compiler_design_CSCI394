@@ -5,6 +5,9 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
+/* Number of arguments that are currently being passed to a function */
+int current_argcount = 0;
+
 /* Generate instruction(s) to load the top of stack into
  * the supplied register. */
 void pop_into(InstructionList& instrs, string reg, string cmt) {
@@ -43,9 +46,6 @@ void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
 /* Generate instructions to perform some operation on the top two values
  * of the stack, and push the result onto the stack. */
 void do_op(InstructionList& instrs, string op, string cmt) {
-    /* Pop off backwards because think about subtraction: we push
-     * the first operand onto the stack first, so need to pop first
-     * into t1, then t0. */
     vector<string> getargs1;
     getargs1.push_back("$t0");
     getargs1.push_back("4($sp)");
@@ -199,18 +199,15 @@ void MemTree::munch(InstructionList& instrs) const {
 }
 
 void NameTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
     /* not sure if we need this one ? i don't think so */
 }
 
 void TempTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
-    /* this is going to be tricky! */
+    /* never mind */
 }
 
 void VarTree::munch(InstructionList& instrs) const {
-    /* TODO fill me in! */
-    /* this needs to turn into offset_($fp) i think */
+    /* don't need */
 }
 
 void ConditionalExprTree::munch(InstructionList& instrs) const {
@@ -267,12 +264,6 @@ void UJumpTree::munch(InstructionList& instrs) const {
 }
 
 void ReturnTree::munch(InstructionList& instrs) const {
-    /* TODO use temp stack locations or w/e */
-    /* TODO save and restore return value on stack */
-    //vector<string> args;
-    //args.push_back(expr_->toStr());
-    //args.push_back("$v0");
-    //instrs.push_back(new ASMMove("move", args, toStr())); //I suspect actually this should be an operation? -E
     /* Return value will be moved when we encounter END FRAME */
     vector<string> ret_args;
     ret_args.push_back("$ra");
@@ -321,7 +312,6 @@ void NewFrameTree::munch(InstructionList& instrs) const {
 
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
-    // TODO: first go through and delete any temps on top of the stack!!!! Not sure how to access temps from here!!!!
     /* Put last temp value into $v0 in case we're returning afterwards */
     pop_into(instrs, "$v0", "load return value");
     /* Need to explicitly save return address on stack because MIPS */
@@ -345,9 +335,10 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
     /* We will save the pointer-to-arguments-location-in-stack in register
      * $s1. this is callee-saved, so we need to save it, but since we don't
      * use it for anything else we can be confident it won't change. */
-    /* We also save number of arguments in $s2, so we can pop them off later. */
     push_from(instrs, "$s1", "save prior s1 value");
-    push_from(instrs, "$s2", "save prior s2 value");
+
+    /* save number of arguments being passed to current function */
+    current_argcount = num_args_;
 
     /* Reserve space for arguments */
     if (num_args_ > 0) {
@@ -363,11 +354,6 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
     argsM.push_back("$s1");
     argsM.push_back("$sp");
     instrs.push_back(new ASMOperation("move", argsM, "save location of arguments"));
-
-    vector<string> argsN;
-    argsN.push_back("$s2");
-    argsN.push_back(to_string(4*num_args_));
-    instrs.push_back(new ASMOperation("li", argsN, "save (4x) number of arguments"));
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
@@ -381,7 +367,7 @@ void ArgPutTree::munch(InstructionList& instrs) const {
     vector<string> args;
     args.push_back("$t0");
     args.push_back("$s1");
-    args.push_back(to_string(4*index_));
+    args.push_back(to_string(4*(current_argcount-index_-1)));
     instrs.push_back(new ASMOperation("add", args, "#figures out where to put the current argument"));
 
     vector<string> args2;
@@ -399,14 +385,13 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     args.push_back("$sp");
     args.push_back("$s1");
     instrs.push_back(new ASMOperation("move", args, "#returns sp to the top of argument list"));
-    /* Now we're back at the top of the arglist, so we just increase $sp by $s2 to get back to where we were */
+    /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount to get back to where we were */
     vector<string> args2;
     args2.push_back("$sp");
     args2.push_back("$sp");
-    args2.push_back("$s2");
-    instrs.push_back(new ASMOperation("add", args2, "remove arguments from stack"));
-    /* Now we just have to restore $s1 and $s2 to their rightful values */
-    pop_into(instrs, "$s2", "restore $s2 value");
+    args2.push_back(to_string(4*current_argcount));
+    instrs.push_back(new ASMOperation("addi", args2, "remove arguments from stack"));
+    /* Now we just have to restore $s1 to its rightful value */
     pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
     push_from(instrs, "$t0", "put back returned func val");
