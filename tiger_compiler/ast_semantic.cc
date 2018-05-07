@@ -249,7 +249,7 @@ const Type *ExprSeq::type_verify(Scope* scope, std::vector<const ASTNode*> vec_,
             if (arg_type != expected_type) {
                 cerr << "ERROR: line " << location_ << endl;
                 cerr << "       parameter ‘" << params->fields_[i].first << "’ to function ‘"
-                    << func_name->toStr() << "’ declared as type ‘" << expected_type->toStr()
+                    << func_name->toStr() << "’ has type ‘" << expected_type->toStr()
                     << "’ but received expression ‘" << vec_[i]->toStr() << "’, which is of type ‘"
                     << arg_type->toStr() << "’." << endl;
                 return Type::errorType;

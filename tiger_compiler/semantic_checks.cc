@@ -11,12 +11,12 @@ int semantic_checks(ASTNode::ASTptr ast) {
 
     /* Set up print and print_int here, so we can typecheck on them */
     RecordType *print_params = new RecordType();
-    print_params->add_field("what", Type::stringType);
+    print_params->add_field("string to print", Type::stringType);
     FunctionType *print_type = new FunctionType("print", print_params, Type::nilType);
     scope->symbol_insert("print", print_type);
 
     RecordType *print_int_params = new RecordType();
-    print_int_params->add_field("what", Type::intType);
+    print_int_params->add_field("integer to print", Type::intType);
     FunctionType *print_int_type = new FunctionType("print_int", print_int_params, Type::nilType);
     scope->symbol_insert("print_int", print_int_type);
 
