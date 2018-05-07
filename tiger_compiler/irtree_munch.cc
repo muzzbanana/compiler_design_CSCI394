@@ -93,25 +93,25 @@ void FragMove::munch(InstructionList& instrs) const {
     vector<string> args;
     if (src_->getType() == tt::BINOP) {
         const BinOpTree *bo = dynamic_cast<const BinOpTree*>(src_);
-        if (bo->op_ != IRTree::Operator::MUL) {
+        if (bo->op_ != IRTree::Operator::DIV) {
             if (bo->op_ == IRTree::Operator::PLUS) {
                 command = "add";
             } else if (bo->op_ == IRTree::Operator::MINUS) {
                 command = "sub";
-            } else if (bo->op_ == IRTree::Operator::DIV) {
-                command = "div";
+            } else if (bo->op_ == IRTree::Operator::MUL) {
+                command = "mul";
             } else {
                 command = "??";
             }
             do_op(instrs, command, toStr());
         } else {
-            /* apparently mips multiplication is kind of complicated... */
-            command = "mul";
+            /* apparently mips division is kind of complicated... */
+            command = "div";
             pop_into(instrs, "$t0", toStr());
             pop_into(instrs, "$t1", " . . . ");
             args.push_back("$t0");
             args.push_back("$t1");
-            instrs.push_back(new ASMOperation("mult", args, " . . . "));
+            instrs.push_back(new ASMOperation("div", args, " . . . "));
             vector<string> args2;
             args2.push_back("$t0");
             instrs.push_back(new ASMOperation("mflo", args2, " . . . "));
