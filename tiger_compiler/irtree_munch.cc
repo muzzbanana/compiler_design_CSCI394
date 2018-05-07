@@ -5,87 +5,62 @@ namespace tiger {
 
 using tt = IRTree::TreeType;
 
+/* --- HELPFUL FUNCTIONS --- */
+
 /* Number of arguments that are currently being passed to a function */
 int current_argcount = 0;
+
+/* Generate a 'sw', 'lw', etc. instruction. (taking 2 parameters) */
+void do_move(InstructionList& instrs, string cmd, string dest, string src, string cmt) {
+    vector<string> args;
+    args.push_back(dest);
+    args.push_back(src);
+    instrs.push_back(new ASMMove(cmd, args, cmt));
+}
+
+/* Generate a 'add', 'sub', etc. instruction. (that takes 3 parameters) */
+void op_instr(InstructionList& instrs, string cmd, string dest, string src1, string src2, string cmt) {
+    vector<string> args;
+    args.push_back(dest);
+    args.push_back(src1);
+    args.push_back(src2);
+    instrs.push_back(new ASMMove(cmd, args, cmt));
+}
 
 /* Generate instruction(s) to load the top of stack into
  * the supplied register. */
 void pop_into(InstructionList& instrs, string reg, string cmt) {
-    vector<string> getargs;
-    getargs.push_back(reg);
-    getargs.push_back("($sp)");
-    instrs.push_back(new ASMMove("lw", getargs, cmt));
+    do_move(instrs, "lw", reg, "($sp)", cmt);
 
     vector<string> addargs;
     addargs.push_back("$sp");
     addargs.push_back("$sp");
     addargs.push_back("4");
-    instrs.push_back(new ASMMove("add", addargs, " . . . "));
+    instrs.push_back(new ASMMove("add", addargs, " ..."));
 }
 
 /* Pop into two registers at once to save on stack pointer math. */
 /* (top of stack -> reg1, next value -> reg2) */
 void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
-    vector<string> getargs1;
-    getargs1.push_back(reg1);
-    getargs1.push_back("($sp)");
-    instrs.push_back(new ASMMove("lw", getargs1, cmt));
-
-    vector<string> getargs2;
-    getargs2.push_back(reg2);
-    getargs2.push_back("4($sp)");
-    instrs.push_back(new ASMMove("lw", getargs2, " . . . "));
-
-    vector<string> addargs;
-    addargs.push_back("$sp");
-    addargs.push_back("$sp");
-    addargs.push_back("8");
-    instrs.push_back(new ASMMove("add", addargs, " . . . "));
+    do_move(instrs, "lw", reg1, "($sp)", cmt);
+    do_move(instrs, "lw", reg2, "4($sp)", cmt);
+    op_instr(instrs, "add", "$sp", "$sp", "8", " ...");
 }
 
 /* Generate instructions to perform some operation on the top two values
  * of the stack, and push the result onto the stack. */
 void do_op(InstructionList& instrs, string op, string cmt) {
-    vector<string> getargs1;
-    getargs1.push_back("$t0");
-    getargs1.push_back("4($sp)");
-    instrs.push_back(new ASMMove("lw", getargs1, cmt));
-
-    vector<string> getargs2;
-    getargs2.push_back("$t1");
-    getargs2.push_back("($sp)");
-    instrs.push_back(new ASMMove("lw", getargs2, " . . . "));
-
-    vector<string> opargs;
-    opargs.push_back("$t0");
-    opargs.push_back("$t0");
-    opargs.push_back("$t1");
-    instrs.push_back(new ASMMove(op, opargs, " . . . "));
-
-    vector<string> putargs;
-    putargs.push_back("$t0");
-    putargs.push_back("4($sp)");
-    instrs.push_back(new ASMMove("sw", putargs, " . . . "));
-
-    vector<string> addargs;
-    addargs.push_back("$sp");
-    addargs.push_back("$sp");
-    addargs.push_back("4");
-    instrs.push_back(new ASMMove("add", addargs, " . . . "));
+    do_move(instrs, "lw", "$t0", "4($sp)", cmt);
+    do_move(instrs, "lw", "$t1", "($sp)", " ...");
+    op_instr(instrs, op, "$t0", "$t0", "$t1", " ...");
+    do_move(instrs, "sw", "$t0", "4($sp)", " ...");
+    op_instr(instrs, "add", "$sp", "$sp", "4", " ...");
 }
 
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
-    vector<string> addargs;
-    addargs.push_back("$sp");
-    addargs.push_back("$sp");
-    addargs.push_back("-4");
-    instrs.push_back(new ASMMove("add", addargs, cmt));
-
-    vector<string> putargs;
-    putargs.push_back(reg);
-    putargs.push_back("($sp)");
-    instrs.push_back(new ASMMove("sw", putargs, " . . . "));
+    op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
+    do_move(instrs, "sw", reg, "($sp)", " ...");
 }
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
@@ -96,17 +71,11 @@ void munch_stdlib(InstructionList& instrs) {
     rargs.push_back("$ra");
 
     instrs.push_back(new ASMLabel(new Label("print", false)));
-    vector<string> pargs;
-    pargs.push_back("$v0");
-    pargs.push_back("4");
-    instrs.push_back(new ASMMove("li", pargs, "Load system call code"));
+    do_move(instrs, "li", "$v0", "4", "Load system call code");
     instrs.push_back(new ASMJump("j", printcommonlabel));
 
     instrs.push_back(new ASMLabel(new Label("print_int", false)));
-    vector<string> piargs;
-    piargs.push_back("$v0");
-    piargs.push_back("1");
-    instrs.push_back(new ASMMove("li", piargs, "Load system call code"));
+    do_move(instrs, "li", "$v0", "1", "Load system call code");
     instrs.push_back(new ASMJump("j", printcommonlabel));
 
     instrs.push_back(new ASMLabel(printcommonlabel));
@@ -115,6 +84,8 @@ void munch_stdlib(InstructionList& instrs) {
     push_from(instrs, "$0", "return nothing"); /* return nothing */
     instrs.push_back(new ASMOperation("jr", rargs, ""));
 }
+
+/* ---- MUNCH FUNCS ---- */
 
 void FragMove::munch(InstructionList& instrs) const {
     string command;
@@ -137,14 +108,14 @@ void FragMove::munch(InstructionList& instrs) const {
             command = "div";
             /* Pop backwards because second operand will be on top of stack */
             pop_into(instrs, "$t1", toStr());
-            pop_into(instrs, "$t0", " . . . ");
+            pop_into(instrs, "$t0", " ...");
             args.push_back("$t0");
             args.push_back("$t1");
-            instrs.push_back(new ASMOperation("div", args, " . . . "));
+            instrs.push_back(new ASMOperation("div", args, " ..."));
             vector<string> args2;
             args2.push_back("$t0");
-            instrs.push_back(new ASMOperation("mflo", args2, " . . . "));
-            push_from(instrs, "$t0", " . . . ");
+            instrs.push_back(new ASMOperation("mflo", args2, " ..."));
+            push_from(instrs, "$t0", " ...");
         }
         /* I'm pretty sure that the way it's set up guarantees the
          * arguments to each binop are always on top. So we just need
@@ -200,56 +171,7 @@ void FragMove::munch(InstructionList& instrs) const {
     }
 }
 
-void StmtExprTree::munch(InstructionList& instrs) const {
-    /* shouldn't be called! */
-    cerr << "error, called StmtExprTree::munch!" << endl;
-}
-
-void BinOpTree::munch(InstructionList& instrs) const {
-    /* shouldn't be called, since binoptree should only be found inside movetree */
-    cerr << "error, called BinOpTree::munch!" << endl;
-}
-
-void CallTree::munch(InstructionList& instrs) const {
-    /* handled in fragmove */
-}
-
-void ConstTree::munch(InstructionList& instrs) const {
-    //instrs.push_back(value_->toStr()); //this is probably wrong!
-    // see added const section to fragmove
-}
-
-void ExprSeqTree::munch(InstructionList& instrs) const {
-    /* not here at this point */
-}
-
-void MemTree::munch(InstructionList& instrs) const {
-    /* i don't think this one is ever used */
-}
-
-void NameTree::munch(InstructionList& instrs) const {
-    /* not sure if we need this one ? i don't think so */
-}
-
-void TempTree::munch(InstructionList& instrs) const {
-    /* never mind */
-}
-
-void VarTree::munch(InstructionList& instrs) const {
-    /* don't need */
-}
-
-void ConditionalExprTree::munch(InstructionList& instrs) const {
-    //should be v similar to CJumpTree. What are left and right?
-    // oh sorry this one doesn't need filled in.
-    // conditionalexprtree gets turned into a cjumptree when we call vectorize()
-}
-
 /* statement trees */
-
-void ExprStmtTree::munch(InstructionList& instrs) const {
-    /* not here at this point */
-}
 
 void CJumpTree::munch(InstructionList& instrs) const {
     string command;
@@ -281,7 +203,7 @@ void CJumpTree::munch(InstructionList& instrs) const {
     args.push_back("$t1");
     args.push_back(t_->toStr());
     /* this probably shouldn't be an ASMMove but also idk if it matters */
-    instrs.push_back(new ASMMove(command, args, toStr()));
+    instrs.push_back(new ASMMove(command, args, " ..."));
 
     /* We need to unconditionally branch to false label now if
      * we didn't jump to true label. */
@@ -303,38 +225,17 @@ void LabelTree::munch(InstructionList& instrs) const {
     instrs.push_back(new ASMLabel(l_));
 }
 
-void MoveTree::munch(InstructionList& instrs) const {
-    vector<string> args;
-    args.push_back(src_->toStr());
-    args.push_back(dest_->toStr());
-    instrs.push_back(new ASMOperation("move", args, toStr()));
-}
-
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList& instrs) const {
     /* Set frame pointer to point to base of stack frame (which is current $sp - 4) */
     /* it's $sp-4 because we need 0($fp) to be the first local, -4($fp) second local, etc. */
     push_from(instrs, "$fp", "save old frame pointer");
-    vector<string> args0;
-    args0.push_back("$fp");
-    args0.push_back("$sp");
-    args0.push_back("4");
-    instrs.push_back(new ASMOperation("sub", args0, "point at base of frame"));
+    op_instr(instrs, "sub", "$fp", "$sp", "4", "point at base of frame");
     /* needs to expand stack to hold however many local vars we need */
-    vector<string> args1;
-    args1.push_back("$t0");
-    args1.push_back("$sp");
-    instrs.push_back(new ASMOperation("move", args1, "#saves the current return address as a stack pointer")); 
-    vector<string> args2;
-    args2.push_back("$sp");
-    args2.push_back("$sp");
-    int num = -4*(num_locals_+1);
-    args2.push_back(to_string(num));
-    instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's locals"));
-    vector<string> args3;
-    args3.push_back("$t0");
-    args3.push_back("($sp)");
-    instrs.push_back(new ASMOperation("sw", args3, "#puts the return address on the top of the stack"));
+    do_move(instrs, "move", "$t0", "$sp", "#saves the current return address as a stack pointer");
+    op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_locals_+1)), "#increments stack for new frame's locals");
+
+    do_move(instrs, "sw", "$t0", "($sp)", "#puts the return address on the top of the stack");
     /* Need to explicitly save return address on stack because MIPS */
     push_from(instrs, "$ra", "save function return addr");
 }
@@ -346,15 +247,9 @@ void EndFrameTree::munch(InstructionList& instrs) const {
     /* Need to explicitly save return address on stack because MIPS */
     pop_into(instrs, "$ra", "recall function return addr");
     /* Restore old frame pointer */
-    vector<string> fargs;
-    fargs.push_back("$fp");
-    fargs.push_back("4($sp)");
-    instrs.push_back(new ASMOperation("lw", fargs, "restore old frame pointer"));
+    do_move(instrs, "lw", "$fp", "4($sp)", "restore old frame pointter");
     /* Restore stack pointer (hopefully this lines up properly?!) */
-    vector<string> args;
-    args.push_back("$sp");
-    args.push_back("($sp)");
-    instrs.push_back(new ASMOperation("lw", args, "#returns sp to the return address"));
+    do_move(instrs, "lw", "$sp", "($sp)", "#returns sp to the return address");
 }
 
 void ArgReserveTree::munch(InstructionList& instrs) const {
@@ -371,38 +266,19 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
 
     /* Reserve space for arguments */
     if (num_args_ > 0) {
-        vector<string> args2;
-        args2.push_back("$sp");
-        args2.push_back("$sp");
-        int num = -4*(num_args_);
-        args2.push_back(to_string(num));
-        instrs.push_back(new ASMOperation("add", args2, "#increments stack for new frame's args"));
+        op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_args_)), "#increments stack for new frame's args");
     }
 
-    vector<string> argsM;
-    argsM.push_back("$s1");
-    argsM.push_back("$sp");
-    instrs.push_back(new ASMOperation("move", argsM, "save location of arguments"));
+    do_move(instrs, "move", "$s1", "$sp", "save location of arguments");
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
-    /* NOTE: I think we actually can just leave the arguments on the stack where they are
-     * with no need to calculate where they go. But we will have to be mindful then that
-     * they're actually backwards... like arg 0 is below arg 1 on the stack. This can be
-     * fixed in the fragmove var part, though. */
     pop_into(instrs, "$t1", "get argument value");
 
-    vector<string> args;
-    args.push_back("$t0");
-    args.push_back("$s1");
-    args.push_back(to_string(4*(current_argcount-index_-1)));
-    instrs.push_back(new ASMOperation("add", args, "#figures out where to put the current argument"));
+    op_instr(instrs, "add", "$t0", "$s1", to_string(-4*(current_argcount-index_-1)), "#figures out where to put the current argument");
 
-    vector<string> args2;
-    args2.push_back("$t1");
-    args2.push_back("($t0)");
-    instrs.push_back(new ASMOperation("sw", args2, "#loads the argument into appropriate slot"));
+    do_move(instrs, "sw", "$t1", "($t0)", "#loads the argument into appropriate slot");
 }
 
 void ArgRemoveTree::munch(InstructionList& instrs) const {
@@ -410,16 +286,9 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* first save return value of function */
     pop_into(instrs, "$t0", "save returned func val");
     /* remove arguments from stack */
-    vector<string> args;
-    args.push_back("$sp");
-    args.push_back("$s1");
-    instrs.push_back(new ASMOperation("move", args, "#returns sp to the top of argument list"));
+    do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount to get back to where we were */
-    vector<string> args2;
-    args2.push_back("$sp");
-    args2.push_back("$sp");
-    args2.push_back(to_string(4*current_argcount));
-    instrs.push_back(new ASMOperation("addi", args2, "remove arguments from stack"));
+    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount), "remove arguments from stack");
     /* Now we just have to restore $s1 to its rightful value */
     pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
@@ -427,13 +296,8 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {
-    /* a static string i forget the syntax for this tho. .asciiz something */
+    /* static string */
     instrs.push_back(new ASMInstruction(label_->toStr() + ": .asciiz \"" + value_ + "\"", ""));
-}
-
-void SeqTree::munch(InstructionList& instrs) const {
-    /* shouldn't be called */
-    cerr << "error, called SeqTree::munch!" << endl;
 }
 
 void SemicolonTree::munch(InstructionList& instrs) const {
@@ -448,10 +312,12 @@ void Fragment::munch(InstructionList& instrs) const {
 
 void NotImplExprTree::munch(InstructionList& instrs) const {
     /* don't call this */
+    cerr << "not implemented Expr!" << endl;
 }
 
 void NotImplStmtTree::munch(InstructionList& instrs) const {
     /* don't call this */
+    cerr << "not implemented Stmt!" << endl;
 }
 
 InstructionList ProgramFragment::munch() const {
@@ -466,5 +332,20 @@ InstructionList ProgramFragment::munch() const {
     munch_stdlib(result);
     return result;
 }
+
+/* Trees that have no munch... */
+void CallTree::munch(InstructionList& instrs) const { }
+void ConstTree::munch(InstructionList& instrs) const { }
+void ExprSeqTree::munch(InstructionList& instrs) const { }
+void MemTree::munch(InstructionList& instrs) const { }
+void NameTree::munch(InstructionList& instrs) const { }
+void TempTree::munch(InstructionList& instrs) const { }
+void VarTree::munch(InstructionList& instrs) const { }
+void ConditionalExprTree::munch(InstructionList& instrs) const { }
+void ExprStmtTree::munch(InstructionList& instrs) const { }
+void SeqTree::munch(InstructionList& instrs) const { }
+void MoveTree::munch(InstructionList& instrs) const { }
+void StmtExprTree::munch(InstructionList& instrs) const { }
+void BinOpTree::munch(InstructionList& instrs) const { }
 
 } //NAMESPACE
