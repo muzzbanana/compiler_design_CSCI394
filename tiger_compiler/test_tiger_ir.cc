@@ -428,3 +428,22 @@ TEST_CASE("check printing (error2)", "[ir-conversion]") {
     fclose(myfile);
 }
 
+TEST_CASE("check expr-sequences", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/semicolons.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
+
+    delete output;
+    fclose(myfile);
+}
+

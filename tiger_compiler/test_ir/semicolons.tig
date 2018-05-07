@@ -1,0 +1,8 @@
+let
+    function print_sequence(i: int) = (print_int(i); print_int(i+1); print_int(i+2); print("\n"))
+in
+    print_sequence(1);
+    print_sequence(4);
+    print_sequence(7)
+end
+
