@@ -31,12 +31,7 @@ void op_instr(InstructionList& instrs, string cmd, string dest, string src1, str
  * the supplied register. */
 void pop_into(InstructionList& instrs, string reg, string cmt) {
     do_move(instrs, "lw", reg, "($sp)", cmt);
-
-    vector<string> addargs;
-    addargs.push_back("$sp");
-    addargs.push_back("$sp");
-    addargs.push_back("4");
-    instrs.push_back(new ASMMove("add", addargs, " . . ."));
+    op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
 }
 
 /* Pop into two registers at once to save on stack pointer math. */
