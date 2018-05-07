@@ -23,11 +23,7 @@ void do_move(InstructionList& instrs, string cmd, string dest, string src, strin
     } else {
         /* Otherwise... don't do anything. But add the comment to the previous thing to
          * note that we tried */
-        if (instrs.back()->comment_ == " . . .") {
-            instrs.back()->comment_ = cmt;
-        } else if (cmt != " . . .") {
-            instrs.back()->comment_ = instrs.back()->comment_ + "; " + cmt;
-        }
+        instrs.back()->comment_ = instrs.back()->comment_ + " / " + cmt;
     }
 }
 
@@ -38,6 +34,19 @@ void op_instr(InstructionList& instrs, string cmd, string dest, string src1, str
     args.push_back(src1);
     args.push_back(src2);
     instrs.push_back(new ASMMove(cmd, args, cmt));
+}
+
+/* Generate instruction to increase stack pointer by four. */
+void incr_stack(InstructionList& instrs, string cmt) {
+    string comment = cmt;
+    if (instrs.size() > 0
+            && instrs.back()->instruction_ == "sw"
+            && dynamic_cast<const ASMMove*>(instrs.back())->args_[1] == "($sp)") {
+        /* If we just stored something on top of stack, erase it -- we are about to clobber it. */
+        comment = instrs.back()->comment_ + " / " + comment;
+        instrs.pop_back();
+    }
+    op_instr(instrs, "add", "$sp", "$sp", "4", comment);
 }
 
 /* Generate instruction(s) to load the top of stack into
@@ -52,13 +61,7 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
         instrs.pop_back();
         instrs.pop_back();
         string newcmt;
-        if (cmt == " . . .") {
-            newcmt = last->comment_;
-        } else if (last->comment_ == " . . .") {
-            newcmt = cmt;
-        } else {
-            newcmt = last->comment_ + "; " + cmt;
-        }
+        newcmt = last->comment_ + " / " + cmt;
         do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(last)->args_[0], newcmt);
         instrs.back()->generated_pop_ = true;
     } else {
@@ -74,7 +77,7 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
             do_move(instrs, "lw", reg, "($sp)", cmt);
             instrs.back()->generated_pop_ = true;
         }
-        op_instr(instrs, "add", "$sp", "$sp", "4", add_comment);
+        incr_stack(instrs, add_comment);
         instrs.back()->generated_pop_ = true;
     }
 }
@@ -93,8 +96,10 @@ void do_op(InstructionList& instrs, string op, string cmt) {
     do_move(instrs, "lw", "$t0", "4($sp)", cmt);
     do_move(instrs, "lw", "$t1", "($sp)", " . . .");
     op_instr(instrs, op, "$t0", "$t0", "$t1", " . . .");
-    do_move(instrs, "sw", "$t0", "4($sp)", " . . .");
-    op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
+    incr_stack(instrs, " . . .");
+    instrs.back()->generated_pop_ = true;
+    do_move(instrs, "sw", "$t0", "($sp)", " . . .");
+    instrs.back()->generated_push_ = true;
 }
 
 /* Generate instructions to push a given register onto the stack. */
@@ -107,13 +112,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
         /* The last thing was adding to the stack pointer,
          * so we don't need to subtract from it again --
          * just get rid of the last instruction */
-        if (instrs.back()->comment_ == " . . .") {
-            sw_comment = cmt;
-        } else if (cmt == " . . .") {
-            sw_comment = instrs.back()->comment_;
-        } else {
-            sw_comment = instrs.back()->comment_ + "; " + cmt;
-        }
+        sw_comment = instrs.back()->comment_ + " / " + cmt;
         instrs.pop_back();
     } else {
         op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
@@ -125,9 +124,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
         /* If there's a 'sw something, ($sp)' right before us,
          * then it can't possibly be useful, since we're about
          * to overwrite it. Thus it can be removed. */
-        if (instrs.back()->comment_ != " . . .") {
-            sw_comment = instrs.back()->comment_ + "; " + sw_comment;
-        }
+        sw_comment = instrs.back()->comment_ + " / " + sw_comment;
         instrs.pop_back();
     }
     if (instrs.size() > 0
@@ -136,9 +133,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
             && dynamic_cast<const ASMMove*>(instrs.back())->args_[0] == reg) {
         /* If we just loaded the same register from the stack, there's no
          * need to push the same thing onto the stack again. */
-        if (instrs.back()->comment_ != " . . .") {
-            instrs.back()->comment_ = instrs.back()->comment_ + "; " + sw_comment;
-        }
+        instrs.back()->comment_ = instrs.back()->comment_ + " / " + sw_comment;
     } else {
         do_move(instrs, "sw", reg, "($sp)", sw_comment);
         instrs.back()->generated_push_ = true;
