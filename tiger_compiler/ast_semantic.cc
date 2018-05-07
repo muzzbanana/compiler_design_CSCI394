@@ -3,25 +3,25 @@
 namespace tiger {
 
 const Type *Assignment::type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr right_, int location_) {
-            const Type *name_type = left_->type_verify(scope);
-            const Type *value_type = right_->type_verify(scope);
-            if (name_type == Type::notFoundType) {
-                cerr << "ERROR: line " << location_ << endl;
-                cerr << "       unknown variable ‘" << left_->toStr() << "’" << endl;
-                return Type::errorType;
-            }
+    const Type *name_type = left_->type_verify(scope);
+    const Type *value_type = right_->type_verify(scope);
+    if (name_type == Type::notFoundType) {
+        cerr << "ERROR: line " << location_ << endl;
+        cerr << "       unknown variable ‘" << left_->toStr() << "’" << endl;
+        return Type::errorType;
+    }
 
-            if (name_type == value_type && name_type != Type::errorType) {
-                return value_type;
-            } else if (name_type != Type::errorType && value_type != Type::errorType) {
-                cerr << "ERROR: line " << location_ << endl;
-                cerr << "       cannot assign expression of type ‘" << value_type->toStr() << "’ to variable ‘"
-                     << left_->toStr() << "’, which is of type ‘" << name_type->toStr() << "’." << endl;
-                return Type::errorType;
-            } else {
-                return Type::errorType;
-            }
-        }
+    if (name_type == value_type && name_type != Type::errorType) {
+        return value_type;
+    } else if (name_type != Type::errorType && value_type != Type::errorType) {
+        cerr << "ERROR: line " << location_ << endl;
+        cerr << "       cannot assign expression of type ‘" << value_type->toStr() << "’ to variable ‘"
+             << left_->toStr() << "’, which is of type ‘" << name_type->toStr() << "’." << endl;
+        return Type::errorType;
+    } else {
+        return Type::errorType;
+    }
+}
 
 const Type *IfThenElse::type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_, int location_) {
     const Type *cond_type = left_->type_verify(scope);

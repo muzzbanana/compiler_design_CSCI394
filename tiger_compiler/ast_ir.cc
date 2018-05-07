@@ -20,6 +20,9 @@ const ProgramTree *convert_ast(ASTNode::ASTptr ast) {
     info->initArray_label = new Label("initArray", false);
     info->malloc_label = new Label("malloc", false);
 
+    info->func_labels_["print"] = new Label("print", false);
+    info->func_labels_["print_int"] = new Label("print_int", false);
+
     info->frame_ = frame;
 
     vector<string> empty_args;

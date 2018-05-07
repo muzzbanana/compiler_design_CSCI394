@@ -383,3 +383,48 @@ TEST_CASE("check division", "[ir-conversion]") {
     fclose(myfile);
 }
 
+TEST_CASE("check printing", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/helloworld.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    std::cout << output->toStr() << std::endl;
+    std::cout << ir->toStr() << std::endl;
+
+    const ProgramFragment *fr = ir->vectorize();
+    std::cout << "\n== ASM ==\n" << std::endl;
+    print_instrs(fr->munch());
+    std::cout << "\n";
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check printing (error)", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/helloerror.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    REQUIRE(ir == NULL);
+
+    delete output;
+    fclose(myfile);
+}
+
+TEST_CASE("check printing (error2)", "[ir-conversion]") {
+    FILE *myfile = fopen("test_ir/helloerror2.tig", "r");
+    yyin = myfile;
+    ASTNode::ASTptr output = NULL;
+    yyparse(&output);
+
+    const ProgramTree *ir = convert_ast(output);
+    REQUIRE(ir == NULL);
+
+    delete output;
+    fclose(myfile);
+}
+

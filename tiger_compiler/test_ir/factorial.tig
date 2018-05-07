@@ -1,5 +1,5 @@
 let
     function fac(i: int):  int = if i < 2 then 1 else i * fac(i - 1)
 in
-    fac(5)
+    print_int(fac(5))
 end

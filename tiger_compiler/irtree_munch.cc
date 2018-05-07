@@ -88,6 +88,32 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
     instrs.push_back(new ASMMove("sw", putargs, " . . . "));
 }
 
+/* Put 'print' and 'print_int' into the thing so we can print stuff out */
+void munch_stdlib(InstructionList& instrs) {
+    vector<string> rargs;
+    rargs.push_back("$ra");
+
+    instrs.push_back(new ASMLabel(new Label("print", false)));
+    vector<string> pargs;
+    pargs.push_back("$v0");
+    pargs.push_back("4");
+    instrs.push_back(new ASMMove("li", pargs, "Load system call code"));
+    pop_into(instrs, "$a0", "get thing to print");
+    instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
+    push_from(instrs, "$0", "return nothing"); /* return nothing */
+    instrs.push_back(new ASMOperation("jr", rargs, ""));
+
+    instrs.push_back(new ASMLabel(new Label("print_int", false)));
+    vector<string> piargs;
+    piargs.push_back("$v0");
+    piargs.push_back("1");
+    instrs.push_back(new ASMMove("li", piargs, "Load system call code"));
+    pop_into(instrs, "$a0", "get thing to print");
+    instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
+    push_from(instrs, "$0", "return nothing"); /* return nothing */
+    instrs.push_back(new ASMOperation("jr", rargs, ""));
+}
+
 void FragMove::munch(InstructionList& instrs) const {
     string command;
     vector<string> args;
@@ -435,6 +461,7 @@ InstructionList ProgramFragment::munch() const {
     }
     result.push_back(new ASMLabel(new Label("main", false)));
     text_segment->munch(result);
+    munch_stdlib(result);
     return result;
 }
 
