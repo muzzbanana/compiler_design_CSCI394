@@ -109,6 +109,11 @@ const StmtTree *Assignment::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
     return new MoveTree(leftExpr, rightExpr);
 }
 
+bool is_comparison(IRTree::Operator op) {
+    using ito = IRTree::Operator;
+    return (op == ito::EQ || op == ito::NE || op == ito::LT || op == ito::GT || op == ito::LE || op == ito::GE);
+}
+
 const ExprTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr middle_, ASTNode::ASTptr right_) {
     /* We evaluate the conditional expression and then just create
      * a CJumpnode that checks whether it's equal to 0. */
@@ -124,12 +129,6 @@ const ExprTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
      *      MOV 0, tmp2
      *      JNE tmp1, tmp2, t, f */
     const IRTree *condTree = left_->convert_to_ir(info);
-
-    /* Need to pass an expression to CJumpTree -- we know it has to be an expression
-     * because of our position in the AST (can't put a statement inside the condition
-     * of an if...) but need to convert it */
-    assert(condTree->isExpr());
-    const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
 
     /* Then the true and false things need to be examined -- if they're exprs,
      * they need to be wrapped in an ExprStmtTree; otherwise they can just be passed
@@ -149,16 +148,19 @@ const ExprTree *IfThenElse::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, A
     } else {
         falseExpr = new StmtExprTree(dynamic_cast<const StmtTree*>(falseTree));
     }
-    /*return new SeqTree(new CJumpTree(IRTree::Operator::NE,
-                conditional, new ConstTree(0), trueLabel, falseLabel),
-           new SeqTree(new LabelTree(trueLabel),
-           new SeqTree(trueStmt,
-           new SeqTree(new UJumpTree(afterLabel),
-           new SeqTree(new LabelTree(falseLabel),
-           new SeqTree(falseStmt,
-           new SeqTree(new LabelTree(afterLabel),
-                   NULL)))))));*/
-    return new ConditionalExprTree(IRTree::Operator::NE, conditional, new ConstTree(0), trueExpr, falseExpr);
+
+    /* Need to pass an expression to CJumpTree -- we know it has to be an expression
+     * because of our position in the AST (can't put a statement inside the condition
+     * of an if...) but need to convert it */
+    assert(condTree->isExpr());
+    if (condTree->getType() == IRTree::TreeType::BINOP
+            && is_comparison(dynamic_cast<const BinOpTree*>(condTree)->op_)) {
+        const BinOpTree* cond_expr = dynamic_cast<const BinOpTree*>(condTree);
+        return new ConditionalExprTree(cond_expr->op_, cond_expr->left_, cond_expr->right_, trueExpr, falseExpr);
+    } else {
+        const ExprTree *conditional = dynamic_cast<const ExprTree*>(condTree);
+        return new ConditionalExprTree(IRTree::Operator::NE, conditional, new ConstTree(0), trueExpr, falseExpr);
+    }
 }
 
 const StmtTree *WhileDo::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {
@@ -175,13 +177,16 @@ const StmtTree *WhileDo::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTN
         bodyStmt = dynamic_cast<const StmtTree*>(bodyTree);
     }
 
-    return new SeqTree(new LabelTree(testLabel),
-           new SeqTree(new CJumpTree(IRTree::Operator::NE,
-                conditional, new ConstTree(0), bodyLabel, doneLabel),
-           new SeqTree(new LabelTree(bodyLabel),
-           new SeqTree(bodyStmt,
-           new SeqTree(new UJumpTree(testLabel),
-           new SeqTree(new LabelTree(doneLabel), NULL))))));
+    return new ExprStmtTree(new ExprSeqTree(
+               new SeqTree(new LabelTree(testLabel),
+               new SeqTree(new CJumpTree(IRTree::Operator::NE,
+                    conditional, new ConstTree(0), bodyLabel, doneLabel),
+               new SeqTree(new LabelTree(bodyLabel),
+               new SeqTree(bodyStmt,
+               new SeqTree(new SemicolonTree(), // throw away returned result since we return nil
+               new SeqTree(new UJumpTree(testLabel),
+               new SeqTree(new LabelTree(doneLabel), NULL)))))))
+           , new ConstTree(0), false)); // need to return *something* after the loop
 }
 
 const StmtTree *ForTo::convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
@@ -208,7 +213,7 @@ const StmtTree *ForTo::convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode
     assert(limit->isExpr());
     limitExpr = dynamic_cast<const ExprTree*>(limit);
 
-    const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
+    //const ExprTree *conditional = new BinOpTree(IRTree::Operator::LT, countExpr, limitExpr);
 
     const IRTree *bodyTree = four_->convert_to_ir(info);
     const StmtTree *bodyStmt;
@@ -220,15 +225,18 @@ const StmtTree *ForTo::convert_to_ir(IRInfo *info, ASTNode::ASTptr one_, ASTNode
 
     const ExprTree *plus = new BinOpTree(IRTree::Operator::PLUS, countExpr, new ConstTree(1));
 
-    return new SeqTree(initialize,
+    return new ExprStmtTree(new ExprSeqTree(
+            new SeqTree(initialize,
             new SeqTree(new LabelTree(testLabel),
-            new SeqTree(new CJumpTree(IRTree::Operator::NE,
-                        conditional, new ConstTree(0), bodyLabel, doneLabel),
+            new SeqTree(new CJumpTree(IRTree::Operator::LE,
+                        countExpr, limitExpr, bodyLabel, doneLabel),
             new SeqTree(new LabelTree(bodyLabel),
             new SeqTree(bodyStmt,
+            new SeqTree(new SemicolonTree(),
             new SeqTree(new MoveTree(countExpr, plus),
             new SeqTree(new UJumpTree(testLabel),
-            new SeqTree(new LabelTree(doneLabel), NULL))))))));
+            new SeqTree(new LabelTree(doneLabel), NULL)))))))))
+        , new ConstTree(0), false)); // return meaningless 0 so we can put this in an exprseq
 }
 
 const StmtTree *UntypedVarDeclaration::convert_to_ir(IRInfo *info, ASTNode::ASTptr left_, ASTNode::ASTptr right_) {

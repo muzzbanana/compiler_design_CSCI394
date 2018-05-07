@@ -68,12 +68,20 @@ const Type *WhileDo::type_verify(Scope* scope, ASTNode::ASTptr left_, ASTNode::A
 
 const Type *ForTo::type_verify(Scope* scope, ASTNode::ASTptr one_, ASTNode::ASTptr two_,
         ASTNode::ASTptr three_, ASTNode::ASTptr four_, int location_) {
+    string varname = one_->toStr();
     const Type *first_type = two_->type_verify(scope);
     const Type *last_type = three_->type_verify(scope);
-    const Type *body_type = four_->type_verify(scope);
-    if (first_type == Type::intType && last_type == Type::intType
-            && body_type != Type::errorType) {
-        return Type::nilType;
+    if (first_type == Type::intType && last_type == Type::intType) {
+        /* Insert the loop variable into the scope. */
+        scope->push_scope();
+        scope->symbol_insert(varname, Type::intType);
+        const Type *body_type = four_->type_verify(scope);
+        scope->pop_scope();
+        if (body_type != Type::errorType) {
+            return Type::nilType;
+        } else {
+            return Type::errorType;
+        }
     } else if (first_type != Type::intType || last_type != Type::intType) {
         cerr << "ERROR: line " << location_ << endl;
         cerr << "       'from' and 'to' expressions in 'for' loop must be integer expressions" << endl;

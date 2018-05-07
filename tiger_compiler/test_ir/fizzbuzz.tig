@@ -1,0 +1,9 @@
+let
+    function numberize(i: int) =
+        if (i / 15) * 15 = i then print("fizzbuzz\n")
+        else if (i / 3) * 3 = i then print("fizz\n")
+        else if (i / 5) * 5 = i then print("buzz\n")
+        else (print_int(i); print("\n"))
+in
+    for num := 1 to 35 do numberize(num)
+end

@@ -318,7 +318,6 @@ void NewFrameTree::munch(InstructionList& instrs) const {
 
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
-    /* Put last temp value into $v0 in case we're returning afterwards */
     pop_into(instrs, "$v0", "load return value");
     /* Need to explicitly save return address on stack because MIPS */
     pop_into(instrs, "$ra", "recall function return addr");
