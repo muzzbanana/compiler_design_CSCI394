@@ -34,10 +34,11 @@ class ASMInstruction {
             return ss.str();
         }
 
-    protected:
         const string instruction_;
+
         const string comment_;
 
+        bool generated_push_ = false;
 };
 
 // typedef vector<ASMInstructions*> InstructionList;
@@ -94,7 +95,7 @@ class ASMMove : public ASMInstruction {
         ss << " # " << comment_;
         return ss.str();
     }
- private:
+
     const vector<string> args_;
 };
 

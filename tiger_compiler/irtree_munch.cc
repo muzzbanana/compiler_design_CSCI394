@@ -33,8 +33,19 @@ void op_instr(InstructionList& instrs, string cmd, string dest, string src1, str
 /* Generate instruction(s) to load the top of stack into
  * the supplied register. */
 void pop_into(InstructionList& instrs, string reg, string cmt) {
-    do_move(instrs, "lw", reg, "($sp)", cmt);
-    op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
+    if (instrs.size() > 1
+            && instrs[instrs.size()-2]->generated_push_
+            && instrs.back()->generated_push_) {
+        /* Detect if we immediately just pushed something, and replace with a 'move'
+         * instead of pushing onto stack and immediately popping back off */
+        ASMInstruction *last = instrs.back();
+        instrs.pop_back();
+        instrs.pop_back();
+        do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(last)->args_[0], last->comment_ + " -> " + cmt);
+    } else {
+        do_move(instrs, "lw", reg, "($sp)", cmt);
+        op_instr(instrs, "add", "$sp", "$sp", "4", " . . .");
+    }
 }
 
 /* Pop into two registers at once to save on stack pointer math. */
@@ -58,7 +69,9 @@ void do_op(InstructionList& instrs, string op, string cmt) {
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
     op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
+    instrs.back()->generated_push_ = true;
     do_move(instrs, "sw", reg, "($sp)", " . . .");
+    instrs.back()->generated_push_ = true;
 }
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
