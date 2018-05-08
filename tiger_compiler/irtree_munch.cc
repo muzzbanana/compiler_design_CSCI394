@@ -36,6 +36,25 @@ void op_instr(InstructionList& instrs, string cmd, string dest, string src1, str
     instrs.push_back(new ASMMove(cmd, args, cmt));
 }
 
+/* Generate instruction to change stack pointer by amt. */
+void move_sp(InstructionList& instrs, int amt, string cmt) {
+    if (instrs.back()->generated_move_sp_) {
+        ASMMove* last = dynamic_cast<ASMMove*>(instrs.back());
+        last->args_[2] = to_string(atoi(last->args_[2].c_str()) + amt);
+        last->comment_ = last->comment_ + " / " + cmt;
+        last->generated_move_sp_ = true;
+        instrs.pop_back();
+        if (last->args_[2] != "0") {
+            instrs.push_back(last);
+        } else {
+            instrs.back()->comment_ = instrs.back()->comment_ + " / " + last->comment_;
+        }
+    } else {
+        op_instr(instrs, "add", "$sp", "$sp", to_string(amt), cmt);
+        instrs.back()->generated_move_sp_ = true;
+    }
+}
+
 /* Generate instruction to increase stack pointer by four. */
 void incr_stack(InstructionList& instrs, string cmt) {
     string comment = cmt;
@@ -46,7 +65,7 @@ void incr_stack(InstructionList& instrs, string cmt) {
         comment = instrs.back()->comment_ + " / " + comment;
         instrs.pop_back();
     }
-    op_instr(instrs, "add", "$sp", "$sp", "4", comment);
+    move_sp(instrs, 4, comment);
 }
 
 /* Generate instruction(s) to load the top of stack into
@@ -87,7 +106,7 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
 void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
     do_move(instrs, "lw", reg1, "($sp)", cmt);
     do_move(instrs, "lw", reg2, "4($sp)", " . . .");
-    op_instr(instrs, "add", "$sp", "$sp", "8", " . . .");
+    move_sp(instrs, 8, " . . .");
 }
 
 /* Generate instructions to perform some operation on the top two values
@@ -115,7 +134,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
         sw_comment = instrs.back()->comment_ + " / " + cmt;
         instrs.pop_back();
     } else {
-        op_instr(instrs, "add", "$sp", "$sp", "-4", cmt);
+        move_sp(instrs, -4, cmt);
         instrs.back()->generated_push_ = true;
     }
     if (instrs.size() > 0
@@ -309,7 +328,7 @@ void NewFrameTree::munch(InstructionList& instrs) const {
     op_instr(instrs, "sub", "$fp", "$sp", "4", "point at base of frame");
     /* needs to expand stack to hold however many local vars we need */
     do_move(instrs, "move", "$t0", "$sp", "#saves the current return address as a stack pointer");
-    op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_locals_+1)), "#increments stack for new frame's locals");
+    move_sp(instrs, -4*(num_locals_+1), "#increments stack for new frame's locals");
 
     do_move(instrs, "sw", "$t0", "($sp)", "#puts the return address on the top of the stack");
     /* Need to explicitly save return address on stack because MIPS */
@@ -341,7 +360,7 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
 
     /* Reserve space for arguments */
     if (num_args_ > 0) {
-        op_instr(instrs, "add", "$sp", "$sp", to_string(-4*(num_args_)), toStr());
+        move_sp(instrs, -4*(num_args_), toStr());
     }
 
     do_move(instrs, "move", "$s1", "$sp", "save location of arguments");
@@ -363,7 +382,7 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* remove arguments from stack */
     do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
-    op_instr(instrs, "add", "$sp", "$sp", to_string(4*current_argcount.top()), toStr());
+    move_sp(instrs, 4*current_argcount.top(), toStr());
     current_argcount.pop();
     /* Now we just have to restore $s1 to its rightful value */
     pop_into(instrs, "$s1", "restore $s1 value");

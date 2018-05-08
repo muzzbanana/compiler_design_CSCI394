@@ -40,6 +40,7 @@ class ASMInstruction {
 
         bool generated_push_ = false;
         bool generated_pop_ = false;
+        bool generated_move_sp_ = false;
 };
 
 // typedef vector<ASMInstructions*> InstructionList;
@@ -97,7 +98,7 @@ class ASMMove : public ASMInstruction {
         return ss.str();
     }
 
-    const vector<string> args_;
+    vector<string> args_;
 };
 
 class ASMLabel : public ASMInstruction {
