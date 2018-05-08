@@ -189,7 +189,9 @@ void munch_stdlib(InstructionList& instrs) {
 
     instrs.push_back(new ASMLabel(printcommonlabel));
     pop_into(instrs, "$a0", "get thing to print");
+    move_sp(instrs, -4 , ""); /* delete stack movement after optimization */
     instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
+    move_sp(instrs, 4 , ""); /* yeah */
     push_from(instrs, "$0", "return nothing"); /* return nothing */
     instrs.push_back(new ASMOperation("jr", rargs, ""));
 }
