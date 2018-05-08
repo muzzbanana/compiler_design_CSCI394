@@ -137,19 +137,8 @@ void do_op(InstructionList& instrs, string op, string cmt) {
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
     string sw_comment = "...";
-    if (instrs.size() > 0
-            && instrs.back()->generated_pop_
-            && instrs.back()->instruction_ == "add"
-            && dynamic_cast<const ASMMove*>(instrs.back())->args_[2] == "4") {
-        /* The last thing was adding to the stack pointer,
-         * so we don't need to subtract from it again --
-         * just get rid of the last instruction */
-        sw_comment = instrs.back()->comment_ + " / " + cmt;
-        instrs.pop_back();
-    } else {
-        move_sp(instrs, -4, cmt);
-        instrs.back()->generated_push_ = true;
-    }
+    move_sp(instrs, -4, cmt);
+    instrs.back()->generated_push_ = true;
     if (instrs.size() > 0
             && instrs.back()->generated_push_
             && instrs.back()->instruction_ == "sw") {
@@ -394,7 +383,7 @@ void ArgPutTree::munch(InstructionList& instrs) const {
 void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* remove args from stack (undo ArgReserve) */
     /* first save return value of function */
-    pop_into(instrs, "$v0", "save returned func val");
+    pop_into(instrs, "$v0", "save returned value");
     /* remove arguments from stack */
     //do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
@@ -407,7 +396,7 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* Now we just have to restore $s1 to its rightful value */
     //pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
-    push_from(instrs, "$v0", "put back returned func val");
+    push_from(instrs, "$v0", "put back returned val");
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {
@@ -416,7 +405,7 @@ void StaticStringTree::munch(InstructionList& instrs) const {
 }
 
 void SemicolonTree::munch(InstructionList& instrs) const {
-    pop_into(instrs, "$v0", "discard return value of previous expr");
+    pop_into(instrs, "$v0", "discard last result");
 }
 
 void Fragment::munch(InstructionList& instrs) const {
