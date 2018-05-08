@@ -122,22 +122,10 @@ void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
     move_sp(instrs, 8, "...");
 }
 
-/* Generate instructions to perform some operation on the top two values
- * of the stack, and push the result onto the stack. */
-void do_op(InstructionList& instrs, string op, string cmt) {
-    do_move(instrs, "lw", "$t0", "4($sp)", cmt);
-    do_move(instrs, "lw", "$t1", "($sp)", "...");
-    op_instr(instrs, op, "$t0", "$t0", "$t1", "...");
-    incr_stack(instrs, "...");
-    instrs.back()->generated_pop_ = true;
-    do_move(instrs, "sw", "$t0", "($sp)", "...");
-    instrs.back()->generated_push_ = true;
-}
-
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
-    string sw_comment = "...";
-    move_sp(instrs, -4, cmt);
+    string sw_comment = cmt;
+    move_sp(instrs, -4, "...");
     instrs.back()->generated_push_ = true;
     if (instrs.size() > 0
             && instrs.back()->generated_push_
@@ -159,6 +147,22 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
         do_move(instrs, "sw", reg, "($sp)", sw_comment);
         instrs.back()->generated_push_ = true;
     }
+}
+
+/* Generate instructions to perform some operation on the top two values
+ * of the stack, and push the result onto the stack. */
+void do_op(InstructionList& instrs, string op, string cmt) {
+    /*do_move(instrs, "lw", "$t0", "4($sp)", cmt);
+    do_move(instrs, "lw", "$t1", "($sp)", "...");*/
+    pop_into(instrs, "$t0", cmt);
+    pop_into(instrs, "$t1", "...");
+    move_sp(instrs, -4, "..."); /* cancel sp action after optimizing */
+    op_instr(instrs, op, "$t0", "$t1", "$t0", "...");
+    move_sp(instrs, 4, "..."); /* cancel sp action after optimizing */
+    instrs.back()->generated_pop_ = true;
+    push_from(instrs, "$t0", "...");
+    //do_move(instrs, "sw", "$t0", "($sp)", "...");
+    instrs.back()->generated_push_ = true;
 }
 
 /* Put 'print' and 'print_int' into the thing so we can print stuff out */
@@ -233,7 +237,7 @@ void FragMove::munch(InstructionList& instrs) const {
         }
         args.push_back(to_string(-4*offset) + "($fp)");
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", "push var value on stack");
+        push_from(instrs, "$t0", "push var on stack");
     } else if (dest_->getType() == tt::VAR) {
         pop_into(instrs, "$t0", "get value to put");
         command = "sw";
@@ -255,13 +259,13 @@ void FragMove::munch(InstructionList& instrs) const {
         args.push_back("$t0");
         args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", " (put on stack...)");
+        push_from(instrs, "$t0", "...");
     } else if (src_->getType() == tt::NAME) {
         command = "la";
         args.push_back("$t0");
         args.push_back(dynamic_cast<const NameTree*>(src_)->label_->toStr());
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", " (put on stack...)");
+        push_from(instrs, "$t0", "...");
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -327,7 +331,7 @@ void LabelTree::munch(InstructionList& instrs) const {
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList& instrs) const {
     /* Save stack pointer when entering function */
-    do_move(instrs, "move", "$t0", "$sp", "#saves the current return address as a stack pointer");
+    do_move(instrs, "move", "$t0", "$sp", "#saves the current stack pointer address");
     /* Set frame pointer to point to base of stack frame (which is current $sp - 4) */
     push_from(instrs, "$fp", "save old frame pointer");
     /* it's $sp-4 because we need 0($fp) to be the first local, -4($fp) second local, etc. */
@@ -335,20 +339,19 @@ void NewFrameTree::munch(InstructionList& instrs) const {
     /* needs to expand stack to hold however many local vars we need */
     move_sp(instrs, -4*(num_locals_+1), "#increments stack for new frame's locals");
 
-    do_move(instrs, "sw", "$t0", "($sp)", "#puts the return address on the top of the stack");
+    do_move(instrs, "sw", "$t0", "($sp)", "#puts the old stack pointer on the top of the stack");
     /* Need to explicitly save return address on stack because MIPS */
     push_from(instrs, "$ra", "save function return addr");
 }
 
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
-    pop_into(instrs, "$v0", "load return value");
     /* Need to explicitly save return address on stack because MIPS */
-    pop_into(instrs, "$ra", "recall function return addr");
+    pop2_into(instrs, "$v0", "$ra", toStr());
     /* Restore old frame pointer */
     do_move(instrs, "lw", "$fp", "4($sp)", "restore old frame pointter");
     /* Restore stack pointer (hopefully this lines up properly?!) */
-    do_move(instrs, "lw", "$sp", "($sp)", "#returns sp to the return address");
+    do_move(instrs, "lw", "$sp", "($sp)", "#returns sp to the old address");
 }
 
 void ArgReserveTree::munch(InstructionList& instrs) const {
@@ -373,7 +376,7 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
 
 void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
-    pop_into(instrs, "$t0", "get argument value");
+    pop_into(instrs, "$t0", "pop argument val");
 
     //op_instr(instrs, "add", "$t1", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
 
@@ -383,7 +386,7 @@ void ArgPutTree::munch(InstructionList& instrs) const {
 void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* remove args from stack (undo ArgReserve) */
     /* first save return value of function */
-    pop_into(instrs, "$v0", "save returned value");
+    pop_into(instrs, "$v0", "pop return val");
     /* remove arguments from stack */
     //do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
@@ -396,7 +399,7 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* Now we just have to restore $s1 to its rightful value */
     //pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
-    push_from(instrs, "$v0", "put back returned val");
+    push_from(instrs, "$v0", "push return val");
 }
 
 void StaticStringTree::munch(InstructionList& instrs) const {
