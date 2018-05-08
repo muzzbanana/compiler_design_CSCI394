@@ -97,7 +97,12 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
         do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(last)->args_[0], newcmt);
         instrs.back()->generated_pop_ = true;
     } else {
-        string add_comment = "...";
+        string add_comment;
+        if (cmt != "...") {
+            add_comment = "```";
+        } else {
+            add_comment = "...";
+        }
         if (instrs.size() > 0
                 && instrs.back()->instruction_ == "sw"
                 && instrs.back()->generated_push_
@@ -118,14 +123,18 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
 /* (top of stack -> reg1, next value -> reg2) */
 void pop2_into(InstructionList& instrs, string reg1, string reg2, string cmt) {
     do_move(instrs, "lw", reg1, "($sp)", cmt);
-    do_move(instrs, "lw", reg2, "4($sp)", "...");
-    move_sp(instrs, 8, "...");
+    do_move(instrs, "lw", reg2, "4($sp)", "```");
+    move_sp(instrs, 8, "```");
 }
 
 /* Generate instructions to push a given register onto the stack. */
 void push_from(InstructionList& instrs, string reg, string cmt) {
     string sw_comment = cmt;
-    move_sp(instrs, -4, "...");
+    if (cmt != "```") {
+        move_sp(instrs, -4, "...");
+    } else {
+        move_sp(instrs, -4, "```");
+    }
     instrs.back()->generated_push_ = true;
     if (instrs.size() > 0
             && instrs.back()->generated_push_
@@ -153,15 +162,15 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
  * of the stack, and push the result onto the stack. */
 void do_op(InstructionList& instrs, string op, string cmt) {
     /*do_move(instrs, "lw", "$t0", "4($sp)", cmt);
-    do_move(instrs, "lw", "$t1", "($sp)", "...");*/
-    pop_into(instrs, "$t0", cmt);
+    do_move(instrs, "lw", "$t1", "($sp)", "```");*/
+    pop_into(instrs, "$t0", "...");
     pop_into(instrs, "$t1", "...");
     move_sp(instrs, -4, "..."); /* cancel sp action after optimizing */
-    op_instr(instrs, op, "$t0", "$t1", "$t0", "...");
-    move_sp(instrs, 4, "..."); /* cancel sp action after optimizing */
+    op_instr(instrs, op, "$t0", "$t1", "$t0", cmt);
+    move_sp(instrs, 4, "```"); /* cancel sp action after optimizing */
     instrs.back()->generated_pop_ = true;
-    push_from(instrs, "$t0", "...");
-    //do_move(instrs, "sw", "$t0", "($sp)", "...");
+    push_from(instrs, "$t0", "```");
+    //do_move(instrs, "sw", "$t0", "($sp)", "```");
     instrs.back()->generated_push_ = true;
 }
 
@@ -211,14 +220,15 @@ void FragMove::munch(InstructionList& instrs) const {
             /* apparently mips division is kind of complicated... */
             command = "div";
             /* Pop backwards because second operand will be on top of stack */
-            pop2_into(instrs, "$t1", "$t0", toStr());
-            args.push_back("$t0");
+            pop_into(instrs, "$t0", "...");
+            pop_into(instrs, "$t1", "...");
             args.push_back("$t1");
-            instrs.push_back(new ASMOperation("div", args, "..."));
+            args.push_back("$t0");
+            instrs.push_back(new ASMOperation("div", args, toStr()));
             vector<string> args2;
             args2.push_back("$t0");
-            instrs.push_back(new ASMOperation("mflo", args2, "..."));
-            push_from(instrs, "$t0", "...");
+            instrs.push_back(new ASMOperation("mflo", args2, "```"));
+            push_from(instrs, "$t0", "```");
         }
         /* I'm pretty sure that the way it's set up guarantees the
          * arguments to each binop are always on top. So we just need
@@ -259,13 +269,13 @@ void FragMove::munch(InstructionList& instrs) const {
         args.push_back("$t0");
         args.push_back(to_string(dynamic_cast<const ConstTree*>(src_)->value_));
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", "...");
+        push_from(instrs, "$t0", "```");
     } else if (src_->getType() == tt::NAME) {
         command = "la";
         args.push_back("$t0");
         args.push_back(dynamic_cast<const NameTree*>(src_)->label_->toStr());
         instrs.push_back(new ASMMove(command, args, toStr()));
-        push_from(instrs, "$t0", "...");
+        push_from(instrs, "$t0", "```");
     } else {
         command = "move";
         args.push_back(dest_->toStr());
@@ -306,7 +316,7 @@ void CJumpTree::munch(InstructionList& instrs) const {
     args.push_back("$t1");
     args.push_back(t_->toStr());
     /* this probably shouldn't be an ASMMove but also idk if it matters */
-    instrs.push_back(new ASMMove(command, args, "..."));
+    instrs.push_back(new ASMMove(command, args, "```"));
 
     /* We need to unconditionally branch to false label now if
      * we didn't jump to true label. */
