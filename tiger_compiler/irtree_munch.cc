@@ -38,21 +38,32 @@ void op_instr(InstructionList& instrs, string cmd, string dest, string src1, str
 
 /* Generate instruction to change stack pointer by amt. */
 void move_sp(InstructionList& instrs, int amt, string cmt) {
-    if (instrs.back()->generated_move_sp_) {
-        ASMMove* last = dynamic_cast<ASMMove*>(instrs.back());
-        last->args_[2] = to_string(atoi(last->args_[2].c_str()) + amt);
-        last->comment_ = last->comment_ + " / " + cmt;
-        last->generated_move_sp_ = true;
-        instrs.pop_back();
-        if (last->args_[2] != "0") {
-            instrs.push_back(last);
+    op_instr(instrs, "add", "$sp", "$sp", to_string(amt), cmt);
+    instrs.back()->generated_move_sp_ = true;
+}
+
+/* Consolidate consecutive stack movements together. */
+void consolidate_stack_mvts(InstructionList& instrs) {
+    InstructionList new_result;
+    for (auto a : instrs) {
+        if (new_result.size() > 0 && new_result.back()->generated_move_sp_ && a->generated_move_sp_) {
+            int old_amt = atoi(dynamic_cast<ASMMove*>(new_result.back())->args_[2].c_str());
+            int new_amt = atoi(dynamic_cast<ASMMove*>(a)->args_[2].c_str());
+            if (old_amt + new_amt != 0) {
+                dynamic_cast<ASMMove*>(new_result.back())->args_[2] = to_string(old_amt + new_amt);
+                new_result.back()->comment_ += string(" / ") + a->comment_;
+            } else {
+                string consolidated_comment = new_result.back()->comment_ + " / " + a->comment_;
+                new_result.pop_back();
+                if (new_result.size() > 0) {
+                    new_result.back()->comment_ += " / " + consolidated_comment;
+                }
+            }
         } else {
-            instrs.back()->comment_ = instrs.back()->comment_ + " / " + last->comment_;
+            new_result.push_back(a);
         }
-    } else {
-        op_instr(instrs, "add", "$sp", "$sp", to_string(amt), cmt);
-        instrs.back()->generated_move_sp_ = true;
     }
+    instrs = new_result;
 }
 
 /* Generate instruction to increase stack pointer by four. */
@@ -63,6 +74,7 @@ void incr_stack(InstructionList& instrs, string cmt) {
             && dynamic_cast<const ASMMove*>(instrs.back())->args_[1] == "($sp)") {
         /* If we just stored something on top of stack, erase it -- we are about to clobber it. */
         comment = instrs.back()->comment_ + " / " + comment;
+        cerr << " REMOVED by incr_stack : " << instrs.back()->toStr() << endl;
         instrs.pop_back();
     }
     move_sp(instrs, 4, comment);
@@ -73,11 +85,15 @@ void incr_stack(InstructionList& instrs, string cmt) {
 void pop_into(InstructionList& instrs, string reg, string cmt) {
     if (instrs.size() > 1
             && instrs[instrs.size()-2]->generated_push_
-            && instrs.back()->generated_push_) {
+            && instrs[instrs.size()-2]->instruction_ == "add"
+            && instrs.back()->generated_push_
+            && instrs.back()->instruction_ == "sw") {
         /* Detect if we immediately just pushed something, and replace with a 'move'
          * instead of pushing onto stack and immediately popping back off */
         ASMInstruction *last = instrs.back();
+        cerr << " REMOVED by pop_into1 : " << instrs.back()->toStr() << endl;
         instrs.pop_back();
+        cerr << " REMOVED by pop_into2 : " << instrs.back()->toStr() << endl;
         instrs.pop_back();
         string newcmt;
         newcmt = last->comment_ + " / " + cmt;
@@ -132,6 +148,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
          * so we don't need to subtract from it again --
          * just get rid of the last instruction */
         sw_comment = instrs.back()->comment_ + " / " + cmt;
+        cerr << " REMOVED by push_from1 : " << instrs.back()->toStr() << endl;
         instrs.pop_back();
     } else {
         move_sp(instrs, -4, cmt);
@@ -144,6 +161,7 @@ void push_from(InstructionList& instrs, string reg, string cmt) {
          * then it can't possibly be useful, since we're about
          * to overwrite it. Thus it can be removed. */
         sw_comment = instrs.back()->comment_ + " / " + sw_comment;
+        cerr << " REMOVED by push_from2 : " << instrs.back()->toStr() << endl;
         instrs.pop_back();
     }
     if (instrs.size() > 0
@@ -322,12 +340,13 @@ void LabelTree::munch(InstructionList& instrs) const {
 
 /* this is all function stack stuff hmm */
 void NewFrameTree::munch(InstructionList& instrs) const {
+    /* Save stack pointer when entering function */
+    do_move(instrs, "move", "$t0", "$sp", "#saves the current return address as a stack pointer");
     /* Set frame pointer to point to base of stack frame (which is current $sp - 4) */
-    /* it's $sp-4 because we need 0($fp) to be the first local, -4($fp) second local, etc. */
     push_from(instrs, "$fp", "save old frame pointer");
+    /* it's $sp-4 because we need 0($fp) to be the first local, -4($fp) second local, etc. */
     op_instr(instrs, "sub", "$fp", "$sp", "4", "point at base of frame");
     /* needs to expand stack to hold however many local vars we need */
-    do_move(instrs, "move", "$t0", "$sp", "#saves the current return address as a stack pointer");
     move_sp(instrs, -4*(num_locals_+1), "#increments stack for new frame's locals");
 
     do_move(instrs, "sw", "$t0", "($sp)", "#puts the return address on the top of the stack");
@@ -353,7 +372,7 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
     /* We will save the pointer-to-arguments-location-in-stack in register
      * $s1. this is callee-saved, so we need to save it, but since we don't
      * use it for anything else we can be confident it won't change. */
-    push_from(instrs, "$s1", "save prior s1 value");
+    //push_from(instrs, "$s1", "save prior s1 value");
 
     /* save number of arguments being passed to current function */
     current_argcount.push(num_args_);
@@ -363,16 +382,16 @@ void ArgReserveTree::munch(InstructionList& instrs) const {
         move_sp(instrs, -4*(num_args_), toStr());
     }
 
-    do_move(instrs, "move", "$s1", "$sp", "save location of arguments");
+    //do_move(instrs, "move", "$s1", "$sp", "save location of arguments");
 }
 
 void ArgPutTree::munch(InstructionList& instrs) const {
     /* put arg in register or stack */
     pop_into(instrs, "$t0", "get argument value");
 
-    op_instr(instrs, "add", "$t1", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
+    //op_instr(instrs, "add", "$t1", "$s1", to_string(4*(current_argcount.top()-index_-1)), "#figures out where to put the current argument");
 
-    do_move(instrs, "sw", "$t0", "($t1)", "#loads the argument into appropriate slot");
+    do_move(instrs, "sw", "$t0", to_string(4*(current_argcount.top()-index_-1)) + "($sp)", toStr());
 }
 
 void ArgRemoveTree::munch(InstructionList& instrs) const {
@@ -380,12 +399,16 @@ void ArgRemoveTree::munch(InstructionList& instrs) const {
     /* first save return value of function */
     pop_into(instrs, "$v0", "save returned func val");
     /* remove arguments from stack */
-    do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
+    //do_move(instrs, "move", "$sp", "$s1", "#returns sp to the top of argument list");
     /* Now we're back at the top of the arglist, so we just increase $sp by current_argcount.back() to get back to where we were */
-    move_sp(instrs, 4*current_argcount.top(), toStr());
+    if (current_argcount.top() > 0) {
+        /* Actually, we know there was only the return value before the arguments,
+         * so now that we've only popped it off, we can just reset the stack pointer */
+        move_sp(instrs, 4*current_argcount.top(), toStr());
+    }
     current_argcount.pop();
     /* Now we just have to restore $s1 to its rightful value */
-    pop_into(instrs, "$s1", "restore $s1 value");
+    //pop_into(instrs, "$s1", "restore $s1 value");
     /* put func return value back on top of stack */
     push_from(instrs, "$v0", "put back returned func val");
 }
@@ -425,6 +448,7 @@ InstructionList ProgramFragment::munch() const {
     result.push_back(new ASMLabel(new Label("main", false)));
     text_segment->munch(result);
     munch_stdlib(result);
+    consolidate_stack_mvts(result);
     return result;
 }
 
