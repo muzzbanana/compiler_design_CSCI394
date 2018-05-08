@@ -105,11 +105,13 @@ void pop_into(InstructionList& instrs, string reg, string cmt) {
         }
         if (instrs.size() > 0
                 && instrs.back()->instruction_ == "sw"
-                && instrs.back()->generated_push_
-                && dynamic_cast<const ASMMove*>(instrs.back())->args_[0] == reg) {
-            /* If we just stored the same register onto the top of the stack, there's no need
-             * to load it again. */
-            add_comment = cmt;
+                && instrs.back()->generated_push_) {
+                //&& dynamic_cast<const ASMMove*>(instrs.back())->args_[0] == reg) {
+            /* If we just pushed onto the stack, just move to the new
+             * register rather than reading from memory. (Plus we might end up
+             * not even needing it, if the read was to the same register!) */
+            do_move(instrs, "move", reg, dynamic_cast<const ASMMove*>(instrs.back())->args_[0], cmt);
+            //add_comment = cmt;
         } else {
             do_move(instrs, "lw", reg, "($sp)", cmt);
             instrs.back()->generated_pop_ = true;
@@ -191,10 +193,10 @@ void munch_stdlib(InstructionList& instrs) {
 
     instrs.push_back(new ASMLabel(printcommonlabel));
     pop_into(instrs, "$a0", "get thing to print");
-    move_sp(instrs, -4 , ""); /* delete stack movement after optimization */
+    move_sp(instrs, -4 , ""); /* we expect the argument to stay on the stack */
     instrs.push_back(new ASMInstruction("syscall", "Do it!!"));
-    move_sp(instrs, 4 , ""); /* yeah */
-    push_from(instrs, "$0", "return nothing"); /* return nothing */
+    do_move(instrs, "move", "$v0", "$0", "return nothing");
+    //push_from(instrs, "$0", "return nothing"); /* return nothing */
     instrs.push_back(new ASMOperation("jr", rargs, ""));
 }
 
@@ -311,12 +313,14 @@ void CJumpTree::munch(InstructionList& instrs) const {
         default:
             command = "???";
     }
-    pop2_into(instrs, "$t1", "$t0", toStr());
-    args.push_back("$t0");
+    //pop2_into(instrs, "$t1", "$t0", toStr());
+    pop_into(instrs, "$t0", "...");
+    pop_into(instrs, "$t1", "...");
     args.push_back("$t1");
+    args.push_back("$t0");
     args.push_back(t_->toStr());
     /* this probably shouldn't be an ASMMove but also idk if it matters */
-    instrs.push_back(new ASMMove(command, args, "```"));
+    instrs.push_back(new ASMMove(command, args, toStr()));
 
     /* We need to unconditionally branch to false label now if
      * we didn't jump to true label. */
@@ -357,7 +361,9 @@ void NewFrameTree::munch(InstructionList& instrs) const {
 void EndFrameTree::munch(InstructionList& instrs) const {
     /* needs to pop off those local vars (+ maybe temps if there are any left) */
     /* Need to explicitly save return address on stack because MIPS */
-    pop2_into(instrs, "$v0", "$ra", toStr());
+    //pop2_into(instrs, "$v0", "$ra", toStr());
+    pop_into(instrs, "$v0", toStr());
+    pop_into(instrs, "$ra", "```");
     /* Restore old frame pointer */
     do_move(instrs, "lw", "$fp", "4($sp)", "restore old frame pointter");
     /* Restore stack pointer (hopefully this lines up properly?!) */
