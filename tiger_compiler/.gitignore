@@ -8,3 +8,5 @@ tiger.tab.c
 tiger.tab.h
 lex.yy.c
 tiger.output
+*.S
+tc

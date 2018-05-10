@@ -8,7 +8,10 @@ LDFLAGS=$(CXXFLAGS) -lfl
 LIBS=
 
 
-all: test_tiger_semantic test_tiger_ir tiger
+all: tc ir
+
+tc: tiger.o tiger.tab.o lex.yy.o type.o semantic.o ast_semantic.o scope.o semantic_checks.o ast_ir.o irtree.o irtree_munch.o label.o temp.o frame.o temp.hh fragment.hh ast.hh tc.o
+	$(CXX) $(LIBS) -o $@ $^ $(LDFLAGS)
 
 lex: test_tiger_lex
 	./test_tiger_lex
